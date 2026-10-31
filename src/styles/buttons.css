@@ -1,0 +1,152 @@
+/*
+ * Buttons. Use on <a> or <button>:
+ *   .btn.btn--primary    UDAN Green action (one per section)
+ *   .btn.btn--secondary  Deep Teal
+ *   .btn.btn--outline    teal outline on light surfaces
+ *   .btn.btn--ghost      text-style, subtle hover
+ *   .btn.btn--light      white button for teal/photo backgrounds
+ *   .btn--sm             compact (still >= 44px tall)
+ *   .btn--block          always full width
+ * On mobile (< 640px) buttons are full width unless .btn--inline is added.
+ */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: var(--tap);
+  padding: var(--space-3) var(--space-5);
+  border: 2px solid transparent;
+  border-radius: var(--radius);
+  font-family: var(--font-heading);
+  font-size: var(--fs-base);
+  font-weight: var(--fw-bold);
+  line-height: 1.2;
+  text-align: center;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color var(--transition),
+    border-color var(--transition),
+    color var(--transition),
+    box-shadow var(--transition);
+  width: 100%;
+}
+
+@media (min-width: 40em) {
+  .btn {
+    width: auto;
+  }
+}
+
+.btn--inline {
+  width: auto;
+}
+
+.btn--block {
+  width: 100%;
+}
+
+.btn:hover {
+  text-decoration: none;
+}
+
+.btn svg {
+  flex-shrink: 0;
+  width: 1.25em;
+  height: 1.25em;
+}
+
+.btn--sm {
+  padding: var(--space-2) var(--space-4);
+  font-size: var(--fs-sm);
+}
+
+.btn--primary {
+  background: var(--color-action);
+  color: var(--color-white);
+}
+
+.btn--primary:hover {
+  background: var(--color-action-hover);
+}
+
+.btn--secondary {
+  background: var(--color-teal);
+  color: var(--color-white);
+}
+
+.btn--secondary:hover {
+  background: var(--color-teal-hover);
+}
+
+.btn--outline {
+  background: transparent;
+  border-color: var(--color-teal);
+  color: var(--color-teal);
+}
+
+.btn--outline:hover {
+  background: var(--color-teal);
+  color: var(--color-white);
+}
+
+.btn--ghost {
+  background: transparent;
+  color: var(--color-teal);
+  padding-inline: var(--space-3);
+}
+
+.btn--ghost:hover {
+  background: var(--color-surface-2);
+}
+
+.btn--light {
+  background: var(--color-white);
+  color: var(--color-teal);
+}
+
+.btn--light:hover {
+  background: var(--color-visa-tint);
+}
+
+/* Group of buttons that stack on mobile and sit in a row from tablet up */
+.btn-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+@media (min-width: 40em) {
+  .btn-group {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+}
+
+/* Inline text link with arrow, e.g. "Learn more" */
+.link-arrow {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-height: var(--tap);
+  font-family: var(--font-heading);
+  font-weight: var(--fw-bold);
+  color: var(--color-teal);
+  text-decoration: none;
+}
+
+.link-arrow:hover {
+  text-decoration: underline;
+}
+
+.link-arrow svg {
+  width: 1.1em;
+  height: 1.1em;
+  transition: transform var(--transition);
+}
+
+.link-arrow:hover svg {
+  transform: translateX(3px);
+}

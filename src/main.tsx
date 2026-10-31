@@ -1,10 +1,11 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import './style.css'
-
-function App() {
-  return null
-}
+import '@fontsource-variable/manrope'
+import '@fontsource-variable/inter'
+import './styles/tokens.css'
+import './styles/base.css'
+import './styles/buttons.css'
+import { App } from './App'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

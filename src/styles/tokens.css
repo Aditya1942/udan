@@ -1,0 +1,96 @@
+/*
+ * UDAN design tokens. Use these custom properties everywhere; never hard-code colours.
+ * Contrast notes (WCAG AA, measured):
+ *   white on --color-green (#57931E)      3.75  -> NOT for text; use --color-action
+ *   white on --color-action (#4A7F19)     4.84  OK (buttons)
+ *   white on --color-teal (#165D79)       7.30  OK
+ *   --color-text-muted on all light bgs   >= 4.59 OK
+ *   --color-sky / --color-lime            decorative accents only, never body text on light bgs
+ */
+:root {
+  /* Brand (visiting card) */
+  --color-green: #57931e;        /* UDAN Green: brand fills, icons, accents */
+  --color-lime: #7fb61c;         /* Lime Green: sparing accent */
+  --color-sky: #29a9ca;          /* Sky Blue: sparing accent (visa area) */
+  --color-teal: #165d79;         /* Deep Teal: hierarchy, nav, footer, secondary buttons */
+
+  /* Derived action / state shades */
+  --color-action: #4a7f19;       /* primary button bg (AA with white) */
+  --color-action-hover: #3f6e15;
+  --color-teal-hover: #0f4a61;
+  --color-teal-deep: #0f4a61;    /* darker teal surface */
+  --color-green-text: #4a7f19;   /* green text on light surfaces */
+  --color-teal-text-soft: #d7e6ec; /* body text on teal surfaces */
+  --color-sky-on-teal: #9fd9ea;  /* sky accent text on teal surfaces (AA) */
+  --color-lime-on-teal: #c9f07a; /* lime accent text on teal surfaces (AA) */
+
+  /* Neutrals */
+  --color-white: #ffffff;
+  --color-surface: #f7f8f5;      /* page alt background */
+  --color-surface-2: #f0f3ee;    /* soft cards / bands */
+  --color-ink: #253238;          /* body text */
+  --color-slate: #68757a;        /* icons, borders, large text only on tinted bgs */
+  --color-text-muted: #5b686d;   /* secondary text (AA on all light surfaces) */
+  --color-border: #e1e7e2;
+
+  /* Area tints */
+  --color-travel-tint: #eff6e7;  /* faint green for travel areas */
+  --color-visa-tint: #eaf4f7;    /* faint sky/teal for visa areas */
+
+  --color-focus: #29a9ca;
+
+  /* Typography */
+  --font-heading: 'Manrope Variable', 'Manrope', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-body: 'Inter Variable', 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  --fs-xs: 0.8125rem;   /* 13 */
+  --fs-sm: 0.9375rem;   /* 15 */
+  --fs-base: 1rem;      /* 16 */
+  --fs-md: 1.125rem;    /* 18 */
+  --fs-lg: 1.25rem;     /* 20 */
+  --fs-xl: clamp(1.375rem, 1.2rem + 0.8vw, 1.625rem);
+  --fs-2xl: clamp(1.75rem, 1.4rem + 1.6vw, 2.375rem);
+  --fs-3xl: clamp(2.125rem, 1.6rem + 2.6vw, 3.5rem);
+
+  --lh-tight: 1.15;
+  --lh-snug: 1.3;
+  --lh-body: 1.65;
+
+  --fw-regular: 400;
+  --fw-medium: 500;
+  --fw-semibold: 600;
+  --fw-bold: 700;
+  --fw-extrabold: 800;
+
+  /* Spacing scale (4px base) */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 2.5rem;
+  --space-8: 3rem;
+  --space-9: 4rem;
+  --space-10: 5rem;
+  --space-section: clamp(3.5rem, 2.5rem + 4vw, 6rem);
+
+  /* The one radius */
+  --radius: 10px;
+  --radius-pill: 999px; /* badges only */
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgb(37 50 56 / 0.06), 0 1px 3px rgb(37 50 56 / 0.06);
+  --shadow-md: 0 4px 12px rgb(37 50 56 / 0.08), 0 2px 4px rgb(37 50 56 / 0.04);
+  --shadow-lg: 0 16px 40px rgb(22 93 121 / 0.14);
+
+  /* Layout */
+  --container: 72rem;      /* 1152px */
+  --container-narrow: 46rem;
+  --gutter: clamp(1rem, 0.6rem + 2vw, 2rem);
+  --header-height: 4.25rem;
+  --mobile-bar-height: 4rem;
+  --tap: 2.75rem;          /* 44px minimum touch target */
+
+  --transition: 160ms ease;
+}

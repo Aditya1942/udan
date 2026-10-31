@@ -1,0 +1,34 @@
+.logo {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--tap);
+  text-decoration: none;
+  border-radius: var(--radius);
+}
+
+/* heights only; width: auto preserves the original aspect ratio */
+.logo img {
+  width: auto;
+}
+
+.logo--md .logo__mark {
+  height: 2.75rem;
+}
+
+.logo--md .logo__wordmark {
+  height: 1.75rem;
+}
+
+.logo--lg .logo__mark {
+  height: 3.5rem;
+}
+
+.logo--lg .logo__wordmark {
+  height: 2.25rem;
+}
+
+.logo--on-dark {
+  padding: var(--space-2) var(--space-4);
+  background: var(--color-white);
+}

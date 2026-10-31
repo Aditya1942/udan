@@ -1,0 +1,50 @@
+.section-heading {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-bottom: var(--space-7);
+  max-width: 44rem;
+}
+
+.section-heading--center {
+  margin-inline: auto;
+  text-align: center;
+  align-items: center;
+}
+
+.section-heading__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-heading);
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-bold);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-green-text);
+}
+
+/* short accent bar before the eyebrow */
+.section-heading__eyebrow::before {
+  content: '';
+  width: 1.5rem;
+  height: 2px;
+  background: currentColor;
+}
+
+.section--visa .section-heading__eyebrow {
+  color: var(--color-teal);
+}
+
+.section--teal .section-heading__eyebrow {
+  color: var(--color-lime-on-teal);
+}
+
+.section-heading__intro {
+  font-size: var(--fs-md);
+  color: var(--color-text-muted);
+}
+
+.section--teal .section-heading__intro {
+  color: var(--color-teal-text-soft);
+}
