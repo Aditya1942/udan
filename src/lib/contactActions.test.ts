@@ -36,7 +36,7 @@ describe('getDirectionsHref', () => {
     expect(url.origin + url.pathname).toBe('https://www.google.com/maps/dir/');
     expect(url.searchParams.get('api')).toBe('1');
     expect(url.searchParams.get('destination')).toBe(
-      'UGF-12, Meghdeep Shopping Center, Opp. Prakash Highschool, Near Sandesh Press, Bodakdev, Ahmedabad, Gujarat, India',
+      'UGF-12, Meghdeep Complex, Sandesh Press Road, Opp. Prakash Higher Secondary School, Vastrapur, Ahmedabad, Gujarat 380054, India',
     );
   });
 

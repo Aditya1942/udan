@@ -1,12 +1,14 @@
 /**
  * Single source of truth for UDAN business facts.
- * Everything here comes from the visiting card (see docs/specs/udan-website.md).
+ * Sources: the visiting card and the UDAN company profile (Dolly Shah).
+ * The company profile wins where they differ (e.g. address, corporate travel).
  * Do not add prices, packages, stats, testimonials, email, hours or socials.
  */
 import {
   Banknote,
   BookUser,
   BriefcaseBusiness,
+  Building2,
   CircleQuestionMark,
   Hotel,
   ShieldPlus,
@@ -20,17 +22,22 @@ export const business = {
   name: 'UDAN Immigration & Tours',
   shortName: 'UDAN',
   tagline: 'Your Journey Begins with UDAN.',
+  /** From the company profile. */
+  slogan: 'Travel. Explore. Experience.',
+  promise: 'Your Journey, Our Priority.',
+  focusAreas: ['Travel Management', 'Visa Assistance', 'Tourism', 'Corporate Travel'],
   contactPerson: 'Dolly Shah',
   phone: {
     display: '+91 96872 32015',
     e164: '+919687232015',
   },
   address: {
-    line1: 'UGF-12, Meghdeep Shopping Center',
-    line2: 'Opp. Prakash Highschool, Near Sandesh Press',
-    locality: 'Bodakdev',
+    line1: 'UGF-12, Meghdeep Complex, Sandesh Press Road',
+    line2: 'Opp. Prakash Higher Secondary School',
+    locality: 'Vastrapur',
     city: 'Ahmedabad',
     region: 'Gujarat',
+    postalCode: '380054',
     country: 'India',
     countryCode: 'IN',
   },
@@ -42,7 +49,7 @@ export const fullAddress = [
   business.address.line2,
   business.address.locality,
   business.address.city,
-  business.address.region,
+  `${business.address.region} ${business.address.postalCode}`,
   business.address.country,
 ].join(', ');
 
@@ -60,6 +67,8 @@ export const SERVICE_IDS = [
   'visitor-business-visa',
   'passport-services',
   'currency-exchange',
+  // Added from the company profile; not in the original spec catalogue.
+  'corporate-travel',
   'other',
 ] as const;
 
@@ -74,6 +83,8 @@ export type Service = {
   description: string;
   group: ServiceGroup;
   icon: LucideIcon;
+  /** What UDAN helps with, from the company profile. Empty where the profile has no detail. */
+  highlights: readonly string[];
 };
 
 export const services: readonly Service[] = [
@@ -84,6 +95,14 @@ export const services: readonly Service[] = [
       'Holiday planning for trips abroad and across India, shaped around your dates, interests and budget.',
     group: 'travel',
     icon: TreePalm,
+    highlights: [
+      'Customised holiday packages',
+      'Family holidays and group tours',
+      'Honeymoon packages',
+      'International vacation packages',
+      'Domestic sightseeing and pilgrimage tours',
+      'Customised itineraries and transportation arrangements',
+    ],
   },
   {
     id: 'hotel-booking',
@@ -91,6 +110,12 @@ export const services: readonly Service[] = [
     description: 'Help finding and booking stays that suit your trip, location and budget.',
     group: 'travel',
     icon: Hotel,
+    highlights: [
+      'Hotel bookings across India and worldwide',
+      'Budget, premium and luxury accommodation options',
+      'Business travel accommodation',
+      'Customised hotel arrangements',
+    ],
   },
   {
     id: 'flight-train-tickets',
@@ -98,6 +123,13 @@ export const services: readonly Service[] = [
     description: 'Air and rail ticket bookings for journeys within India and abroad.',
     group: 'travel',
     icon: TicketsPlane,
+    highlights: [
+      'Domestic and international air tickets',
+      'Rail bookings',
+      'Flight comparisons and itinerary planning',
+      'Group and corporate flight bookings',
+      'Ticket cancellation and rescheduling assistance',
+    ],
   },
   {
     id: 'travel-insurance',
@@ -105,6 +137,7 @@ export const services: readonly Service[] = [
     description: 'Guidance on travel insurance options so you can set off with cover in place.',
     group: 'travel',
     icon: ShieldPlus,
+    highlights: [],
   },
   {
     id: 'visa-services',
@@ -113,6 +146,11 @@ export const services: readonly Service[] = [
       'Guidance with visa applications: understanding requirements, preparing documents and submitting your application.',
     group: 'visa',
     icon: Stamp,
+    highlights: [
+      'Visa documentation guidance',
+      'Application process and appointment assistance, where available',
+      'Travel documentation support',
+    ],
   },
   {
     id: 'visitor-business-visa',
@@ -121,6 +159,10 @@ export const services: readonly Service[] = [
       'Support with visitor and business visitor visa applications, from paperwork to submission.',
     group: 'visa',
     icon: BriefcaseBusiness,
+    highlights: [
+      'Visitor and tourist visa assistance',
+      'Business visitor visa assistance',
+    ],
   },
   {
     id: 'passport-services',
@@ -128,6 +170,11 @@ export const services: readonly Service[] = [
     description: 'Help with new passport and renewal applications and the paperwork involved.',
     group: 'visa',
     icon: BookUser,
+    highlights: [
+      'Fresh passport application guidance',
+      'Passport renewal assistance',
+      'Documentation guidance for passport applications',
+    ],
   },
   {
     id: 'currency-exchange',
@@ -135,6 +182,23 @@ export const services: readonly Service[] = [
     description: 'Foreign currency for your trip, arranged before you travel.',
     group: 'travel',
     icon: Banknote,
+    highlights: [],
+  },
+  {
+    id: 'corporate-travel',
+    label: 'Corporate Travel Management',
+    description:
+      'Travel arrangements for businesses, from employee and management bookings to group travel.',
+    group: 'travel',
+    icon: Building2,
+    highlights: [
+      'Business travel arrangements',
+      'Employee and management travel bookings',
+      'Corporate flight and hotel reservations',
+      'Group travel coordination',
+      'Customised travel solutions for businesses',
+      'Booking documentation and invoice coordination',
+    ],
   },
   {
     id: 'other',
@@ -142,8 +206,49 @@ export const services: readonly Service[] = [
     description: "Not sure which service you need? Tell us about your plans and we'll guide you.",
     group: 'other',
     icon: CircleQuestionMark,
+    highlights: [],
   },
 ];
+
+/* ------------------------------------------------------------------ */
+/* Company profile                                                     */
+/* ------------------------------------------------------------------ */
+
+/** Verbatim-ish copy from the UDAN company profile. */
+export const profile = {
+  about: [
+    'UDAN Immigration & Tours is an Ahmedabad-based travel and immigration service provider offering domestic and international travel solutions. We assist individuals, families, business travellers and corporate clients with their travel requirements.',
+    'Our services include domestic and international flight bookings, rail bookings, hotel reservations, travel insurance, currency exchange, customised tour packages, visa assistance and corporate travel management.',
+    "We focus on understanding our customers' needs and providing suitable travel solutions through personalised service, transparent communication and professional coordination.",
+  ],
+  mission:
+    'To become a trusted name in the travel and tourism industry by providing convenient, reliable and customer-focused travel solutions.',
+  vision: [
+    'To simplify domestic and international travel planning.',
+    'To provide customised travel solutions according to customer requirements.',
+    'To deliver professional and responsive customer service.',
+    'To maintain transparency in pricing and booking conditions.',
+    'To build long-term relationships with individuals and corporate clients.',
+  ],
+  strengths: [
+    'Comprehensive travel service offerings.',
+    'Personalised customer assistance.',
+    'Domestic and international travel solutions.',
+    'Customised itineraries and holiday packages.',
+    'Professional booking coordination.',
+    'Assistance with travel documentation.',
+    'Focus on customer satisfaction and long-term relationships.',
+  ],
+  commitment: [
+    'At UDAN Immigration & Tours, we believe every journey should begin with confidence and proper planning.',
+    'We are committed to assisting our customers throughout the travel planning and booking process, providing clear information about services, prices and applicable terms.',
+    'Our goal is to make travel arrangements simpler and more convenient while building lasting relationships based on trust, transparency and service.',
+  ],
+  clients:
+    'We value every client relationship built on trust, transparency and dependable service. We are proud to serve businesses across industries and strive to deliver seamless travel solutions tailored to their unique needs.',
+  visaDisclaimer:
+    'Visa decisions are made by the relevant immigration authorities. Visa approval cannot be guaranteed.',
+} as const;
 
 export function isServiceId(value: unknown): value is ServiceId {
   return typeof value === 'string' && (SERVICE_IDS as readonly string[]).includes(value);

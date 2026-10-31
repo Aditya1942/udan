@@ -47,7 +47,7 @@ export function InquiryFormSlot({ defaultService, destination, sourcePage, id = 
         </a>
         .
       </p>
-      <ContactActions layout="stack" whatsappText={buildEnquiryMessage({ service: defaultService, destination: dest })} />
+      <ContactActions layout="stack" actions={['whatsapp']} whatsappText={buildEnquiryMessage({ service: defaultService, destination: dest })} />
     </div>
   );
 }

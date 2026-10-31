@@ -1,0 +1,48 @@
+.privacy.section {
+  padding-top: var(--space-8);
+}
+
+.privacy__updated {
+  display: inline-block;
+  margin-bottom: var(--space-7);
+  padding: var(--space-2) var(--space-4);
+  background: var(--color-surface-2);
+  border-radius: var(--radius);
+  font-size: var(--fs-sm);
+  color: var(--color-text-muted);
+}
+
+.privacy__updated time {
+  font-weight: var(--fw-semibold);
+  color: var(--color-ink);
+}
+
+.privacy__body {
+  display: grid;
+  gap: var(--space-7);
+  max-width: 40rem;
+}
+
+.privacy__body section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.privacy__body h2 {
+  font-size: var(--fs-xl);
+}
+
+.privacy__body ul {
+  display: grid;
+  gap: var(--space-1);
+  padding-left: var(--space-5);
+}
+
+.privacy__body li::marker {
+  color: var(--color-green);
+}
+
+.privacy__body a {
+  font-weight: var(--fw-semibold);
+}

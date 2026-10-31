@@ -1,0 +1,159 @@
+.other-category__layout {
+  display: grid;
+  gap: var(--space-2);
+}
+
+@media (min-width: 64em) {
+  .other-category__layout {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+    gap: var(--space-9);
+    align-items: start;
+  }
+
+  .other-category__heading {
+    margin-bottom: 0;
+  }
+}
+
+.other-category__cards {
+  display: grid;
+  gap: var(--space-5);
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr));
+}
+
+/* single card (Documents) shouldn't stretch to a very wide bar */
+.other-category__cards:has(> li:only-child) {
+  grid-template-columns: minmax(0, 34rem);
+}
+
+.other-category__crosslink {
+  margin-top: var(--space-5);
+  color: var(--color-text-muted);
+}
+
+.other-category__crosslink a {
+  font-weight: var(--fw-semibold);
+}
+
+.other-help {
+  display: grid;
+  gap: var(--space-6);
+}
+
+@media (min-width: 64em) {
+  .other-help {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: var(--space-9);
+  }
+}
+
+.other-help__text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+/* Service cards (travel = green top bar, visa = teal document spine) */
+.other-category__cards > li {
+  display: flex;
+}
+
+.other-service {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  width: 100%;
+  padding: var(--space-6) var(--space-5) var(--space-4);
+  background: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+}
+
+.other-service--travel {
+  border-top: 4px solid var(--color-green);
+}
+
+.other-service--visa {
+  border-left: 4px solid var(--color-teal);
+}
+
+.other-service__icon {
+  display: inline-grid;
+  place-items: center;
+  width: 3rem;
+  height: 3rem;
+}
+
+.other-service__icon svg {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.other-service--travel .other-service__icon {
+  border-radius: 50%;
+  background: var(--color-travel-tint);
+  color: var(--color-green-text);
+}
+
+.other-service--visa .other-service__icon {
+  border-radius: var(--radius);
+  background: var(--color-teal);
+  color: var(--color-sky-on-teal);
+}
+
+.other-service--visa .other-service__title {
+  color: var(--color-teal);
+}
+
+.other-service__text {
+  color: var(--color-text-muted);
+}
+
+.other-service__subtitle {
+  margin-top: var(--space-2);
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-bold);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-green-text);
+}
+
+.other-service--visa .other-service__subtitle {
+  color: var(--color-teal);
+}
+
+.other-service__list {
+  display: grid;
+  gap: var(--space-2);
+  font-size: var(--fs-sm);
+}
+
+.other-service__list li {
+  display: flex;
+  gap: var(--space-2);
+  align-items: flex-start;
+}
+
+.other-service__list svg {
+  flex-shrink: 0;
+  width: 1rem;
+  height: 1rem;
+  margin-top: 0.25em;
+  color: var(--color-green-text);
+}
+
+.other-service--visa .other-service__list svg {
+  color: var(--color-teal);
+}
+
+.other-service__link {
+  align-self: flex-start;
+  margin-top: auto;
+  color: var(--color-green-text);
+}
+
+.other-service--visa .other-service__link {
+  color: var(--color-teal);
+}

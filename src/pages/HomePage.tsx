@@ -1,13 +1,29 @@
 import { usePageMeta } from '../hooks/usePageMeta';
-import { Section } from '../components/Section';
+import { HomeContact } from './home/HomeContact';
+import { HomeDestinations } from './home/HomeDestinations';
+import { HomeHero } from './home/HomeHero';
+import { HomeOtherServices } from './home/HomeOtherServices';
+import { HomeServices } from './home/HomeServices';
+import { HomeSteps } from './home/HomeSteps';
+import { HomeVisa } from './home/HomeVisa';
+import { HomeWhy } from './home/HomeWhy';
+import './HomePage.css';
 
 export default function HomePage() {
   usePageMeta({
-    description: 'UDAN Immigration & Tours in Bodakdev, Ahmedabad: international and domestic tours, visa and passport guidance, tickets, hotels, travel insurance and currency exchange.',
+    description:
+      'UDAN Immigration & Tours in Vastrapur, Ahmedabad: international and domestic tours, visa and passport guidance, flight and train tickets, hotels, travel insurance, currency exchange and corporate travel.',
   });
   return (
-    <Section>
-      <h1>Your Journey Begins with UDAN.</h1>
-    </Section>
+    <>
+      <HomeHero />
+      <HomeServices />
+      <HomeDestinations />
+      <HomeVisa />
+      <HomeOtherServices />
+      <HomeWhy />
+      <HomeSteps />
+      <HomeContact />
+    </>
   );
 }

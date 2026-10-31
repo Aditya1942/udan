@@ -1,0 +1,268 @@
+/* Destination galleries: 1 col -> 2 col (tablet) -> 3 col (desktop); first card featured */
+.tours-gallery {
+  display: grid;
+  gap: var(--space-5);
+  grid-template-columns: 1fr;
+}
+
+.tours-gallery__item {
+  min-width: 0;
+}
+
+@media (min-width: 40em) {
+  .tours-gallery {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .tours-gallery__item--featured {
+    grid-column: span 2;
+  }
+
+  .tours-gallery__item--featured .destination-card__media {
+    aspect-ratio: 16 / 9;
+  }
+}
+
+@media (min-width: 64em) {
+  .tours-gallery {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  /* featured photo fills whatever height the row gives it (set by the neighbouring card) */
+  .tours-gallery__item--featured .destination-card__media {
+    aspect-ratio: auto;
+    flex: 1;
+    min-height: 16rem;
+  }
+
+  .tours-gallery__item--featured .destination-card__media img {
+    position: absolute;
+    inset: 0;
+  }
+
+  .tours-gallery--even .tours-gallery__item--featured {
+    grid-column: auto;
+  }
+
+  .tours-gallery--even .tours-gallery__item--featured .destination-card__media {
+    flex: none;
+    aspect-ratio: 4 / 3;
+    min-height: 0;
+  }
+
+  .tours-gallery__item .destination-card__name {
+    font-size: var(--fs-xl);
+  }
+}
+
+.tours-note {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  max-width: 44rem;
+  margin-top: var(--space-7);
+  color: var(--color-text-muted);
+  font-size: var(--fs-sm);
+}
+
+.tours-note svg {
+  flex-shrink: 0;
+  width: 1.25rem;
+  height: 1.25rem;
+  margin-top: 0.15em;
+  color: var(--color-green-text);
+}
+
+/* Plan a trip: photo + content */
+.tours-plan__layout {
+  display: grid;
+  gap: var(--space-7);
+}
+
+.tours-plan__media {
+  overflow: hidden;
+  border-radius: var(--radius);
+  aspect-ratio: 4 / 3;
+  background: var(--color-surface-2);
+}
+
+.tours-plan__media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+@media (min-width: 64em) {
+  .tours-plan__layout {
+    grid-template-columns: 5fr 7fr;
+    gap: var(--space-9);
+    align-items: start;
+  }
+
+  .tours-plan__media {
+    position: sticky;
+    top: calc(var(--header-height) + var(--space-6));
+    aspect-ratio: 3 / 4;
+  }
+}
+
+.tours-plan__content .section-heading {
+  margin-bottom: var(--space-6);
+}
+
+.tours-plan__services {
+  display: grid;
+  gap: var(--space-5);
+  margin-bottom: var(--space-7);
+}
+
+@media (min-width: 40em) {
+  .tours-plan__services {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: var(--space-6);
+  }
+}
+
+.tours-plan__service {
+  display: flex;
+  gap: var(--space-4);
+  align-items: flex-start;
+}
+
+.tours-plan__service-icon {
+  display: inline-grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 50%;
+  background: var(--color-white);
+  color: var(--color-green-text);
+  box-shadow: var(--shadow-sm);
+}
+
+.tours-plan__service-icon svg {
+  width: 1.35rem;
+  height: 1.35rem;
+}
+
+.tours-plan__service-title {
+  font-size: var(--fs-base);
+  margin-bottom: var(--space-1);
+}
+
+.tours-plan__service-text {
+  font-size: var(--fs-sm);
+  color: var(--color-text-muted);
+}
+
+.tours-plan__details {
+  margin-bottom: var(--space-6);
+  padding: var(--space-5);
+  background: var(--color-white);
+  border-radius: var(--radius);
+  border-left: 4px solid var(--color-green);
+}
+
+.tours-plan__details-title {
+  font-size: var(--fs-base);
+  margin-bottom: var(--space-3);
+}
+
+.tours-plan__checklist {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.tours-plan__checklist li,
+.tours-plan__details-foot {
+  display: flex;
+  gap: var(--space-3);
+  align-items: flex-start;
+  font-size: var(--fs-sm);
+}
+
+.tours-plan__checklist svg,
+.tours-plan__details-foot svg {
+  flex-shrink: 0;
+  width: 1.1rem;
+  height: 1.1rem;
+  margin-top: 0.2em;
+  color: var(--color-green-text);
+}
+
+.tours-plan__details-foot {
+  margin-top: var(--space-3);
+  color: var(--color-text-muted);
+}
+
+/* Visa cross-link band */
+.tours-visa.section {
+  padding-block: var(--space-8);
+}
+
+.tours-visa__inner {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  padding-left: var(--space-5);
+  border-left: 4px solid var(--color-teal);
+}
+
+@media (min-width: 48em) {
+  .tours-visa__inner {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+.tours-visa__title {
+  font-size: var(--fs-xl);
+  color: var(--color-teal);
+}
+
+.tours-visa__text {
+  margin-top: var(--space-2);
+  color: var(--color-text-muted);
+}
+
+/* Tour highlights (from the company profile) */
+.tours-plan__highlights {
+  margin-bottom: var(--space-7);
+}
+
+.tours-plan__highlights-title,
+.tours-plan__services-title {
+  margin-bottom: var(--space-4);
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-bold);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-green-text);
+}
+
+.tours-plan__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.tours-plan__chips li {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  background: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
+}
+
+.tours-plan__chips svg {
+  flex-shrink: 0;
+  width: 1rem;
+  height: 1rem;
+  color: var(--color-green-text);
+}
