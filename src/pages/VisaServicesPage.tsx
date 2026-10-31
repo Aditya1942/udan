@@ -1,4 +1,4 @@
-import { ArrowRight, Info, Phone } from 'lucide-react';
+import { Info, Phone } from 'lucide-react';
 import { Link } from 'react-router';
 import { ContactActions } from '../components/ContactActions';
 import { PageHero } from '../components/PageHero';
@@ -34,13 +34,11 @@ export default function VisaServicesPage() {
     <>
       <PageHero
         tone="visa"
-        eyebrow="Visa & passport guidance"
         title="Visa Services"
-        intro="Clear, practical guidance with visa and passport applications, so you know what's involved and can prepare with confidence."
+        intro="Clear, practical guidance with visa and passport applications, so you know what’s involved and can prepare with confidence."
       >
         <Link to={getEnquireHref({ service: 'visa-services' })} className="btn btn--primary">
           Enquire about a visa
-          <ArrowRight aria-hidden="true" />
         </Link>
         <a href={getCallHref()} className="btn btn--outline">
           <Phone aria-hidden="true" />
@@ -51,9 +49,8 @@ export default function VisaServicesPage() {
       <Section labelledBy="visa-services-heading" className="visa-main">
         <SectionHeading
           id="visa-services-heading"
-          eyebrow="How we can help"
-          title="Guidance for your next step abroad"
-          intro="Choose the service that fits your plans. If you're not sure which one you need, get in touch and we'll point you in the right direction."
+          title="How we can help"
+          intro="Choose the service that fits your plans. If you’re not sure which one you need, get in touch and we’ll point you in the right direction."
         />
 
         <VisaDisclaimer className="visa-main__disclaimer" />
@@ -91,7 +88,6 @@ export default function VisaServicesPage() {
                     <Link to={getEnquireHref({ service: id })} className="btn btn--outline btn--sm visa-block__action">
                       Enquire
                       <span className="visually-hidden"> about {label}</span>
-                      <ArrowRight aria-hidden="true" />
                     </Link>
                   </div>
                 </article>
@@ -107,7 +103,7 @@ export default function VisaServicesPage() {
             <h2 id="visa-contact-heading">Talk to {business.contactPerson} about your application</h2>
             <p>
               Call or WhatsApp to discuss your plans, or visit the office in {business.address.locality},{' '}
-              {business.address.city}. We'll explain what's involved and how we can help.
+              {business.address.city}. We’ll explain what’s involved and how we can help.
             </p>
           </div>
           <ContactActions onDark whatsappText={buildEnquiryMessage({ service: 'visa-services' })} />
@@ -126,7 +122,6 @@ export default function VisaServicesPage() {
           </div>
           <Link to={routes.tours} className="link-arrow visa-tours__link">
             Explore Tours &amp; Packages
-            <ArrowRight aria-hidden="true" />
           </Link>
         </div>
       </Section>

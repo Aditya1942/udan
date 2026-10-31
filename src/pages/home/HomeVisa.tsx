@@ -1,4 +1,4 @@
-import { ArrowRight, Info } from 'lucide-react';
+import { Info } from 'lucide-react';
 import { Link } from 'react-router';
 import { Section, SectionHeading } from '../../components/Section';
 import { getService, profile, type ServiceId } from '../../content/business';
@@ -14,8 +14,7 @@ export function HomeVisa() {
         <div className="home-visa__intro">
           <SectionHeading
             id="home-visa-title"
-            eyebrow="Visa & passport"
-            title="Guidance for Your Next Step Abroad"
+            title="Guidance for your next step abroad"
             intro="Applications can feel daunting. We help you understand what's needed, get your documents in order and submit with confidence."
           />
           <p className="home-visa__note">
@@ -25,8 +24,7 @@ export function HomeVisa() {
             </span>
           </p>
           <Link to={routes.visa} className="btn btn--primary">
-            Explore Visa Services
-            <ArrowRight aria-hidden="true" />
+            Explore visa services
           </Link>
         </div>
 
@@ -35,15 +33,14 @@ export function HomeVisa() {
             const { label, description, icon: Icon } = getService(id);
             return (
               <li key={id} className="home-visa__item">
-                <span className="home-visa__icon" aria-hidden="true">
-                  <Icon strokeWidth={1.75} />
-                </span>
                 <div className="home-visa__body">
-                  <h3 className="home-visa__title">{label}</h3>
+                  <h3 className="home-visa__title">
+                    <Icon className="home-visa__icon" aria-hidden="true" strokeWidth={1.75} />
+                    {label}
+                  </h3>
                   <p className="home-visa__text">{description}</p>
                   <Link to={getEnquireHref({ service: id })} className="link-arrow">
                     Enquire<span className="visually-hidden"> about {label}</span>
-                    <ArrowRight aria-hidden="true" />
                   </Link>
                 </div>
               </li>

@@ -23,8 +23,7 @@ export default function ContactPage() {
     <>
       <PageHero
         tone="neutral"
-        eyebrow="Contact"
-        title="Contact Us"
+        title="Contact us"
         intro={`Planning a trip or preparing an application? Call or WhatsApp ${business.contactPerson}, or visit the office in ${address.locality}, ${address.city}.`}
       >
         <ContactActions actions={['call', 'whatsapp']} />

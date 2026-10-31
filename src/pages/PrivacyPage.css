@@ -1,15 +1,14 @@
 .privacy.section {
-  padding-top: var(--space-8);
+  padding-top: var(--space-2xl);
 }
 
 .privacy__updated {
-  display: inline-block;
-  margin-bottom: var(--space-7);
-  padding: var(--space-2) var(--space-4);
-  background: var(--color-surface-2);
-  border-radius: var(--radius);
-  font-size: var(--fs-sm);
-  color: var(--color-text-muted);
+  margin-bottom: var(--space-xl);
+  padding-bottom: var(--space-md);
+  max-width: 40rem;
+  border-bottom: var(--rule-hair) solid var(--color-rule);
+  font-size: var(--text-sm);
+  color: var(--color-muted);
 }
 
 .privacy__updated time {
@@ -19,28 +18,31 @@
 
 .privacy__body {
   display: grid;
-  gap: var(--space-7);
+  gap: var(--space-xl);
   max-width: 40rem;
+  line-height: 1.7;
 }
 
 .privacy__body section {
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
+  gap: var(--space-sm);
 }
 
+/* Prose sub-heads: item-title size, so eight of them don't shout */
 .privacy__body h2 {
-  font-size: var(--fs-xl);
+  font-size: var(--text-title);
+  text-wrap: balance;
 }
 
 .privacy__body ul {
   display: grid;
-  gap: var(--space-1);
-  padding-left: var(--space-5);
+  gap: var(--space-2xs);
+  padding-left: var(--space-lg);
 }
 
 .privacy__body li::marker {
-  color: var(--color-green);
+  color: var(--color-muted);
 }
 
 .privacy__body a {

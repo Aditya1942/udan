@@ -1,7 +1,8 @@
+/* Hallmark · genre: editorial · theme: brand · redesign: restyle · posture: full-palette · nav: kept · footer: kept · hero: kept · system in src/styles/hallmark/tokens.css */
 .contact-actions {
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
+  gap: var(--space-sm);
 }
 
 @media (min-width: 40em) {

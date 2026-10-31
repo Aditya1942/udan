@@ -1,56 +1,53 @@
 .contact-main__layout {
   display: grid;
-  gap: var(--space-8);
+  gap: var(--space-2xl);
 }
 
 @media (min-width: 64em) {
   .contact-main__layout {
     grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
-    gap: var(--space-9);
+    gap: var(--space-2xl);
     align-items: start;
   }
 }
 
 .contact-details__title {
-  margin-bottom: var(--space-6);
-  font-size: var(--fs-xl);
+  margin-bottom: var(--space-lg);
+  font-size: var(--text-section);
+  text-wrap: balance;
 }
 
 .contact-details__list {
   display: grid;
-  border-top: 1px solid var(--color-border);
+  border-top: var(--rule-hair) solid var(--color-rule);
 }
 
 .contact-details__item {
   display: flex;
-  gap: var(--space-4);
+  gap: var(--space-sm);
   align-items: flex-start;
-  padding-block: var(--space-5);
-  border-bottom: 1px solid var(--color-border);
+  padding-block: var(--space-lg);
+  border-bottom: var(--rule-hair) solid var(--color-rule);
 }
 
+/* Icon at text size, in the label's colour, on the label's line */
 .contact-details__icon {
-  display: inline-grid;
+  display: inline-flex;
   flex-shrink: 0;
-  place-items: center;
-  width: 2.75rem;
-  height: 2.75rem;
-  border-radius: 50%;
-  background: var(--color-surface-2);
-  color: var(--color-teal);
+  padding-top: 0.15em;
+  font-size: var(--text-md);
+  color: var(--color-field);
 }
 
 .contact-details__icon svg {
-  width: 1.35rem;
-  height: 1.35rem;
+  width: 1.125em;
+  height: 1.125em;
 }
 
 .contact-details__label {
-  font-size: var(--fs-xs);
-  font-weight: var(--fw-bold);
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+  font-weight: var(--fw-semibold);
+  color: var(--color-muted);
 }
 
 .contact-details__value {
@@ -63,17 +60,22 @@
   display: inline-flex;
   align-items: center;
   min-height: var(--tap);
-  color: var(--color-teal);
+  color: var(--color-field);
   white-space: nowrap;
+  transition: color var(--dur-short) var(--ease-out);
+}
+
+.contact-details__link:hover {
+  color: var(--color-field-hover);
 }
 
 .contact-details__address {
+  margin-top: var(--space-2xs);
   font-style: normal;
   font-weight: var(--fw-regular);
   line-height: var(--lh-body);
 }
 
 .contact-details__directions {
-  margin-top: var(--space-4);
+  margin-top: var(--space-md);
 }
-

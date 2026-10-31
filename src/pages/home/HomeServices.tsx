@@ -43,9 +43,8 @@ export function HomeServices() {
     <Section labelledBy="home-services-title" className="home-services">
       <SectionHeading
         id="home-services-title"
-        eyebrow="What we do"
-        title="Everything You Need for Your Next Journey"
-        intro="From the holiday itself to the tickets, stays and paperwork around it, UDAN brings it together under one roof."
+        title="Everything you need for your next journey"
+        intro="The holiday itself, and the tickets, stays and paperwork around it."
       />
       <ul role="list" className="home-services__focus" aria-label="Our focus areas">
         {business.focusAreas.map((area) => (

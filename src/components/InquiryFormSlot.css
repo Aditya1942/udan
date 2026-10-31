@@ -1,55 +1,37 @@
 .inquiry-slot {
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
-  padding: var(--space-6) var(--space-5);
-  background: var(--color-white);
-  border: 1px solid var(--color-border);
-  border-top: 4px solid var(--color-green);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow-lg);
+  gap: var(--space-md);
+  padding: var(--space-xl) var(--space-lg);
+  background: var(--color-paper);
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-card);
 }
 
 @media (min-width: 40em) {
   .inquiry-slot {
-    padding: var(--space-7);
+    padding: var(--space-xl);
   }
 }
 
-.inquiry-slot__icon {
-  display: inline-grid;
-  place-items: center;
-  width: 3rem;
-  height: 3rem;
-  border-radius: 50%;
-  background: var(--color-travel-tint);
-  color: var(--color-green-text);
-}
-
-.inquiry-slot__icon svg {
-  width: 1.5rem;
-  height: 1.5rem;
-}
-
 .inquiry-slot__title {
-  font-size: var(--fs-xl);
+  font-size: var(--text-title);
 }
 
 .inquiry-slot__context {
-  padding: var(--space-3) var(--space-4);
-  background: var(--color-visa-tint);
-  border-radius: var(--radius);
+  padding-block: var(--space-sm);
+  border-block: 1px solid var(--color-rule);
   font-weight: var(--fw-semibold);
-  color: var(--color-teal);
+  color: var(--color-ink);
 }
 
 .inquiry-slot__context-label {
   font-weight: var(--fw-regular);
-  color: var(--color-text-muted);
+  color: var(--color-muted);
 }
 
 .inquiry-slot__text {
-  color: var(--color-text-muted);
+  color: var(--color-ink-2);
 }
 
 .inquiry-slot__phone {

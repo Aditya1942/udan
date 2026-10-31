@@ -219,7 +219,7 @@ export const profile = {
   about: [
     'UDAN Immigration & Tours is an Ahmedabad-based travel and immigration service provider offering domestic and international travel solutions. We assist individuals, families, business travellers and corporate clients with their travel requirements.',
     'Our services include domestic and international flight bookings, rail bookings, hotel reservations, travel insurance, currency exchange, customised tour packages, visa assistance and corporate travel management.',
-    "We focus on understanding our customers' needs and providing suitable travel solutions through personalised service, transparent communication and professional coordination.",
+    "We focus on understanding our customers’ needs and providing suitable travel solutions through personalised service, transparent communication and professional coordination.",
   ],
   mission:
     'To become a trusted name in the travel and tourism industry by providing convenient, reliable and customer-focused travel solutions.',

@@ -1,4 +1,4 @@
-import { ArrowRight, Check } from 'lucide-react';
+import { Check } from 'lucide-react';
 import { Link } from 'react-router';
 import { ContactActions } from '../components/ContactActions';
 import { PageHero } from '../components/PageHero';
@@ -11,7 +11,6 @@ import './OtherServicesPage.css';
 
 type Category = {
   key: string;
-  eyebrow: string;
   title: string;
   intro: string;
   services: readonly ServiceId[];
@@ -22,7 +21,6 @@ type Category = {
 const CATEGORIES: readonly Category[] = [
   {
     key: 'bookings',
-    eyebrow: 'Bookings',
     title: 'Stays and tickets',
     intro: 'Hotels, flights and trains arranged for you, for trips within India and abroad.',
     services: ['hotel-booking', 'flight-train-tickets'],
@@ -31,7 +29,6 @@ const CATEGORIES: readonly Category[] = [
   },
   {
     key: 'before-you-travel',
-    eyebrow: 'Before you travel',
     title: 'Cover and currency',
     intro: 'Sort out insurance and foreign currency before you set off.',
     services: ['travel-insurance', 'currency-exchange'],
@@ -40,7 +37,6 @@ const CATEGORIES: readonly Category[] = [
   },
   {
     key: 'corporate',
-    eyebrow: 'For businesses',
     title: 'Corporate travel',
     intro: 'Travel arrangements for companies, from individual trips to group travel.',
     services: ['corporate-travel'],
@@ -49,7 +45,6 @@ const CATEGORIES: readonly Category[] = [
   },
   {
     key: 'documents',
-    eyebrow: 'Documents',
     title: 'Passport services',
     intro: 'Passport help sits with our visa guidance, as the two often go together.',
     services: ['passport-services'],
@@ -69,13 +64,11 @@ export default function OtherServicesPage() {
     <>
       <PageHero
         tone="travel"
-        eyebrow="Other Services"
         title="The rest of your trip, sorted"
         intro="Beyond tours and visas, UDAN can help with the practical pieces of travel: hotels, tickets, insurance, currency, passports and corporate travel."
       >
         <Link to={getEnquireHref({ service: 'other' })} className="btn btn--primary">
           Send an enquiry
-          <ArrowRight aria-hidden="true" />
         </Link>
       </PageHero>
 
@@ -92,7 +85,6 @@ export default function OtherServicesPage() {
             <div className="other-category__layout">
               <SectionHeading
                 id={headingId}
-                eyebrow={category.eyebrow}
                 title={category.title}
                 intro={category.intro}
                 className="other-category__heading"
@@ -131,7 +123,6 @@ export default function OtherServicesPage() {
                           <Link to={getEnquireHref({ service: id })} className="link-arrow other-service__link">
                             Enquire
                             <span className="visually-hidden"> about {label}</span>
-                            <ArrowRight aria-hidden="true" />
                           </Link>
                         </article>
                       </li>
@@ -154,7 +145,7 @@ export default function OtherServicesPage() {
         <div className="other-help">
           <div className="other-help__text">
             <h2 id="other-help-heading">Not sure which service you need?</h2>
-            <p>Tell us about your plans and we'll guide you to the right help.</p>
+            <p>Tell us about your plans and we’ll guide you to the right help.</p>
           </div>
           <ContactActions onDark actions={['call', 'whatsapp']} />
         </div>

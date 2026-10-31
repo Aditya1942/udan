@@ -1,51 +1,43 @@
 /*
- * UDAN design tokens. Use these custom properties everywhere; never hard-code colours.
- * Contrast notes (WCAG AA, measured):
- *   white on --color-green (#57931E)      3.75  -> NOT for text; use --color-action
- *   white on --color-action (#4A7F19)     4.84  OK (buttons)
- *   white on --color-teal (#165D79)       7.30  OK
- *   --color-text-muted on all light bgs   >= 4.59 OK
- *   --color-sky / --color-lime            decorative accents only, never body text on light bgs
+ * UDAN design tokens (Hallmark restyle). Role values live in ./hallmark/tokens.css;
+ * the legacy names below alias those roles so every component keeps reading the same names.
+ * Contrast (WCAG AA): paper on --color-action 4.8; paper on --color-teal 7.2; --color-text-muted on paper/paper-2 >= 4.8.
+ * --color-sky / --color-lime: on-field accents and icons only, never body text on paper.
  */
 :root {
   /* Brand (visiting card) */
-  --color-green: #57931e;        /* UDAN Green: brand fills, icons, accents */
-  --color-lime: #7fb61c;         /* Lime Green: sparing accent */
-  --color-sky: #29a9ca;          /* Sky Blue: sparing accent (visa area) */
-  --color-teal: #165d79;         /* Deep Teal: hierarchy, nav, footer, secondary buttons */
+  --color-green: var(--color-seal-lime);
+  --color-lime: var(--color-seal-lime);
+  --color-sky: var(--color-seal-sky);
+  --color-teal: var(--color-field);
 
-  /* Derived action / state shades */
-  --color-action: #4a7f19;       /* primary button bg (AA with white) */
-  --color-action-hover: #3f6e15;
-  --color-teal-hover: #0f4a61;
-  --color-teal-deep: #0f4a61;    /* darker teal surface */
-  --color-green-text: #4a7f19;   /* green text on light surfaces */
-  --color-teal-text-soft: #d7e6ec; /* body text on teal surfaces */
-  --color-sky-on-teal: #9fd9ea;  /* sky accent text on teal surfaces (AA) */
-  --color-lime-on-teal: #c9f07a; /* lime accent text on teal surfaces (AA) */
+  /* Action / state */
+  --color-action: var(--color-accent);
+  --color-action-hover: var(--color-accent-hover);
+  --color-teal-hover: var(--color-field-hover);
+  --color-teal-deep: var(--color-field-deep);
+  --color-green-text: var(--color-accent-text);
+  --color-teal-text-soft: var(--color-on-field-soft);
+  --color-sky-on-teal: var(--color-sky-on-field);
+  --color-lime-on-teal: var(--color-lime-on-field);
 
-  /* Neutrals */
-  --color-white: #ffffff;
-  --color-surface: #f7f8f5;      /* page alt background */
-  --color-surface-2: #f0f3ee;    /* soft cards / bands */
-  --color-ink: #253238;          /* body text */
-  --color-slate: #68757a;        /* icons, borders, large text only on tinted bgs */
-  --color-text-muted: #5b686d;   /* secondary text (AA on all light surfaces) */
-  --color-border: #e1e7e2;
+  /* Neutrals (tinted toward the brand green; no pure white) */
+  --color-white: var(--color-on-field);
+  --color-surface: var(--color-paper-2);
+  --color-surface-2: var(--color-paper-3);
+  --color-slate: var(--color-muted);
+  --color-text-muted: var(--color-muted);
+  --color-border: var(--color-rule);
 
   /* Area tints */
-  --color-travel-tint: #eff6e7;  /* faint green for travel areas */
-  --color-visa-tint: #eaf4f7;    /* faint sky/teal for visa areas */
+  --color-travel-tint: var(--color-paper-2);
+  --color-visa-tint: var(--color-paper-visa);
 
-  /* Focus ring (>= 3:1 against the surface it sits on).
-   * Teal on light surfaces (7.3:1 on white); white on teal/dark surfaces (7.3:1 on teal).
-   * Dark containers switch the ring by setting --focus-ring: var(--focus-ring-on-dark). */
-  --focus-ring: var(--color-teal);
-  --focus-ring-on-dark: var(--color-white);
+  --focus-ring: var(--color-focus);
+  --focus-ring-on-dark: var(--color-focus-on-field);
 
   /* Typography */
-  --font-heading: 'Manrope Variable', 'Manrope', system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --font-body: 'Inter Variable', 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-heading: var(--font-display);
 
   --fs-xs: 0.8125rem;   /* 13 */
   --fs-sm: 0.9375rem;   /* 15 */
@@ -61,10 +53,10 @@
   --lh-body: 1.65;
 
   --fw-regular: 400;
-  --fw-medium: 500;
+  --fw-medium: 400;
   --fw-semibold: 600;
   --fw-bold: 700;
-  --fw-extrabold: 800;
+  --fw-extrabold: 700;
 
   /* Spacing scale (4px base) */
   --space-1: 0.25rem;
@@ -80,13 +72,14 @@
   --space-section: clamp(3.5rem, 2.5rem + 4vw, 6rem);
 
   /* The one radius */
-  --radius: 10px;
+  --radius: var(--radius-card);
   --radius-pill: 999px; /* badges only */
 
   /* Shadows */
-  --shadow-sm: 0 1px 2px rgb(37 50 56 / 0.06), 0 1px 3px rgb(37 50 56 / 0.06);
-  --shadow-md: 0 4px 12px rgb(37 50 56 / 0.08), 0 2px 4px rgb(37 50 56 / 0.04);
-  --shadow-lg: 0 16px 40px rgb(22 93 121 / 0.14);
+  /* One shadow at most; cards use a hairline instead */
+  --shadow-sm: none;
+  --shadow-md: none;
+  --shadow-lg: 0 1px 2px oklch(20% 0.01 225 / 0.06);
 
   /* Layout */
   --container: 72rem;      /* 1152px */
@@ -96,5 +89,5 @@
   --mobile-bar-height: 4rem;
   --tap: 2.75rem;          /* 44px minimum touch target */
 
-  --transition: 160ms ease;
+  --transition: var(--dur-short) var(--ease-out);
 }

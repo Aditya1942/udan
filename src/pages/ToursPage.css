@@ -1,3 +1,4 @@
+/* Hallmark · restyle · page: ToursPage · reads DESIGN.md and src/styles/hallmark/tokens.css */
 /* Destination galleries: 1 col -> 2 col (tablet) -> 3 col (desktop); first card featured */
 .tours-gallery {
   display: grid;
@@ -51,7 +52,7 @@
   }
 
   .tours-gallery__item .destination-card__name {
-    font-size: var(--fs-xl);
+    font-size: var(--text-title);
   }
 }
 
@@ -62,15 +63,15 @@
   max-width: 44rem;
   margin-top: var(--space-7);
   color: var(--color-text-muted);
-  font-size: var(--fs-sm);
+  font-size: var(--text-sm);
 }
 
 .tours-note svg {
   flex-shrink: 0;
-  width: 1.25rem;
-  height: 1.25rem;
-  margin-top: 0.15em;
-  color: var(--color-green-text);
+  width: 1em;
+  height: 1em;
+  margin-top: 0.3em;
+  color: currentColor;
 }
 
 /* Plan a trip: photo + content */
@@ -110,103 +111,140 @@
   margin-bottom: var(--space-6);
 }
 
+/* Sub-heads inside the plan column: item-title scale, display face */
+.tours-plan__highlights-title,
+.tours-plan__services-title,
+.tours-plan__details-title {
+  margin-bottom: var(--space-md);
+  font-size: var(--text-title);
+}
+
+/* Tour highlights (from the company profile): a plain checked list, two columns from tablet */
+.tours-plan__highlights {
+  margin-bottom: var(--space-xl);
+}
+
+.tours-plan__chips {
+  display: grid;
+  gap: var(--space-xs) var(--space-lg);
+}
+
+@media (min-width: 40em) {
+  .tours-plan__chips {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.tours-plan__chips li {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-xs);
+  min-width: 0;
+  color: var(--color-ink-2);
+}
+
+.tours-plan__chips svg {
+  flex-shrink: 0;
+  width: 1em;
+  height: 1em;
+  margin-top: 0.3em;
+  color: var(--color-accent-text);
+}
+
+/* Services arranged alongside: icon at text size, no coin */
 .tours-plan__services {
   display: grid;
-  gap: var(--space-5);
-  margin-bottom: var(--space-7);
+  gap: var(--space-lg);
+  margin-bottom: var(--space-xl);
 }
 
 @media (min-width: 40em) {
   .tours-plan__services {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    column-gap: var(--space-6);
+    column-gap: var(--space-xl);
   }
 }
 
 .tours-plan__service {
   display: flex;
-  gap: var(--space-4);
+  gap: var(--space-sm);
   align-items: flex-start;
+  min-width: 0;
 }
 
 .tours-plan__service-icon {
-  display: inline-grid;
+  display: inline-flex;
   flex-shrink: 0;
-  place-items: center;
-  width: 2.75rem;
-  height: 2.75rem;
-  border-radius: 50%;
-  background: var(--color-white);
-  color: var(--color-green-text);
-  box-shadow: var(--shadow-sm);
+  margin-top: 0.15em;
+  color: var(--color-field);
 }
 
 .tours-plan__service-icon svg {
-  width: 1.35rem;
-  height: 1.35rem;
+  width: 1.25rem;
+  height: 1.25rem;
 }
 
 .tours-plan__service-title {
-  font-size: var(--fs-base);
-  margin-bottom: var(--space-1);
+  margin-bottom: var(--space-2xs);
+  font-family: var(--font-body);
+  font-size: var(--text-md);
+  font-weight: var(--fw-bold);
+  letter-spacing: 0;
+  line-height: var(--lh-snug);
 }
 
 .tours-plan__service-text {
-  font-size: var(--fs-sm);
+  font-size: var(--text-sm);
   color: var(--color-text-muted);
 }
 
+/* What to share: whitespace and a hairline above, no box */
 .tours-plan__details {
-  margin-bottom: var(--space-6);
-  padding: var(--space-5);
-  background: var(--color-white);
-  border-radius: var(--radius);
-  border-left: 4px solid var(--color-green);
-}
-
-.tours-plan__details-title {
-  font-size: var(--fs-base);
-  margin-bottom: var(--space-3);
+  margin-bottom: var(--space-xl);
+  padding-top: var(--space-lg);
+  border-top: var(--rule-hair) solid var(--color-rule);
 }
 
 .tours-plan__checklist {
   display: grid;
-  gap: var(--space-2);
+  gap: var(--space-xs);
 }
 
 .tours-plan__checklist li,
 .tours-plan__details-foot {
   display: flex;
-  gap: var(--space-3);
+  gap: var(--space-sm);
   align-items: flex-start;
-  font-size: var(--fs-sm);
 }
 
 .tours-plan__checklist svg,
 .tours-plan__details-foot svg {
   flex-shrink: 0;
-  width: 1.1rem;
-  height: 1.1rem;
-  margin-top: 0.2em;
-  color: var(--color-green-text);
+  width: 1em;
+  height: 1em;
+  margin-top: 0.3em;
+  color: var(--color-field);
 }
 
 .tours-plan__details-foot {
-  margin-top: var(--space-3);
+  margin-top: var(--space-md);
+  font-size: var(--text-sm);
   color: var(--color-text-muted);
 }
 
-/* Visa cross-link band */
+.tours-plan__details-foot svg {
+  color: currentColor;
+}
+
+/* Visa cross-link band: the change of paper is the break */
 .tours-visa.section {
-  padding-block: var(--space-8);
+  padding-block: var(--space-2xl);
 }
 
 .tours-visa__inner {
   display: flex;
   flex-direction: column;
-  gap: var(--space-5);
-  padding-left: var(--space-5);
-  border-left: 4px solid var(--color-teal);
+  gap: var(--space-lg);
 }
 
 @media (min-width: 48em) {
@@ -214,55 +252,20 @@
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
+    gap: var(--space-2xl);
   }
 }
 
 .tours-visa__title {
-  font-size: var(--fs-xl);
-  color: var(--color-teal);
+  max-width: 24ch;
+  font-size: var(--text-section);
 }
 
 .tours-visa__text {
-  margin-top: var(--space-2);
+  margin-top: var(--space-sm);
   color: var(--color-text-muted);
 }
 
-/* Tour highlights (from the company profile) */
-.tours-plan__highlights {
-  margin-bottom: var(--space-7);
-}
-
-.tours-plan__highlights-title,
-.tours-plan__services-title {
-  margin-bottom: var(--space-4);
-  font-size: var(--fs-xs);
-  font-weight: var(--fw-bold);
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--color-green-text);
-}
-
-.tours-plan__chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-}
-
-.tours-plan__chips li {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  padding: var(--space-2) var(--space-4);
-  background: var(--color-white);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius);
-  font-size: var(--fs-sm);
-  font-weight: var(--fw-medium);
-}
-
-.tours-plan__chips svg {
+.tours-visa .btn {
   flex-shrink: 0;
-  width: 1rem;
-  height: 1rem;
-  color: var(--color-green-text);
 }

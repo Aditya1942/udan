@@ -14,24 +14,19 @@ export function HomeContact() {
         <div className="home-contact__details">
           <SectionHeading
             id="home-contact-title"
-            eyebrow="Contact"
-            title="Let's Plan Your Journey"
-            intro="Call, message or drop by the office. We're happy to talk through your plans."
+            title="Let’s plan your journey"
+            intro="Call, message or drop by the office. We’re happy to talk through your plans."
           />
           <ul role="list" className="home-contact__facts">
             <li className="home-contact__fact">
-              <span className="home-contact__fact-icon" aria-hidden="true">
-                <UserRound strokeWidth={1.75} />
-              </span>
+              <UserRound className="home-contact__fact-icon" aria-hidden="true" strokeWidth={1.75} />
               <div>
                 <p className="home-contact__fact-label">Contact person</p>
                 <p className="home-contact__fact-value">{business.contactPerson}</p>
               </div>
             </li>
             <li className="home-contact__fact">
-              <span className="home-contact__fact-icon" aria-hidden="true">
-                <Phone strokeWidth={1.75} />
-              </span>
+              <Phone className="home-contact__fact-icon" aria-hidden="true" strokeWidth={1.75} />
               <div>
                 <p className="home-contact__fact-label">Phone &amp; WhatsApp</p>
                 <p className="home-contact__fact-value">
@@ -40,9 +35,7 @@ export function HomeContact() {
               </div>
             </li>
             <li className="home-contact__fact">
-              <span className="home-contact__fact-icon" aria-hidden="true">
-                <MapPin strokeWidth={1.75} />
-              </span>
+              <MapPin className="home-contact__fact-icon" aria-hidden="true" strokeWidth={1.75} />
               <div>
                 <p className="home-contact__fact-label">Office</p>
                 <address className="home-contact__fact-value home-contact__address">

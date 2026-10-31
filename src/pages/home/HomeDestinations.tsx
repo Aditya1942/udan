@@ -1,4 +1,3 @@
-import { ArrowRight } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router';
 import { DestinationCard } from '../../components/DestinationCard';
@@ -27,8 +26,7 @@ export function HomeDestinations() {
       <div className="home-destinations__head">
         <SectionHeading
           id="home-destinations-title"
-          eyebrow="Tours & packages"
-          title="Discover Your Next Destination"
+          title="Discover your next destination"
           intro="A few places to spark ideas, abroad and across India. Tell us where you'd like to go and we'll help you plan it."
         />
         <div className="home-filter" role="group" aria-label="Filter destinations">
@@ -60,8 +58,7 @@ export function HomeDestinations() {
 
       <div className="home-section-cta">
         <Link to={routes.tours} className="btn btn--primary">
-          See Tours &amp; Packages
-          <ArrowRight aria-hidden="true" />
+          See tours &amp; packages
         </Link>
       </div>
     </Section>

@@ -1,4 +1,4 @@
-import { ArrowRight, Globe, MapPin } from 'lucide-react';
+import { Globe, MapPin } from 'lucide-react';
 import { Link } from 'react-router';
 import type { Destination } from '../content/business';
 import { getEnquireHref } from '../lib/contactActions';
@@ -41,7 +41,6 @@ export function DestinationCard({
           className="link-arrow destination-card__link"
         >
           Enquire Now<span className="visually-hidden"> about {name}</span>
-          <ArrowRight aria-hidden="true" />
         </Link>
       </div>
     </article>

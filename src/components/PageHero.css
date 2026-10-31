@@ -3,53 +3,45 @@
   isolation: isolate;
   overflow: hidden;
   padding-block: clamp(3rem, 2rem + 5vw, 6rem);
+  border-bottom: 1px solid var(--color-rule);
 }
 
 .page-hero--neutral {
-  background: var(--color-surface);
+  background: var(--color-paper-2);
 }
 
 .page-hero--travel {
-  background: var(--color-travel-tint);
+  background: var(--color-paper-2);
 }
 
 .page-hero--visa {
-  background: var(--color-visa-tint);
+  background: var(--color-paper-visa);
 }
 
 .page-hero__inner {
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
+  gap: var(--space-md);
 }
 
 .page-hero__inner > * {
   max-width: 42rem;
 }
 
-.page-hero__eyebrow {
-  font-family: var(--font-heading);
-  font-size: var(--fs-xs);
-  font-weight: var(--fw-bold);
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--color-green-text);
-}
-
-.page-hero--visa .page-hero__eyebrow {
-  color: var(--color-teal);
+.page-hero__title {
+  font-size: var(--text-display-s);
 }
 
 .page-hero__intro {
-  font-size: var(--fs-md);
-  color: var(--color-text-muted);
+  font-size: var(--text-lead);
+  color: var(--color-ink-2);
 }
 
 .page-hero__actions {
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
-  margin-top: var(--space-2);
+  gap: var(--space-sm);
+  margin-top: var(--space-xs);
 }
 
 @media (min-width: 40em) {
@@ -59,16 +51,18 @@
   }
 }
 
-/* Photo variant: image behind a teal gradient so white text stays AA */
+/* Photo variant: image behind a teal scrim so on-field text stays AA */
 .page-hero--photo {
   padding-block: clamp(4rem, 3rem + 7vw, 8rem);
-  color: var(--color-white);
+  border-bottom: 0;
+  color: var(--color-on-field);
 }
 
 .page-hero__media {
   position: absolute;
   inset: 0;
   z-index: -1;
+  background: var(--color-field-deep);
 }
 
 .page-hero__media img {
@@ -83,24 +77,13 @@
   inset: 0;
   background: linear-gradient(
     90deg,
-    color-mix(in srgb, var(--color-teal-deep) 92%, transparent) 0%,
-    color-mix(in srgb, var(--color-teal-deep) 78%, transparent) 50%,
-    color-mix(in srgb, var(--color-teal-deep) 45%, transparent) 100%
+    color-mix(in oklch, var(--color-field-deep) 92%, transparent) 0%,
+    color-mix(in oklch, var(--color-field-deep) 78%, transparent) 50%,
+    color-mix(in oklch, var(--color-field-deep) 45%, transparent) 100%
   );
 }
 
-.page-hero--photo .page-hero__title {
-  color: var(--color-white);
-}
-
+.page-hero--photo .page-hero__title,
 .page-hero--photo .page-hero__intro {
-  color: var(--color-white);
-}
-
-.page-hero--photo .page-hero__eyebrow {
-  color: var(--color-lime-on-teal);
-}
-
-.page-hero--photo.page-hero--visa .page-hero__eyebrow {
-  color: var(--color-sky-on-teal);
+  color: var(--color-on-field);
 }

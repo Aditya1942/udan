@@ -1,44 +1,88 @@
+/* Hallmark · genre: editorial · theme: brand · redesign: restyle · posture: full-palette · nav: kept · footer: kept · hero: kept · system in src/styles/hallmark/tokens.css */
 .mobile-bar {
   position: fixed;
   inset: auto 0 0 0;
-  z-index: 40;
+  z-index: var(--z-sticky);
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: var(--space-2);
-  padding: var(--space-2) var(--space-3) calc(var(--space-2) + env(safe-area-inset-bottom));
-  background: var(--color-white);
-  border-top: 1px solid var(--color-border);
-  box-shadow: 0 -4px 16px color-mix(in srgb, var(--color-ink) 8%, transparent);
+  gap: var(--space-xs);
+  padding: var(--space-xs) var(--space-sm) calc(var(--space-xs) + env(safe-area-inset-bottom));
+  background: var(--color-paper);
+  border-top: 1px solid var(--color-rule);
 }
 
 .mobile-bar__action {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: var(--space-2);
-  min-height: 3rem;
-  border-radius: var(--radius);
-  font-family: var(--font-heading);
-  font-weight: var(--fw-bold);
-  color: var(--color-white);
+  gap: var(--space-xs);
+  min-height: 48px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-card);
+  font-family: var(--font-body);
+  font-weight: var(--fw-semibold);
+  text-decoration: none;
+  transition:
+    background-color var(--dur-short) var(--ease-out),
+    border-color var(--dur-short) var(--ease-out),
+    color var(--dur-short) var(--ease-out),
+    transform var(--dur-micro) var(--ease-out);
+}
+
+.mobile-bar__action:hover {
   text-decoration: none;
 }
 
+.mobile-bar__action:active {
+  transform: translateY(1px);
+}
+
+.mobile-bar__action:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+  transition: none;
+}
+
 .mobile-bar__action svg {
-  width: 1.25rem;
-  height: 1.25rem;
+  width: 1.125em;
+  height: 1.125em;
 }
 
 .mobile-bar__action--call {
-  background: var(--color-action);
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: var(--color-accent-ink);
+}
+
+.mobile-bar__action--call:hover {
+  background: var(--color-accent-hover);
+  border-color: var(--color-accent-hover);
+  color: var(--color-accent-ink);
 }
 
 .mobile-bar__action--whatsapp {
-  background: var(--color-teal);
+  background: transparent;
+  border-color: var(--color-field);
+  color: var(--color-field);
+}
+
+.mobile-bar__action--whatsapp:hover {
+  background: var(--color-paper-2);
+  color: var(--color-field-hover);
 }
 
 @media (min-width: 48em) {
   .mobile-bar {
     display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mobile-bar__action {
+    transition: none;
+  }
+
+  .mobile-bar__action:active {
+    transform: none;
   }
 }

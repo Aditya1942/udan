@@ -1,3 +1,4 @@
+/* Hallmark · genre: editorial · theme: brand · redesign: restyle · posture: full-palette · nav: kept · footer: kept · hero: kept · system in src/styles/hallmark/tokens.css */
 /* Reset */
 *,
 *::before,
@@ -23,7 +24,7 @@ body {
   font-size: var(--fs-base);
   line-height: var(--lh-body);
   color: var(--color-ink);
-  background: var(--color-white);
+  background: var(--color-paper);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
@@ -64,16 +65,17 @@ h2,
 h3,
 h4 {
   font-family: var(--font-heading);
-  font-weight: var(--fw-bold);
+  font-weight: var(--display-weight);
   line-height: var(--lh-tight);
   color: var(--color-ink);
-  letter-spacing: -0.015em;
+  letter-spacing: var(--tracking-display);
   text-wrap: balance;
+  overflow-wrap: break-word;
+  min-width: 0;
 }
 
 h1 {
   font-size: var(--fs-3xl);
-  font-weight: var(--fw-extrabold);
 }
 
 h2 {
@@ -95,8 +97,17 @@ a {
   text-decoration-thickness: 1px;
 }
 
+a {
+  transition: color var(--dur-short) var(--ease-out);
+}
+
 a:hover {
+  color: var(--color-field-hover);
   text-decoration-thickness: 2px;
+}
+
+a:active {
+  color: var(--color-field-deep);
 }
 
 strong {
@@ -105,9 +116,9 @@ strong {
 
 /* Focus: visible ring on every interactive element */
 :focus-visible {
-  outline: 3px solid var(--focus-ring);
+  outline: 2px solid var(--focus-ring);
   outline-offset: 2px;
-  border-radius: var(--radius);
+  transition: none;
 }
 
 /* Dark / teal surfaces use a light focus ring */
@@ -127,10 +138,10 @@ strong {
   position: absolute;
   top: var(--space-2);
   left: var(--space-2);
-  z-index: 100;
+  z-index: var(--z-modal);
   padding: var(--space-3) var(--space-4);
-  background: var(--color-teal);
-  color: var(--color-white);
+  background: var(--color-field);
+  color: var(--color-on-field);
   font-weight: var(--fw-semibold);
   border-radius: var(--radius);
   text-decoration: none;
@@ -184,7 +195,12 @@ main:focus {
 }
 
 .section--teal a:not(.btn) {
-  color: var(--color-white);
+  color: var(--color-on-field);
+}
+
+.section--teal a:not(.btn):hover,
+.section--teal a:not(.btn):active {
+  color: var(--color-on-field-soft);
 }
 
 .visually-hidden {

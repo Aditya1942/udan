@@ -1,4 +1,4 @@
-import { ArrowRight, CalendarDays, Check, Compass, MapPin, Users, Wallet } from 'lucide-react';
+import { CalendarDays, Check, Compass, MapPin, Users, Wallet } from 'lucide-react';
 import { Link } from 'react-router';
 import { DestinationCard } from '../components/DestinationCard';
 import { PageHero } from '../components/PageHero';
@@ -77,13 +77,11 @@ export default function ToursPage() {
       <PageHero
         tone="travel"
         photo={heroPhoto}
-        eyebrow="Tours & Packages"
         title="Holidays planned around you"
-        intro="From city breaks abroad to journeys across India, tell us where you'd like to go and we'll help you plan the trip, from tickets and hotels to insurance."
+        intro="From city breaks abroad to trips across India, tell us where you’d like to go and we’ll help you plan the trip, from tickets and hotels to insurance."
       >
         <Link to={TOURS_ENQUIRY} className="btn btn--primary">
           Enquire about a trip
-          <ArrowRight aria-hidden="true" />
         </Link>
         <a href="#international" className="btn btn--light">
           Browse destinations
@@ -93,7 +91,6 @@ export default function ToursPage() {
       <Section id="international" labelledBy="tours-international-heading">
         <SectionHeading
           id="tours-international-heading"
-          eyebrow="International"
           title="Trips abroad"
           intro="A few places to spark ideas. Enquire about any of them, or anywhere else you have in mind."
         />
@@ -103,8 +100,7 @@ export default function ToursPage() {
       <Section id="domestic" tone="surface" labelledBy="tours-domestic-heading">
         <SectionHeading
           id="tours-domestic-heading"
-          eyebrow="Domestic"
-          title="Journeys across India"
+          title="Trips across India"
           intro="Mountains, backwaters and royal cities, closer to home."
         />
         <DestinationGallery items={domestic} />
@@ -127,9 +123,8 @@ export default function ToursPage() {
           <div className="tours-plan__content">
             <SectionHeading
               id="tours-plan-heading"
-              eyebrow="Plan a trip with UDAN"
-              title="Everything for your trip, in one place"
-              intro="UDAN can help arrange the different parts of your journey, so you have one point of contact instead of many."
+              title="Plan a trip with UDAN"
+              intro="UDAN can help arrange the different parts of your trip, so you have one point of contact instead of many."
             />
             {tourHighlights.length > 0 && (
               <div className="tours-plan__highlights">
@@ -155,7 +150,7 @@ export default function ToursPage() {
                       <Icon strokeWidth={1.75} />
                     </span>
                     <div>
-                      <h3 className="tours-plan__service-title">{label}</h3>
+                      <h4 className="tours-plan__service-title">{label}</h4>
                       <p className="tours-plan__service-text">{description}</p>
                     </div>
                   </li>
@@ -175,14 +170,13 @@ export default function ToursPage() {
               </ul>
               <p className="tours-plan__details-foot">
                 <Check aria-hidden="true" />
-                Not sure yet? That's fine. We can talk it through.
+                Not sure yet? That’s fine. We can talk it through.
               </p>
             </div>
 
             <div className="btn-group">
               <Link to={TOURS_ENQUIRY} className="btn btn--primary">
                 Enquire about a trip
-                <ArrowRight aria-hidden="true" />
               </Link>
               <Link to={routes.otherServices} className="btn btn--ghost">
                 See all travel services
@@ -204,7 +198,6 @@ export default function ToursPage() {
           </div>
           <Link to={routes.visa} className="btn btn--outline">
             Explore Visa Services
-            <ArrowRight aria-hidden="true" />
           </Link>
         </div>
       </Section>

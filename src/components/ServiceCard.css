@@ -2,78 +2,56 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
+  gap: var(--space-sm);
   height: 100%;
-  padding: var(--space-6) var(--space-5) var(--space-4);
-  background: var(--color-white);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow-sm);
-  transition: box-shadow var(--transition), transform var(--transition);
+  padding: var(--space-lg) var(--space-lg) var(--space-md);
+  background: var(--color-paper);
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-card);
+  transition: border-color var(--dur-short) var(--ease-out);
 }
 
 .service-card:hover {
-  box-shadow: var(--shadow-md);
-  transform: translateY(-2px);
+  border-color: var(--color-rule-strong);
+}
+
+/* Icon inline with the heading, at text size, in currentColor, no coin */
+.service-card__head {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-xs);
 }
 
 .service-card__icon {
-  display: inline-grid;
-  place-items: center;
-  width: 3rem;
-  height: 3rem;
-  border-radius: var(--radius);
+  display: inline-flex;
+  flex-shrink: 0;
+  align-self: center;
+  color: var(--color-accent-text);
 }
 
 .service-card__icon svg {
-  width: 1.5rem;
-  height: 1.5rem;
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.service-card__title {
+  font-size: var(--text-title);
 }
 
 .service-card__text {
   flex: 1;
-  color: var(--color-text-muted);
+  color: var(--color-ink-2);
 }
 
 .service-card__link {
   align-self: flex-start;
 }
 
-/* Travel: airy, green accent bar on top, round green icon */
-.service-card--travel {
-  border-top: 4px solid var(--color-green);
-}
-
-.service-card--travel .service-card__icon {
-  border-radius: 50%;
-  background: var(--color-travel-tint);
-  color: var(--color-green-text);
-}
-
-/* Visa: document-style card: teal spine on the left, faint ruled lines, folded corner */
+/* Visa: document tone, faint blue paper and field-coloured icon */
 .service-card--visa {
-  border-left: 4px solid var(--color-teal);
-  background:
-    linear-gradient(to bottom, transparent calc(100% - 1px), var(--color-visa-tint) 1px) 0 0 / 100% 1.75rem,
-    var(--color-white);
-}
-
-.service-card--visa::after {
-  content: '';
-  position: absolute;
-  top: -1px;
-  right: -1px;
-  width: 1.5rem;
-  height: 1.5rem;
-  background: linear-gradient(225deg, var(--color-visa-tint) 50%, var(--color-border) 50%);
-  border-top-right-radius: var(--radius);
+  background: var(--color-paper-visa);
 }
 
 .service-card--visa .service-card__icon {
-  background: var(--color-teal);
-  color: var(--color-sky-on-teal);
-}
-
-.service-card--visa .service-card__title {
-  color: var(--color-teal);
+  color: var(--color-field);
 }

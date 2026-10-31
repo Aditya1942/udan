@@ -1,4 +1,3 @@
-import { ArrowDown } from 'lucide-react';
 import { Section, SectionHeading } from '../../components/Section';
 import { business } from '../../content/business';
 
@@ -22,10 +21,8 @@ export function HomeSteps() {
     <Section tone="teal" labelledBy="home-steps-title" className="home-steps">
       <SectionHeading
         id="home-steps-title"
-        eyebrow="Getting started"
-        title="How to Get Started"
+        title="How to get started"
         intro="Three simple steps from first question to next steps."
-        align="center"
       />
       <ol role="list" className="home-steps__list">
         {STEPS.map(({ title, text }, index) => (
@@ -41,10 +38,9 @@ export function HomeSteps() {
           </li>
         ))}
       </ol>
-      <div className="home-section-cta home-section-cta--center">
+      <div className="home-section-cta">
         <a href="#contact" className="btn btn--primary">
-          Get in Touch
-          <ArrowDown aria-hidden="true" />
+          Get in touch
         </a>
       </div>
     </Section>

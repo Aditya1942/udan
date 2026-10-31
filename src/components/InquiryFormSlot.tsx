@@ -1,4 +1,3 @@
-import { MessageSquareText } from 'lucide-react';
 import { business, getService, type ServiceId } from '../content/business';
 import { buildEnquiryMessage, getCallHref } from '../lib/contactActions';
 import { ContactActions } from './ContactActions';
@@ -28,9 +27,6 @@ export function InquiryFormSlot({ defaultService, destination, sourcePage, id = 
 
   return (
     <div id={id} className="inquiry-slot" data-source-page={sourcePage} role="region" aria-labelledby={headingId}>
-      <span className="inquiry-slot__icon" aria-hidden="true">
-        <MessageSquareText strokeWidth={1.75} />
-      </span>
       <h2 id={headingId} className="inquiry-slot__title">
         Send us an enquiry
       </h2>

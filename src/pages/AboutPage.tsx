@@ -1,4 +1,4 @@
-import { ArrowRight, Check } from 'lucide-react';
+import { Check } from 'lucide-react';
 import { Link } from 'react-router';
 import { ContactActions } from '../components/ContactActions';
 import { PageHero } from '../components/PageHero';
@@ -21,12 +21,12 @@ export default function AboutPage() {
 
   return (
     <>
-      <PageHero tone="neutral" eyebrow="About Us" title={`About ${business.shortName}`} intro={business.slogan} />
+      <PageHero tone="neutral" title={`About ${business.shortName}`} intro={business.slogan} />
 
       <Section labelledBy="about-who-heading">
         <div className="about-who">
           <div className="about-who__text">
-            <SectionHeading id="about-who-heading" eyebrow="Who we are" title={business.promise} />
+            <SectionHeading id="about-who-heading" title="Who we are" />
             <div className="about-who__copy">
               {profile.about.map((paragraph, index) => (
                 <p key={paragraph} className={index === 0 ? 'lead' : undefined}>
@@ -55,7 +55,7 @@ export default function AboutPage() {
               </div>
               <div className="about-facts__row">
                 <dt>Focus areas</dt>
-                <dd>{business.focusAreas.join(' · ')}</dd>
+                <dd>{business.focusAreas.join(', ')}</dd>
               </div>
             </dl>
           </div>
@@ -66,7 +66,7 @@ export default function AboutPage() {
       </Section>
 
       <Section tone="surface" labelledBy="about-mission-heading">
-        <SectionHeading id="about-mission-heading" eyebrow="Mission & vision" title="What we're working towards" />
+        <SectionHeading id="about-mission-heading" title="What we’re working towards" />
         <div className="about-mv">
           <article className="about-mv__mission" aria-labelledby="about-mission-title">
             <h3 id="about-mission-title" className="about-mv__title">
@@ -93,7 +93,6 @@ export default function AboutPage() {
       <Section labelledBy="about-services-heading">
         <SectionHeading
           id="about-services-heading"
-          eyebrow="What we do"
           title="The range of services"
           intro="Two areas of work, kept clearly separate: planning travel for individuals, families and businesses, and guidance with documents."
         />
@@ -113,11 +112,9 @@ export default function AboutPage() {
             <div className="about-area__links">
               <Link to={routes.tours} className="link-arrow">
                 Tours &amp; Packages
-                <ArrowRight aria-hidden="true" />
               </Link>
               <Link to={routes.otherServices} className="link-arrow">
                 Other Services
-                <ArrowRight aria-hidden="true" />
               </Link>
             </div>
           </article>
@@ -137,7 +134,6 @@ export default function AboutPage() {
             <div className="about-area__links">
               <Link to={routes.visa} className="link-arrow">
                 Visa Services
-                <ArrowRight aria-hidden="true" />
               </Link>
             </div>
           </article>
@@ -146,7 +142,7 @@ export default function AboutPage() {
 
       <Section tone="travel" labelledBy="about-strengths-heading">
         <div className="about-strengths">
-          <SectionHeading id="about-strengths-heading" eyebrow="Our strengths" title="What we bring to every booking" />
+          <SectionHeading id="about-strengths-heading" title="What we bring to every booking" />
           <ul role="list" className="about-strengths__list">
             {profile.strengths.map((item) => (
               <li key={item}>
@@ -161,7 +157,7 @@ export default function AboutPage() {
       <Section labelledBy="about-commitment-heading">
         <div className="about-commitment">
           <div className="about-commitment__text">
-            <SectionHeading id="about-commitment-heading" eyebrow="Our commitment" title="Every journey should begin with confidence" />
+            <SectionHeading id="about-commitment-heading" title="Our commitment" />
             {profile.commitment.map((paragraph) => (
               <p key={paragraph}>{paragraph}</p>
             ))}

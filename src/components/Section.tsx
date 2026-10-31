@@ -27,6 +27,7 @@ export function Section({ children, id, tone = 'default', narrow, labelledBy, cl
 
 type SectionHeadingProps = {
   title: ReactNode;
+  /** Deprecated: kept for compatibility, no longer rendered. */
   eyebrow?: ReactNode;
   intro?: ReactNode;
   /** Heading level. Default 'h2'. */
@@ -39,7 +40,6 @@ type SectionHeadingProps = {
 
 export function SectionHeading({
   title,
-  eyebrow,
   intro,
   as: Heading = 'h2',
   align = 'start',
@@ -49,7 +49,6 @@ export function SectionHeading({
   const classes = ['section-heading', `section-heading--${align}`, className].filter(Boolean).join(' ');
   return (
     <header className={classes}>
-      {eyebrow && <p className="section-heading__eyebrow">{eyebrow}</p>}
       <Heading id={id} className="section-heading__title">
         {title}
       </Heading>

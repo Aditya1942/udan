@@ -1,4 +1,3 @@
-import { ArrowRight, Compass } from 'lucide-react';
 import { Link } from 'react-router';
 import { Section } from '../components/Section';
 import { primaryNav, routes } from '../content/navigation';
@@ -16,10 +15,9 @@ export default function NotFoundPage() {
   return (
     <Section narrow className="notfound">
       <div className="notfound__inner">
-        <span className="notfound__icon" aria-hidden="true">
-          <Compass strokeWidth={1.5} />
-        </span>
-        <p className="notfound__code">Error 404</p>
+        <p className="notfound__code">
+          <span className="visually-hidden">Error </span>404
+        </p>
         <h1 className="notfound__title">Page not found</h1>
         <p className="notfound__text">
           Looks like this page has taken a detour. It may have moved, or the link may be mistyped.
@@ -41,7 +39,6 @@ export default function NotFoundPage() {
               <li key={to}>
                 <Link to={to} className="link-arrow">
                   {label}
-                  <ArrowRight aria-hidden="true" />
                 </Link>
               </li>
             ))}

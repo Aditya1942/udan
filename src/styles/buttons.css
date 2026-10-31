@@ -1,10 +1,10 @@
 /*
  * Buttons. Use on <a> or <button>:
- *   .btn.btn--primary    UDAN Green action (one per section)
- *   .btn.btn--secondary  Deep Teal
- *   .btn.btn--outline    teal outline on light surfaces
- *   .btn.btn--ghost      text-style, subtle hover
- *   .btn.btn--light      white button for teal/photo backgrounds
+ *   .btn.btn--primary    the one filled action (UDAN green)
+ *   .btn.btn--secondary  outline in the teal field colour, on paper
+ *   .btn.btn--outline    same outline recipe as secondary, on paper
+ *   .btn.btn--ghost      quiet text button, underlined
+ *   .btn.btn--light      outline in on-field colour, for teal/photo surfaces
  *   .btn--sm             compact (still >= 44px tall)
  *   .btn--block          always full width
  * On mobile (< 640px) buttons are full width unless .btn--inline is added.
@@ -13,24 +13,26 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: var(--space-2);
-  min-height: var(--tap);
-  padding: var(--space-3) var(--space-5);
-  border: 2px solid transparent;
-  border-radius: var(--radius);
-  font-family: var(--font-heading);
-  font-size: var(--fs-base);
-  font-weight: var(--fw-bold);
+  gap: var(--space-xs);
+  min-height: 48px;
+  padding: var(--space-sm) var(--space-lg);
+  border: 1px solid transparent;
+  border-radius: var(--radius-card);
+  background: transparent;
+  font-family: var(--font-body);
+  font-size: var(--text-md);
+  font-weight: var(--fw-semibold);
+  letter-spacing: normal;
   line-height: 1.2;
   text-align: center;
   text-decoration: none;
   white-space: nowrap;
   cursor: pointer;
   transition:
-    background-color var(--transition),
-    border-color var(--transition),
-    color var(--transition),
-    box-shadow var(--transition);
+    background-color var(--dur-short) var(--ease-out),
+    border-color var(--dur-short) var(--ease-out),
+    color var(--dur-short) var(--ease-out),
+    transform var(--dur-micro) var(--ease-out);
   width: 100%;
 }
 
@@ -52,70 +54,114 @@
   text-decoration: none;
 }
 
+.btn:active {
+  transform: translateY(1px);
+}
+
+.btn:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+  transition: none;
+}
+
+.btn:disabled,
+.btn[aria-disabled='true'] {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn[aria-busy='true'] {
+  cursor: progress;
+}
+
 .btn svg {
   flex-shrink: 0;
-  width: 1.25em;
-  height: 1.25em;
+  width: 1.125em;
+  height: 1.125em;
 }
 
 .btn--sm {
-  padding: var(--space-2) var(--space-4);
-  font-size: var(--fs-sm);
+  min-height: var(--tap);
+  padding: var(--space-xs) var(--space-md);
+  font-size: var(--text-sm);
 }
 
+/* Primary: the one filled recipe */
 .btn--primary {
-  background: var(--color-action);
-  color: var(--color-white);
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: var(--color-accent-ink);
 }
 
 .btn--primary:hover {
-  background: var(--color-action-hover);
+  background: var(--color-accent-hover);
+  border-color: var(--color-accent-hover);
 }
 
-.btn--secondary {
-  background: var(--color-teal);
-  color: var(--color-white);
+.btn--primary:disabled:hover,
+.btn--primary[aria-disabled='true']:hover {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
 }
 
-.btn--secondary:hover {
-  background: var(--color-teal-hover);
-}
-
+/* Secondary / outline: 1px field-colour outline on paper */
+.btn--secondary,
 .btn--outline {
   background: transparent;
-  border-color: var(--color-teal);
-  color: var(--color-teal);
+  border-color: var(--color-field);
+  color: var(--color-field);
 }
 
+.btn--secondary:hover,
 .btn--outline:hover {
-  background: var(--color-teal);
-  color: var(--color-white);
+  background: var(--color-paper-2);
+  border-color: var(--color-field-hover);
+  color: var(--color-field-hover);
 }
 
-.btn--ghost {
+.btn--secondary:disabled:hover,
+.btn--outline:disabled:hover {
   background: transparent;
-  color: var(--color-teal);
-  padding-inline: var(--space-3);
+}
+
+/* Ghost: quiet underlined text */
+.btn--ghost {
+  padding-inline: var(--space-sm);
+  color: var(--color-field);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.25em;
 }
 
 .btn--ghost:hover {
-  background: var(--color-surface-2);
+  color: var(--color-field-hover);
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
 }
 
+/* Light: outline in on-field colour, for teal/photo surfaces */
 .btn--light {
-  background: var(--color-white);
-  color: var(--color-teal);
+  background: transparent;
+  border-color: var(--color-on-field);
+  color: var(--color-on-field);
 }
 
 .btn--light:hover {
-  background: var(--color-visa-tint);
+  background: var(--color-field-hover);
+  border-color: var(--color-on-field);
+  color: var(--color-on-field);
+}
+
+.btn--light:focus-visible {
+  outline-color: var(--color-focus-on-field);
 }
 
 /* Group of buttons that stack on mobile and sit in a row from tablet up */
 .btn-group {
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
+  gap: var(--space-sm);
 }
 
 @media (min-width: 40em) {
@@ -125,28 +171,38 @@
   }
 }
 
-/* Inline text link with arrow, e.g. "Learn more" */
+/* Quiet text link, e.g. "Learn more" (class name kept for pages) */
 .link-arrow {
   display: inline-flex;
   align-items: center;
-  gap: var(--space-1);
+  gap: var(--space-xs);
   min-height: var(--tap);
-  font-family: var(--font-heading);
-  font-weight: var(--fw-bold);
-  color: var(--color-teal);
-  text-decoration: none;
+  font-family: var(--font-body);
+  font-weight: var(--fw-semibold);
+  color: var(--color-field);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.25em;
+  transition: color var(--dur-short) var(--ease-out);
 }
 
 .link-arrow:hover {
-  text-decoration: underline;
+  color: var(--color-field-hover);
+  text-decoration-thickness: 2px;
+}
+
+.link-arrow:active {
+  color: var(--color-field-deep);
+}
+
+.link-arrow:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+  transition: none;
 }
 
 .link-arrow svg {
-  width: 1.1em;
-  height: 1.1em;
-  transition: transform var(--transition);
-}
-
-.link-arrow:hover svg {
-  transform: translateX(3px);
+  flex-shrink: 0;
+  width: 1em;
+  height: 1em;
 }

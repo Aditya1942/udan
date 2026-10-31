@@ -5,63 +5,54 @@
 .notfound__inner {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: var(--space-4);
-  text-align: center;
+  align-items: flex-start;
+  gap: var(--space-md);
 }
 
-.notfound__icon {
-  display: inline-grid;
-  place-items: center;
-  width: 4.5rem;
-  height: 4.5rem;
-  border-radius: 50%;
-  background: var(--color-travel-tint);
-  color: var(--color-green-text);
-}
-
-.notfound__icon svg {
-  width: 2.25rem;
-  height: 2.25rem;
-}
-
+/* The one graphic numeral on the page, in the display face */
 .notfound__code {
-  font-family: var(--font-heading);
-  font-size: var(--fs-xs);
-  font-weight: var(--fw-bold);
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--color-green-text);
+  font-family: var(--font-display);
+  font-size: clamp(6rem, 16vw, 11rem);
+  font-weight: var(--display-weight);
+  font-variant-numeric: lining-nums tabular-nums;
+  letter-spacing: var(--tracking-display);
+  line-height: 0.9;
+  color: var(--color-field);
+}
+
+.notfound__title {
+  font-size: var(--text-section);
+  text-wrap: balance;
 }
 
 .notfound__text {
   max-width: 32rem;
-  font-size: var(--fs-md);
-  color: var(--color-text-muted);
+  font-size: var(--text-lead);
+  color: var(--color-ink-2);
 }
 
 .notfound__actions {
-  width: 100%;
-  justify-content: center;
-  margin-top: var(--space-3);
+  margin-top: var(--space-sm);
 }
 
 .notfound__links {
   width: 100%;
-  margin-top: var(--space-8);
-  padding-top: var(--space-6);
-  border-top: 1px solid var(--color-border);
+  margin-top: var(--space-2xl);
+  padding-top: var(--space-lg);
+  border-top: var(--rule-hair) solid var(--color-rule);
 }
 
 .notfound__links-title {
-  margin-bottom: var(--space-3);
-  font-size: var(--fs-base);
-  color: var(--color-text-muted);
+  margin-bottom: var(--space-sm);
+  font-family: var(--font-body);
+  font-size: var(--text-md);
+  font-weight: var(--fw-semibold);
+  letter-spacing: 0;
+  color: var(--color-muted);
 }
 
 .notfound__links ul {
   display: flex;
   flex-wrap: wrap;
-  justify-content: center;
-  gap: 0 var(--space-6);
+  gap: 0 var(--space-xl);
 }

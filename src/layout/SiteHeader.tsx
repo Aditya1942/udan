@@ -38,7 +38,7 @@ export function SiteHeader() {
     <header className="site-header" data-menu-open={open || undefined}>
       <div className="container site-header__bar">
         <Logo />
-        <NavLink to={routes.contact} className="btn btn--primary btn--sm btn--inline site-header__cta">
+        <NavLink to={routes.contact} className="btn btn--outline btn--sm btn--inline site-header__cta">
           Contact Us
         </NavLink>
         <button
@@ -62,7 +62,7 @@ export function SiteHeader() {
               </li>
             ))}
           </ul>
-          <NavLink to={routes.contact} className="btn btn--primary btn--sm site-nav__cta">
+          <NavLink to={routes.contact} className="btn btn--outline btn--sm site-nav__cta">
             Contact Us
           </NavLink>
         </nav>
