@@ -1,4 +1,5 @@
 import { business, fullAddress, getService, type ServiceId } from '../content/business';
+import { routes } from '../content/navigation';
 
 export type EnquiryContext = {
   service?: ServiceId;
@@ -29,7 +30,7 @@ export function getEnquireHref({ service, destination }: EnquiryContext = {}): s
   const dest = destination?.trim();
   if (dest) params.set('destination', dest);
   const query = params.toString();
-  return `/contact${query ? `?${query}` : ''}#enquiry`;
+  return `${routes.contact}${query ? `?${query}` : ''}#enquiry`;
 }
 
 /** Friendly first message for WhatsApp, e.g. "Hi UDAN, I'd like to enquire about Visa Services (Dubai)". */

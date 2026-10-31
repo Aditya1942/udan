@@ -38,6 +38,9 @@ export function SiteHeader() {
     <header className="site-header" data-menu-open={open || undefined}>
       <div className="container site-header__bar">
         <Logo />
+        <NavLink to={routes.contact} className="btn btn--primary btn--sm btn--inline site-header__cta">
+          Contact Us
+        </NavLink>
         <button
           ref={toggleRef}
           type="button"

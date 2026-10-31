@@ -311,6 +311,8 @@ export type Destination = {
   phrase: string;
   region: DestinationRegion;
   image: Photo;
+  /** Featured destination (its photo is used as the Tours page hero). */
+  featured?: boolean;
 };
 
 // OPEN ITEM (spec): UDAN must confirm the destination list and photos.
@@ -353,6 +355,7 @@ export const destinations: readonly Destination[] = [
     name: 'Switzerland',
     phrase: 'Alpine valleys, waterfalls and storybook villages.',
     region: 'international',
+    featured: true,
     image: {
       src: unsplash('1530122037265-a5f1f91d3b99'),
       alt: 'Lauterbrunnen valley in Switzerland with chalets, cliffs and a river',

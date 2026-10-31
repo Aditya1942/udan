@@ -7,16 +7,24 @@ type PageMeta = {
   description: string;
 };
 
-/** Sets document.title ("<title> | UDAN Immigration & Tours") and the meta description. */
+/** Finds (or creates) a <meta> tag by `name` or `property` and sets its content. */
+function setMeta(attr: 'name' | 'property', key: string, content: string): void {
+  let meta = document.head.querySelector<HTMLMetaElement>(`meta[${attr}="${key}"]`);
+  if (!meta) {
+    meta = document.createElement('meta');
+    meta.setAttribute(attr, key);
+    document.head.appendChild(meta);
+  }
+  meta.content = content;
+}
+
+/** Sets document.title ("<title> | UDAN Immigration & Tours"), the meta description and the Open Graph title/description. */
 export function usePageMeta({ title, description }: PageMeta): void {
   useEffect(() => {
-    document.title = title ? `${title} | ${business.name}` : `${business.name} | Tours, Visa & Travel Services in Ahmedabad`;
-    let meta = document.querySelector<HTMLMetaElement>('meta[name="description"]');
-    if (!meta) {
-      meta = document.createElement('meta');
-      meta.name = 'description';
-      document.head.appendChild(meta);
-    }
-    meta.content = description;
+    const fullTitle = title ? `${title} | ${business.name}` : `${business.name} | Tours, Visa & Travel Services in Ahmedabad`;
+    document.title = fullTitle;
+    setMeta('name', 'description', description);
+    setMeta('property', 'og:title', fullTitle);
+    setMeta('property', 'og:description', description);
   }, [title, description]);
 }

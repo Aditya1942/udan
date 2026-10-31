@@ -104,7 +104,6 @@ export default function ContactPage() {
                 </div>
               </li>
             </ul>
-            <p className="contact-details__note">We recommend calling ahead before you visit the office.</p>
           </div>
 
           <div className="contact-main__enquiry">

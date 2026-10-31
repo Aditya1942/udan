@@ -18,7 +18,7 @@ const international = destinations.filter((d) => d.region === 'international');
 const domestic = destinations.filter((d) => d.region === 'domestic');
 
 /** Hero photo taken from the (placeholder) destination list in business.ts. */
-const heroPhoto = (destinations.find((d) => d.name === 'Switzerland') ?? destinations[0]).image;
+const heroPhoto = (destinations.find((d) => d.featured) ?? destinations[0]).image;
 
 /** Travel services UDAN can arrange alongside a trip (labels/descriptions come from business.ts). */
 const PLAN_SERVICES: readonly ServiceId[] = [

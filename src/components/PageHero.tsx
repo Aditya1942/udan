@@ -22,7 +22,7 @@ export function PageHero({ title, eyebrow, intro, photo, tone = 'neutral', child
     <header className={classes}>
       {photo && (
         <div className="page-hero__media">
-          <ResponsiveImage photo={photo} priority alt="" />
+          <ResponsiveImage photo={photo} priority />
         </div>
       )}
       <div className="container page-hero__inner">

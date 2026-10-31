@@ -1,4 +1,4 @@
-import { ArrowRight, Check, Quote } from 'lucide-react';
+import { ArrowRight, Check } from 'lucide-react';
 import { Link } from 'react-router';
 import { ContactActions } from '../components/ContactActions';
 import { PageHero } from '../components/PageHero';
@@ -166,13 +166,10 @@ export default function AboutPage() {
               <p key={paragraph}>{paragraph}</p>
             ))}
           </div>
-          <figure className="about-clients">
-            <Quote className="about-clients__icon" aria-hidden="true" />
-            <blockquote>
-              <p>{profile.clients}</p>
-            </blockquote>
-            <figcaption>{business.name}, on our clients</figcaption>
-          </figure>
+          <div className="about-clients">
+            <h3>Our clients</h3>
+            <p>{profile.clients}</p>
+          </div>
         </div>
       </Section>
 

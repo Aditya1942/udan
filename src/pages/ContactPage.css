@@ -77,8 +77,3 @@
   margin-top: var(--space-4);
 }
 
-.contact-details__note {
-  margin-top: var(--space-5);
-  font-size: var(--fs-sm);
-  color: var(--color-text-muted);
-}

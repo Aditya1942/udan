@@ -10,7 +10,7 @@ export function HomeHero() {
   return (
     <section className="home-hero" aria-labelledby="home-hero-title">
       <div className="home-hero__media">
-        <ResponsiveImage photo={photos.hero} priority alt="" />
+        <ResponsiveImage photo={photos.hero} priority />
       </div>
       <div className="container home-hero__inner">
         <div className="home-hero__content">

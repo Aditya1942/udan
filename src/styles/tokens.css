@@ -37,7 +37,11 @@
   --color-travel-tint: #eff6e7;  /* faint green for travel areas */
   --color-visa-tint: #eaf4f7;    /* faint sky/teal for visa areas */
 
-  --color-focus: #29a9ca;
+  /* Focus ring (>= 3:1 against the surface it sits on).
+   * Teal on light surfaces (7.3:1 on white); white on teal/dark surfaces (7.3:1 on teal).
+   * Dark containers switch the ring by setting --focus-ring: var(--focus-ring-on-dark). */
+  --focus-ring: var(--color-teal);
+  --focus-ring-on-dark: var(--color-white);
 
   /* Typography */
   --font-heading: 'Manrope Variable', 'Manrope', system-ui, -apple-system, 'Segoe UI', sans-serif;

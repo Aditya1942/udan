@@ -150,7 +150,7 @@
   top: 0.65em;
   width: 0.5rem;
   height: 0.5rem;
-  border-radius: 2px;
+  border-radius: 0;
   background: var(--color-sky);
 }
 

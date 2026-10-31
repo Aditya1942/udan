@@ -15,7 +15,7 @@ export function SiteFooter() {
           <Logo variant="onDark" />
           <p>
             Tours, tickets, hotels, travel insurance, currency exchange, and visa and passport
-            guidance, all from one office in Ahmedabad.
+            guidance, all from one office in {address.city}.
           </p>
         </div>
 
@@ -49,7 +49,8 @@ export function SiteFooter() {
               <address>
                 {address.line1},<br />
                 {address.line2},<br />
-                {address.locality}, {address.city}, {address.region}, {address.country}
+                {address.locality}, {address.city},<br />
+                {address.region} {address.postalCode}, {address.country}
                 <br />
                 <a href={getDirectionsHref()} target="_blank" rel="noopener noreferrer">
                   Get directions<span className="visually-hidden"> (opens in a new tab)</span>

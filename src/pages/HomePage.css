@@ -275,7 +275,7 @@
   content: '';
   width: 1.25rem;
   height: 4px;
-  border-radius: 2px;
+  border-radius: 0;
 }
 
 .home-services__key--travel::before {

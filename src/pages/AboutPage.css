@@ -321,10 +321,9 @@
 .about-clients {
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
+  gap: var(--space-3);
   padding: var(--space-6) var(--space-5);
   background: var(--color-visa-tint);
-  border-left: 4px solid var(--color-sky);
   border-radius: var(--radius);
 }
 
@@ -334,21 +333,6 @@
   }
 }
 
-.about-clients__icon {
-  width: 2rem;
-  height: 2rem;
-  color: var(--color-teal);
-}
-
-.about-clients blockquote {
-  font-family: var(--font-heading);
-  font-size: var(--fs-md);
-  font-weight: var(--fw-semibold);
-  line-height: var(--lh-snug);
-  color: var(--color-teal);
-}
-
-.about-clients figcaption {
-  font-size: var(--fs-sm);
+.about-clients p {
   color: var(--color-text-muted);
 }

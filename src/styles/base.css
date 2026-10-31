@@ -105,9 +105,17 @@ strong {
 
 /* Focus: visible ring on every interactive element */
 :focus-visible {
-  outline: 3px solid var(--color-focus);
+  outline: 3px solid var(--focus-ring);
   outline-offset: 2px;
-  border-radius: 4px;
+  border-radius: var(--radius);
+}
+
+/* Dark / teal surfaces use a light focus ring */
+.section--teal,
+.site-footer,
+.page-hero--photo,
+.home-hero {
+  --focus-ring: var(--focus-ring-on-dark);
 }
 
 :focus:not(:focus-visible) {
