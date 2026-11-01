@@ -26,6 +26,8 @@ export type { BookingSectionPatch, CancelInput, CreateBookingOptions, CreatedBoo
 export { createClient, createDmc, deleteClient, deleteDmc, updateClient, updateDmc } from './directory';
 export { deleteEnquiry, saveEnquiryNotes, setEnquiryStatus } from './enquiries';
 export { getBusinessProfile, saveBusinessProfile } from './businessProfile';
+export { projectIdOf, readBackupCollections } from './backup';
+export type { RawCollections } from './backup';
 export { ADMIN_COLLECTION_NAMES, subscribeCollection } from './subscribe';
 export type { AdminCollectionName, AdminCollections, CollectionState, CollectionStatus } from './subscribe';
 export {

@@ -4,6 +4,7 @@ import { doc, getDoc, Timestamp, type Firestore } from 'firebase/firestore';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { googleDb, seed, seedAdmins } from '../../test/adminAuth';
 import { createRulesEnv, readAll } from '../../test/firestoreEmulator';
+import { serialiseBackup } from '../export';
 import type { BookingDraft, Booking } from '../model';
 import {
   addClientPayment,
@@ -18,6 +19,7 @@ import {
   deleteClientPayment,
   deleteEnquiry,
   getBusinessProfile,
+  readBackupCollections,
   saveBookingSection,
   saveBusinessProfile,
   saveEnquiryNotes,
@@ -286,6 +288,31 @@ describe('Clients, DMCs, Enquiries, Business profile', () => {
   it('does not seed when asked not to', async () => {
     expect(await getBusinessProfile(db, { seed: false })).toEqual({});
     expect(await readDoc('settings/business')).toBeUndefined();
+  });
+});
+
+describe('readBackupCollections', () => {
+  it('reads all six collections (settings via settings/business) with Timestamps intact; serialises to the backup format', async () => {
+    const at = Timestamp.fromDate(new Date('2026-11-01T04:30:00Z'));
+    await seed(env, {
+      'clients/c1': { name: 'Asha', mobile: '+919876543210', createdAt: at, updatedAt: at },
+      'dmcs/d1': { name: 'Gulf Holidays', createdAt: at, updatedAt: at },
+      'counters/booking': { seq: 3 },
+      'settings/business': { tradingName: 'UDAN', updatedAt: at },
+      'inquiries/e1': enquiryDoc({ createdAt: at }),
+    });
+    const raw = await readBackupCollections(db);
+    expect(Object.keys(raw).sort()).toEqual(['bookings', 'clients', 'counters', 'dmcs', 'inquiries', 'settings']);
+    expect(raw.bookings).toEqual({});
+    expect(raw.counters).toEqual({ booking: { seq: 3 } });
+    expect(raw.settings.business.tradingName).toBe('UDAN');
+    const backup = serialiseBackup({ projectId: 'demo', exportedAt: new Date('2026-11-01T05:00:00Z'), collections: raw });
+    expect(backup.collections.clients.c1.createdAt).toBe('2026-11-01T04:30:00.000Z');
+    expect(backup.collections.inquiries.e1).toMatchObject({ name: 'Neha Shah', createdAt: '2026-11-01T04:30:00.000Z' });
+  });
+
+  it('reads settings as empty when the Business profile was never saved', async () => {
+    expect((await readBackupCollections(db)).settings).toEqual({});
   });
 });
 
