@@ -70,7 +70,8 @@ export function getDb(): Firestore | null {
   if (db !== undefined) return db;
   const firebaseApp = getFirebaseApp();
   if (!firebaseApp) return (db = null);
-  db = getFirestore(firebaseApp);
+  const databaseId = usesEmulator() ? undefined : import.meta.env.VITE_FIRESTORE_DATABASE_ID?.trim();
+  db = databaseId ? getFirestore(firebaseApp, databaseId) : getFirestore(firebaseApp);
   if (usesEmulator()) {
     const [host, port] = (import.meta.env.VITE_FIRESTORE_EMULATOR_HOST || DEFAULT_EMULATOR_HOST).split(':');
     connectFirestoreEmulator(db, host, Number(port));

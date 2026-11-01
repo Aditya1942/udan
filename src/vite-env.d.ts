@@ -6,6 +6,7 @@ interface ImportMetaEnv {
   readonly VITE_FIREBASE_PROJECT_ID?: string;
   readonly VITE_FIREBASE_STORAGE_BUCKET?: string;
   readonly VITE_FIREBASE_MESSAGING_SENDER_ID?: string;
+  readonly VITE_FIRESTORE_DATABASE_ID?: string;
   readonly VITE_FIREBASE_APP_ID?: string;
   /** "true" = connect Firestore (and admin Auth) to the local emulators (npm run emulators). */
   readonly VITE_USE_EMULATOR?: string;
