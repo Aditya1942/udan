@@ -8,7 +8,7 @@ Spec: `docs/specs/udan-admin.md`. Vocabulary: `GLOSSARY.md`. Nothing outside `sr
 | `data/` | done (A1) | `src/admin/data` |
 | `auth/` | done (A2) | `src/admin/auth` |
 | `ui/` (primitives + `admin.css`) | done (A2) | `src/admin/ui` |
-| routes, `shell/`, `screens/` | A2: shell + placeholders; B: Booking detail + New booking; C: Clients, DMCs, Enquiries, Settings | `routes.tsx` (lazy entry), `AdminApp.tsx` |
+| routes, `shell/`, `screens/` | A2: shell; B: Booking detail + New booking; C: Clients, DMCs, Enquiries, Settings; D: Dashboard Overview + Insights | `routes.tsx` (lazy entry), `AdminApp.tsx` |
 | `export/` | done (C) | `src/admin/export` |
 | `pdf/` | later phase | — |
 
@@ -78,9 +78,9 @@ Every function takes a `Firestore` first and rejects with `AdminDataError` (`cod
 `src/App.tsx`: `{ path: '/admin/*', lazy: () => import('./admin/routes') }` (sibling of SiteLayout). `routes.tsx` builds Auth + Firestore
 (or shows "not configured") and renders `<AdminApp auth db signIn?>`: `login` outside the guard; `shell/AdminLayout` (guard: spinner →
 login?next= → `AdminDataProvider` + `ToastProvider` + `AdminShell`) wraps index (Overview), `insights` (React.lazy chunk), `bookings/new`,
-`bookings/:bookingNo`, `clients`, `clients/:id`, `dmcs`, `dmcs/:id`, `enquiries`, `settings`, `*` (admin 404). Screens live in `screens/`
-(placeholders: Overview, Insights). Replace a placeholder file's body; keep its export name.
-`vite.config.ts` `bundleGuard` fails the build if the public entry's static chunk graph contains `src/admin/`, Firebase Auth, `@react-pdf` or `recharts`.
+`bookings/:bookingNo`, `clients`, `clients/:id`, `dmcs`, `dmcs/:id`, `enquiries`, `settings`, `*` (admin 404). Screens live in `screens/`.
+`vite.config.ts` `bundleGuard` fails the build if the public entry's static chunk graph contains `src/admin/`, Firebase Auth, `@react-pdf` or `recharts`,
+and if the admin routes chunk (the one holding `src/admin/routes.tsx`) statically pulls `recharts` (only the lazy Insights screen may).
 
 ## `ui/` — primitives (import `admin.css` nowhere else; `routes.tsx` does)
 
@@ -93,6 +93,7 @@ login?next= → `AdminDataProvider` + `ToastProvider` + `AdminShell`) wraps inde
 - `Dialog({ open, onClose, title, footer, onSubmit, wide })` (native centred `<dialog>`), `ConfirmDialog({ open, title, confirmLabel, danger, busy, onConfirm, onClose })`.
 - States: `DataRegion({ status, error, onRetry, errorTitle, isEmpty, empty, loading })`, `LoadingState`, `EmptyState({ title, action })`,
   `ErrorState({ title, error, onRetry })`, `errorMessage(AdminDataError)`, `Spinner`, `FullScreenSpinner`.
+- `StatStrip({ items, columns, label, className })` — `className="adm-stats--kpis"` (6 → 3 → 2 columns) needs `columns` unset.
 - `ToastProvider` (in the shell) + `useToast()(message, { tone: 'info'|'danger' })`. `StatusBadge({ status })`, `Note({ tone })`.
 - Inputs (forward id/aria from `Field`): `MoneyInput({ value, onChange })` (₹, en-IN grouping, whole rupees, empty = 0),
   `ChipInput({ values, onChange, placeholder })` (Enter/comma adds, chip click / Backspace removes).
@@ -150,6 +151,30 @@ login?next= → `AdminDataProvider` + `ToastProvider` + `AdminShell`) wraps inde
   `settings/signature.ts` resizes a PNG on a canvas until ≤ 100 KB); `settings/DataCard.tsx` (Backup + last-backup + overdue note, Payments
   ledger CSV with period/side and entry count, Clients/DMCs CSV).
 
+## Screens — Dashboard Overview and Insights (phase D)
+
+- `OverviewScreen.tsx` (`/admin`): `DashboardHeader` (tabs keep the query string) → `dashboard/MonthBar` (prev / month+year popover / next,
+  "This month"; `?month=`) → month `StatStrip` (`monthStats`) → `dashboard/NeedsAttention` (`needsAttention({ …, lastBackup: useLastBackup() })`,
+  `<details>` rows; Booking links + pre-filtered table links via `tableHref`; New Enquiries → `/admin/enquiries?filter=new`; Backup overdue →
+  `/admin/settings#data`) → Bookings block with `Segmented` Calendar | Table (`?view=`, default Calendar, Table on phones). Each region uses `DataRegion`.
+- `dashboard/hooks.ts`: `useTableQuery(today)` → `{ query, update(patch | fn) }` (URL via `parseTableQuery` / `tableQueryToParams`, replace;
+  non-table params such as `view` are kept), `tableHref(patch, today)`, `useBookingsView()`, `useMediaQuery`, `PHONE_QUERY` (< 640px).
+- `dashboard/Popover.tsx`: `<details>` popover (Escape / outside click close; `children(close)`). Used by the month picker, Filters, Columns, "+N more".
+- `dashboard/BookingsCalendar.tsx`: `layoutMonth(rows, month)` (weeks, lanes, per-day lists) + grid (bars = Booking ID + Client, status colours,
+  square ends at week edges, 3 lanes then "+N more" day popover, day click → `/admin/bookings/new?start=`), "Show cancelled" (local state),
+  legend; phones get an agenda grouped by day (JS media query, so only one is in the DOM).
+- `dashboard/BookingsTable.tsx`: debounced search (`?q=`), scope `Segmented`, Filters popover (`TableFilters.tsx`: `FilterFields`, `FilterChips`,
+  `filterChips`), Columns menu (hidden columns in localStorage `udan-admin:table-hidden-columns`), CSV (`bookingsCsv` of all filtered + sorted
+  rows), header sort buttons with `aria-sort`, footer = `tableFooter` (refunds owed shown separately), "Search all time" link, All time / date range
+  → 50 rows + "Show more". Rows become cards below 640px (`adm-table--bookings`).
+- `InsightsScreen.tsx` (lazy chunk; the only importer of `insights/`): period `Segmented` (`?period=thisMonth|lastMonth|lastFy|custom`, default
+  This FY; custom `?pfrom=&pto=`), `insights()` data, KPI strip with deltas (% for amounts/counts, points for Commission % and Cancellation rate)
+  + Pending pipeline line, eight charts, Top Clients / Top DMCs / Destinations panels.
+- `insights/charts.tsx` (Recharts): `MonthlyChart`, `StatusChart`, `AmountChart({ kind: 'destination'|'dmc'|'lineType' })`, `AgeingChart`
+  (one stacked bar), `PayablesChart` (stacked by DMC, top 4 + Other), `FunnelChart`; `compactINR` ticks. Colours are `var(--token)`; defaults
+  kept for `accessibilityLayer` and `isAnimationActive`. `insights/ChartFigure.tsx`: `<figure>` labelled by its caption, plot group with an
+  `aria-label`, "View as table" toggle (`aria-pressed`) → `<table>` with `<caption>`; `preferTable` charts start as tables on phones.
+
 ## Tests
 
 - Seam 1: `model/**/*.test.ts` (pure).
@@ -163,6 +188,9 @@ login?next= → `AdminDataProvider` + `ToastProvider` + `AdminShell`) wraps inde
   filter, detail, edit, delete), Enquiries (filter + counts, converted row, status changes, notes, delete, Convert link), Settings (profile
   save/discard, Backup download, ledger + Clients CSV), 4 data-region states. Screen tests call RTL `cleanup()` before `deleteApp` and use
   `clearFirestore(env)` (retrying) from `src/test/firestoreEmulator.ts`.
+- `screens/DashboardScreens.test.tsx`: Overview month figures + Needs attention (incl. Backup overdue and its absence after a recent backup),
+  calendar bars / day links / month bar, table search + filters + sort in the URL, footer totals, URL-loaded filters, CSV content, pre-filtered
+  links, 4 data-region states; Insights smoke (lazy route, period in the URL, KPIs, View as table, Top Clients). Stubs `ResizeObserver` for Recharts.
 - `auth/next.test.ts` (redirect safety); `src/App.test.tsx` (`/admin` lazy, no site chrome, noindex).
 
 Run all with `npm test` (starts the Firestore + Auth emulators).
