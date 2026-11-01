@@ -1,0 +1,48 @@
+rules_version = '2';
+
+// UDAN Firestore rules. Default deny: anything not matched below is refused.
+// Website: the public may only create a well-formed Enquiry in `inquiries`.
+// Enquiries are read in the Firebase console (the admin build extends these rules).
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Must match SERVICE_IDS in src/content/business.ts.
+    function serviceIds() {
+      return [
+        'international-domestic-tours',
+        'hotel-booking',
+        'flight-train-tickets',
+        'travel-insurance',
+        'visa-services',
+        'visitor-business-visa',
+        'passport-services',
+        'currency-exchange',
+        'corporate-travel',
+        'other'
+      ];
+    }
+
+    function inquiryKeys() {
+      return ['name', 'phone', 'service', 'message', 'sourcePage', 'destination', 'status', 'createdAt'];
+    }
+
+    function isValidNewInquiry(data) {
+      return data.keys().hasOnly(inquiryKeys())
+        && data.keys().hasAll(inquiryKeys())
+        && data.name is string && data.name.size() >= 2 && data.name.size() <= 100
+        && data.phone is string && data.phone.matches('^\\+91[6-9][0-9]{9}$')
+        && data['service'] is string && data['service'] in serviceIds() // 'service' is a rules keyword
+        && data.message is string && data.message.size() <= 2000
+        && data.sourcePage is string && data.sourcePage.size() >= 1 && data.sourcePage.size() <= 100
+        && (data.destination == null
+            || (data.destination is string && data.destination.size() >= 1 && data.destination.size() <= 100))
+        && data.status == 'new'
+        && data.createdAt == request.time;
+    }
+
+    match /inquiries/{inquiryId} {
+      allow create: if isValidNewInquiry(request.resource.data);
+      // read, update, delete: denied to clients.
+    }
+  }
+}
