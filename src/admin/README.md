@@ -6,7 +6,10 @@ Spec: `docs/specs/udan-admin.md`. Vocabulary: `GLOSSARY.md`. Nothing outside `sr
 |---|---|---|
 | `model/` | done (A1) | `src/admin/model` |
 | `data/` | done (A1) | `src/admin/data` |
-| `auth/`, `ui/`, `pdf/`, `export/`, routes | later phases | — |
+| `auth/` | done (A2) | `src/admin/auth` |
+| `ui/` (primitives + `admin.css`) | done (A2) | `src/admin/ui` |
+| routes, `shell/`, `screens/` | A2: shell + placeholder screens | `routes.tsx` (lazy entry), `AdminApp.tsx` |
+| `pdf/`, `export/` | later phases | — |
 
 ## `model/` — pure TypeScript (no Firestore, no React)
 
@@ -58,10 +61,46 @@ Every function takes a `Firestore` first and rejects with `AdminDataError` (`cod
 - React: `<AdminDataProvider db>`; hooks `useAdminData()` (states + `retry(name)` + `clientsById`/`dmcsById` + `db`), `useAdminDb`,
   `useClients`, `useDmcs`, `useBookings`, `useEnquiries`, `useBookingRows(today?)`, `useBookingByNo(bookingNo)`, `useNewEnquiryCount`.
 
+## `auth/` — Google sign-in + `config/admins` allow-list (only importer of `firebase/auth`)
+
+- `<AdminSessionProvider auth db signIn?>` (signIn defaults to `signInWithGoogle` popup, `prompt: select_account`).
+- `useAdminSession() → { status: 'loading'|'signedOut'|'checking'|'admin'|'denied', user: { uid, email, displayName, photoURL } | null, message, signingIn, signIn(), signOut() }`.
+  Not on the list → `deleteUser` (best effort) + `signOut` → `denied` + `DENIED_MESSAGE`.
+- Registers the data layer's `setPermissionDeniedHandler`: re-reads `config/admins`; only if that is denied too (email removed) → sign out
+  to login with `DENIED_MESSAGE`. A schema rejection while still listed keeps the session (the call's own error is shown).
+- `getAdminAuth(app)` (connects the Auth emulator when `VITE_USE_EMULATOR=true`, host `VITE_AUTH_EMULATOR_HOST`), `safeNext(next)`, `loginPathFor(path)`.
+
+## Routing
+
+`src/App.tsx`: `{ path: '/admin/*', lazy: () => import('./admin/routes') }` (sibling of SiteLayout). `routes.tsx` builds Auth + Firestore
+(or shows "not configured") and renders `<AdminApp auth db signIn?>`: `login` outside the guard; `shell/AdminLayout` (guard: spinner →
+login?next= → `AdminDataProvider` + `ToastProvider` + `AdminShell`) wraps index (Overview), `insights` (React.lazy chunk), `bookings/new`,
+`bookings/:bookingNo`, `clients`, `clients/:id`, `dmcs`, `dmcs/:id`, `enquiries`, `settings`, `*` (admin 404). Screens live in `screens/`
+(placeholders except Login and Settings → Account). Replace a placeholder file's body; keep its export name.
+`vite.config.ts` `bundleGuard` fails the build if the public entry's static chunk graph contains `src/admin/`, Firebase Auth, `@react-pdf` or `recharts`.
+
+## `ui/` — primitives (import `admin.css` nowhere else; `routes.tsx` does)
+
+- `Button({ variant: 'primary'|'outline'(default)|'ghost'|'danger', size: 'md'|'sm', block, icon, busy, ...button })`, `ButtonLink` (router Link, same styling),
+  `IconButton({ label, variant: 'default'|'ghost' })`, `LinkButton`.
+- `PageHeader({ title, titleExtra, subtitle, back: { to, label }, actions, children })`; `Tabs({ label, items: [{ to, label, end? }] })`;
+  `Segmented({ label, options: [{ value, label }], value, onChange })`.
+- `Panel({ title, level, actions, padded = true, id })` (section labelled by its title), `KeyValues({ items })`, `StatStrip({ items, columns, label })`.
+- `Field({ label, hint, error, children: <input|select|textarea> })` wires id/aria-describedby/aria-invalid; `Checkbox({ label })`.
+- `Dialog({ open, onClose, title, footer, onSubmit, wide })` (native centred `<dialog>`), `ConfirmDialog({ open, title, confirmLabel, danger, busy, onConfirm, onClose })`.
+- States: `DataRegion({ status, error, onRetry, errorTitle, isEmpty, empty, loading })`, `LoadingState`, `EmptyState({ title, action })`,
+  `ErrorState({ title, error, onRetry })`, `errorMessage(AdminDataError)`, `Spinner`, `FullScreenSpinner`.
+- `ToastProvider` (in the shell) + `useToast()(message, { tone: 'info'|'danger' })`. `StatusBadge({ status })`, `Note({ tone })`.
+- `useAdminTitle(page)` → `"<page> · UDAN admin"`; `useNoIndex()` (robots meta while mounted).
+- CSS classes for later screens (ported from the prototypes): `adm-table`, `adm-grid-2/3`, `adm-stack`, `adm-actions`, `is-overdue`, `is-refund`.
+  Derived tokens (`--adm-*`, `--color-danger/warn`) are in `src/styles/tokens.css`.
+
 ## Tests
 
 - Seam 1: `model/**/*.test.ts` (pure).
 - Seam 2: `src/test/rules/admin.test.ts` (helpers in `src/test/adminAuth.ts`: `seedAdmins`, `googleDb`, `seed`).
 - Seam 3: `data/data.test.ts`, `data/AdminDataProvider.test.tsx` (emulator, real rules).
+- Seam 5: `screens/LoginScreen.test.tsx` (Auth + Firestore emulators, real rules; `signIn` = Google credential sign-in instead of the popup).
+- `auth/next.test.ts` (redirect safety); `src/App.test.tsx` (`/admin` lazy, no site chrome, noindex).
 
-Run all with `npm test`.
+Run all with `npm test` (starts the Firestore + Auth emulators).
