@@ -155,7 +155,7 @@ export type BookingSectionPatch = Partial<BookingEditableFields>;
 /** Section keys, for building patches from form state. */
 export const BOOKING_SECTIONS = {
   client: ['clientId'],
-  travel: ['destination', 'travelStart', 'travelEnd', 'pax', 'travellerNames', 'itinerary', 'clientBalanceDueBy'],
+  travel: ['destination', 'travelStart', 'travelEnd', 'pax', 'travellerNames', 'itinerary'],
   price: ['sellingPrice', 'clientBalanceDueBy'],
   lines: ['lines'],
   notes: ['internalNotes'],
