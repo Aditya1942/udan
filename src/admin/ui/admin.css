@@ -377,3 +377,150 @@
   .adm *, .adm-dialog *, .adm-toasts * { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
   .adm-spinner { animation-duration: 1.5s !important; }
 }
+
+/* dashboard — Overview (ported from prototype/admin-shell Variant A: period bar, stat strip, Needs attention, calendar, table) */
+.adm-dash { display: grid; gap: var(--space-5); }
+.adm-pop { position: relative; }
+.adm-pop > summary { list-style: none; cursor: pointer; }
+.adm-pop > summary::-webkit-details-marker { display: none; }
+.adm-popover { position: absolute; left: 0; top: calc(100% + var(--space-2)); z-index: 20; display: grid; gap: var(--space-3); min-width: 16rem; max-width: min(36rem, calc(100vw - 2 * var(--gutter)));
+  padding: var(--space-4); background: var(--color-white); border: 1px solid var(--color-border); border-radius: var(--radius); box-shadow: var(--shadow-md); }
+.adm-popover--end { left: auto; right: 0; }
+.adm-popover__head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); }
+.adm-period { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-3); }
+.adm-period__label { display: inline-flex; align-items: center; justify-content: center; gap: var(--space-1); min-height: var(--tap); min-width: 10em; padding: 0 var(--space-2);
+  font-family: var(--font-heading); font-weight: var(--fw-bold); font-size: var(--fs-md); border-radius: var(--radius); }
+.adm-period__label:hover { background: var(--color-white); }
+.adm-period__label svg { width: 1rem; height: 1rem; color: var(--color-text-muted); }
+.adm-monthgrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-1); }
+.adm-monthgrid button { min-height: var(--adm-ctrl); border: 0; border-radius: var(--radius); background: none; font: inherit; font-size: var(--fs-sm); cursor: pointer; color: var(--color-ink); }
+.adm-monthgrid button:hover { background: var(--color-surface); }
+.adm-monthgrid button[aria-pressed='true'] { background: var(--adm-confirmed-bg); color: var(--adm-confirmed-fg); font-weight: var(--fw-semibold); }
+.adm-monthgrid button.is-current { box-shadow: inset 0 0 0 1px var(--color-teal); }
+.adm-period__year { font-weight: var(--fw-semibold); font-variant-numeric: tabular-nums; }
+
+/* needs attention */
+.adm-attn { display: grid; gap: var(--space-3); }
+.adm-attn > ul { list-style: none; padding: 0; background: var(--color-white); border: 1px solid var(--color-border); border-radius: var(--radius); }
+.adm-attn__row + .adm-attn__row { border-top: 1px solid var(--color-border); }
+.adm-attn summary { display: flex; align-items: center; gap: var(--space-3); min-height: var(--tap); padding: var(--space-2) var(--space-4); cursor: pointer; list-style: none; }
+.adm-attn summary::-webkit-details-marker { display: none; }
+.adm-attn summary:hover { background: var(--color-surface); }
+.adm-attn__count { display: inline-grid; place-items: center; min-width: 1.75rem; height: 1.75rem; padding-inline: var(--space-1); border-radius: var(--radius-pill); font-weight: var(--fw-bold); font-size: var(--fs-sm); font-variant-numeric: tabular-nums; }
+.adm-attn__row--danger .adm-attn__count { background: var(--color-danger-tint); color: var(--color-danger); }
+.adm-attn__row--warn .adm-attn__count { background: var(--color-warn-tint); color: var(--color-warn); }
+.adm-attn__row--info .adm-attn__count { background: var(--adm-confirmed-bg); color: var(--adm-confirmed-fg); }
+.adm-attn__open { margin-left: auto; color: var(--color-teal); font-size: var(--fs-sm); }
+.adm-attn details[open] .adm-attn__open { visibility: hidden; }
+.adm-attn__body { display: grid; gap: var(--space-2); padding: 0 var(--space-4) var(--space-3) calc(var(--space-4) + 1.75rem + var(--space-3)); font-size: var(--fs-sm); }
+.adm-attn__items { display: grid; gap: var(--space-1); list-style: none; padding: 0; color: var(--color-text-muted); }
+.adm-attn__items a { font-weight: var(--fw-semibold); font-variant-numeric: tabular-nums; }
+.adm-attn__links { display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-4); }
+
+/* bookings block */
+.adm-block { display: grid; gap: var(--space-3); }
+.adm-block__head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); flex-wrap: wrap; }
+.adm-flag { display: block; color: var(--color-warn); font-size: var(--fs-xs); font-weight: var(--fw-semibold); }
+
+/* calendar (hand-rolled month grid, Monday first; bars = 24px, square ends at week edges) */
+.adm-cal { display: grid; gap: var(--space-2); }
+.adm-cal__tools { display: flex; justify-content: flex-end; }
+.adm-cal__grid { background: var(--color-white); border: 1px solid var(--color-border); border-radius: var(--radius); }
+.adm-cal__dows { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); border-bottom: 1px solid var(--color-border); }
+.adm-cal__dows span { padding: var(--space-2) var(--space-3); font-size: var(--fs-xs); color: var(--color-text-muted); }
+.adm-cal__week { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); grid-template-rows: 1.75rem repeat(3, 1.5rem) 1.5rem; row-gap: 4px; min-height: 8rem; position: relative; }
+.adm-cal__week + .adm-cal__week { border-top: 1px solid var(--color-border); }
+.adm .adm-cal__day { grid-row: 1 / -1; border-left: 1px solid var(--color-border); padding: var(--space-1) var(--space-2); text-decoration: none; font-size: var(--fs-xs); color: var(--color-ink);
+  font-variant-numeric: tabular-nums; transition: background-color var(--dur-micro); }
+.adm-cal__day:first-child { border-left: 0; }
+.adm-cal__day:hover { background: var(--color-surface); }
+.adm .adm-cal__day.is-out { color: var(--color-text-muted); background: var(--color-surface); }
+.adm-cal__week:last-child .adm-cal__day:first-child { border-bottom-left-radius: var(--radius); }
+.adm-cal__week:last-child .adm-cal__day:nth-child(7) { border-bottom-right-radius: var(--radius); }
+.adm-cal__day.is-today span { display: inline-grid; place-items: center; width: 1.5rem; height: 1.5rem; border-radius: var(--radius-pill); background: var(--color-teal); color: var(--color-white); font-weight: var(--fw-bold); }
+.adm .adm-cal__bar { z-index: 1; align-self: center; height: 1.5rem; margin-inline: 4px; padding: 0 var(--space-2); border-radius: 4px; font-size: var(--fs-xs); line-height: 1.5rem; white-space: nowrap; overflow: hidden;
+  text-overflow: ellipsis; text-decoration: none; transition: filter var(--dur-micro); }
+.adm-cal__bar:hover { filter: brightness(1.08); }
+.adm-cal__bar.cont-l { margin-left: 0; border-top-left-radius: 0; border-bottom-left-radius: 0; }
+.adm-cal__bar.cont-r { margin-right: 0; border-top-right-radius: 0; border-bottom-right-radius: 0; }
+.adm-cal__bar-id { font-weight: var(--fw-bold); font-variant-numeric: tabular-nums; }
+.adm a.adm-bar--pending { background: var(--adm-pending-bg); color: var(--adm-pending-fg); box-shadow: inset 0 0 0 1px var(--adm-pending-bar); }
+.adm a.adm-bar--confirmed { background: var(--adm-confirmed-bar); color: var(--color-white); }
+.adm a.adm-bar--voucher-received { background: var(--adm-voucher-bar); color: var(--color-white); }
+.adm a.adm-bar--completed { background: var(--adm-completed-bar); color: var(--color-white); }
+.adm a.adm-bar--cancelled { background: var(--adm-cancelled-bg); color: var(--adm-cancelled-fg); text-decoration: line-through; }
+.adm-cal__more { z-index: 2; align-self: center; }
+.adm-cal__more > summary { font-size: var(--fs-xs); color: var(--color-teal); padding-inline: var(--space-2); font-weight: var(--fw-semibold); }
+.adm-cal__more > summary:hover { text-decoration: underline; }
+.adm-cal__more .adm-popover { min-width: 15rem; }
+.adm-daylist { list-style: none; padding: 0; display: grid; gap: var(--space-2); }
+.adm-daylist a { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; text-decoration: none; }
+.adm-legend { display: flex; flex-wrap: wrap; gap: var(--space-2); list-style: none; padding: 0; }
+.adm-agenda { list-style: none; padding: 0; background: var(--color-white); border: 1px solid var(--color-border); border-radius: var(--radius); }
+.adm-agenda > li + li { border-top: 1px solid var(--color-border); }
+.adm-agenda__date { padding: var(--space-2) var(--space-4) 0; font-size: var(--fs-xs); font-weight: var(--fw-semibold); color: var(--color-text-muted); font-variant-numeric: tabular-nums; }
+.adm-agenda ul { list-style: none; padding: 0; }
+.adm .adm-agenda ul a { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px var(--space-3); align-items: center; padding: var(--space-2) var(--space-4) var(--space-3); text-decoration: none; color: var(--color-ink); }
+.adm-agenda .adm-sub { grid-column: 1; }
+
+/* bookings table */
+.adm-filter-pop .adm-popover { width: min(36rem, calc(100vw - 2 * var(--gutter))); max-height: 70vh; overflow-y: auto; }
+.adm-filter-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3) var(--space-4); }
+.adm-checks { display: flex; flex-wrap: wrap; gap: 0 var(--space-3); }
+.adm-checks .adm-check { min-height: 2rem; }
+.adm-checks--scroll { max-height: 9rem; overflow-y: auto; }
+.adm-chips { display: flex; gap: var(--space-2); align-items: center; flex-wrap: wrap; }
+.adm-th-btn { display: inline-flex; align-items: center; gap: 4px; min-height: 2rem; padding: 0; border: 0; background: none; font: inherit; color: inherit; cursor: pointer; }
+.adm-th-btn:hover { color: var(--color-ink); }
+.adm-th-btn svg { width: 0.85rem; height: 0.85rem; }
+th.num .adm-th-btn { flex-direction: row-reverse; }
+.adm-table--bookings { border: 1px solid var(--color-border); border-radius: var(--radius); }
+.adm-table--bookings td[data-label='Client'] { min-width: 10rem; }
+.adm-table--bookings td[data-label='Travel dates'] { white-space: nowrap; }
+.adm-table--bookings tbody th a { font-weight: var(--fw-semibold); }
+.adm-table--bookings tfoot :is(th, td) { border-top: 1px solid var(--color-border); font-variant-numeric: tabular-nums; }
+.adm-table-more { display: flex; justify-content: center; }
+
+/* insights */
+.adm-insights { display: grid; gap: var(--space-5); }
+.adm-insights__period { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--space-3); }
+.adm-stats--kpis { --adm-stat-cols: 6; }
+.adm-stat__delta { display: block; margin-top: 2px; font-family: var(--font-body); font-weight: var(--fw-regular); font-size: var(--fs-xs); color: var(--color-text-muted); }
+.adm-charts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-4); }
+.adm-chart { margin: 0; padding: var(--space-4); background: var(--color-white); border: 1px solid var(--color-border); border-radius: var(--radius); display: grid; gap: var(--space-3); align-content: start; min-width: 0; }
+.adm-chart--wide { grid-column: 1 / -1; }
+.adm-chart__head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: var(--space-2); }
+.adm-chart__note { font-size: var(--fs-xs); color: var(--color-text-muted); }
+.adm-chart .adm-table caption { text-align: left; padding-bottom: var(--space-2); font-size: var(--fs-xs); color: var(--color-text-muted); }
+.adm-chart .recharts-default-legend { font-size: var(--fs-xs); }
+.adm-chart .recharts-tooltip-wrapper { font-size: var(--fs-sm); }
+.adm-top-tables { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-4); align-items: start; }
+
+@media (max-width: 60rem) {
+  .adm-charts { grid-template-columns: minmax(0, 1fr); }
+  .adm-stats--kpis { --adm-stat-cols: 3; }
+  .adm-stats--kpis .adm-stat:nth-child(3n + 1) { border-left: 0; }
+  .adm-stats--kpis .adm-stat:nth-child(n + 4) { border-top: 1px solid var(--color-border); }
+  .adm-top-tables { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 40rem) {
+  .adm-period__label { min-width: 0; }
+  .adm-filter-grid { grid-template-columns: minmax(0, 1fr); }
+  .adm-filter-pop .adm-popover { position: fixed; inset: auto var(--gutter) var(--gutter); top: auto; width: auto; max-height: 80vh; }
+  .adm-stats--kpis .adm-stat:nth-child(n) { border-left: 0; border-top: 1px solid var(--color-border); }
+  .adm-stats--kpis .adm-stat:nth-child(even) { border-left: 1px solid var(--color-border); }
+  .adm-stats--kpis .adm-stat:nth-child(-n + 2) { border-top: 0; }
+  /* bookings table rows become cards: ID, Client + mobile, dates, status, outstanding */
+  .adm-table--bookings thead { display: none; }
+  .adm-table--bookings, .adm-table--bookings :is(tbody, tfoot, tr, th, td) { display: block; }
+  .adm-table--bookings tbody tr { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px var(--space-3); padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--color-border); }
+  .adm-table--bookings tbody :is(th, td) { border: 0; padding: 0 !important; grid-column: 1; }
+  .adm-table--bookings tbody td.num { text-align: left; }
+  .adm-table--bookings tbody td[data-label='Status'] { grid-column: 2; grid-row: 1; justify-self: end; }
+  .adm-table--bookings tbody td[data-label='Client outstanding']::before { content: 'Outstanding '; color: var(--color-text-muted); font-weight: var(--fw-regular); }
+  .adm-table--bookings tbody td:is([data-label='Destination'], [data-label='Pax'], [data-label='Selling Price'], [data-label='Received'], [data-label='Commission'], [data-label='DMC(s)']) { display: none; }
+  .adm-table--bookings tfoot tr { display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-4); padding: var(--space-3) var(--space-4); }
+  .adm-table--bookings tfoot :is(th, td) { border: 0; padding: 0; }
+  .adm-table--bookings tfoot td:empty { display: none; }
+  .adm-table--bookings tfoot td[data-label]::before { content: attr(data-label) ' '; color: var(--color-text-muted); font-weight: var(--fw-regular); }
+}

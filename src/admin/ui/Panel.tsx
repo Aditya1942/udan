@@ -51,9 +51,21 @@ export function KeyValues({ items, className }: { items: { label: ReactNode; val
 }
 
 /** Bordered strip of figures (month stats, money strip, KPIs). `columns` defaults to the number of items. */
-export function StatStrip({ items, columns, label }: { items: { label: ReactNode; value: ReactNode; className?: string }[]; columns?: number; label?: string }) {
+export function StatStrip({
+  items,
+  columns,
+  label,
+  className,
+}: {
+  items: { label: ReactNode; value: ReactNode; className?: string }[];
+  columns?: number;
+  label?: string;
+  /** Extra class; a class that sets `--adm-stat-cols` (e.g. `adm-stats--kpis`) needs `columns` left unset. */
+  className?: string;
+}) {
+  const style = className && columns === undefined ? undefined : { ['--adm-stat-cols' as string]: columns ?? items.length };
   return (
-    <dl className="adm-stats" aria-label={label} style={{ ['--adm-stat-cols' as string]: columns ?? items.length }}>
+    <dl className={['adm-stats', className].filter(Boolean).join(' ')} aria-label={label} style={style}>
       {items.map((item, i) => (
         <div key={i} className="adm-stat">
           <dt>{item.label}</dt>
