@@ -2,7 +2,8 @@ import { LogOut } from 'lucide-react';
 import { useState } from 'react';
 import { useAdminSession } from '../auth';
 import { Button, PageHeader, Panel, useAdminTitle } from '../ui';
-import { Placeholder } from './Placeholder';
+import { BusinessProfileForm } from './settings/BusinessProfileForm';
+import { DataCard } from './settings/DataCard';
 
 function Avatar({ photoURL, email }: { photoURL: string | null; email: string }) {
   const [broken, setBroken] = useState(false);
@@ -45,15 +46,34 @@ function AccountPanel() {
   );
 }
 
-/** `/admin/settings` — Account (real), Business profile and Data (later phases). */
+const SECTIONS = [
+  { id: 'account', label: 'Account' },
+  { id: 'business', label: 'Business profile' },
+  { id: 'payment', label: 'Payment details' },
+  { id: 'documents', label: 'Invoice and voucher text' },
+  { id: 'data', label: 'Data' },
+];
+
+/** `/admin/settings` — in-page anchor nav; Account; Business profile (one form, one Save); Data (Backup + CSV exports). */
 export function SettingsScreen() {
   useAdminTitle('Settings');
   return (
     <>
       <PageHeader title="Settings" />
-      <AccountPanel />
-      <Placeholder title="Business profile">Business profile, payment details and document text arrive in a later phase.</Placeholder>
-      <Placeholder title="Data">Backup and CSV exports arrive in a later phase.</Placeholder>
+      <div className="adm-settings">
+        <nav className="adm-settings__nav" aria-label="Settings sections">
+          {SECTIONS.map((s) => (
+            <a key={s.id} href={`#${s.id}`}>
+              {s.label}
+            </a>
+          ))}
+        </nav>
+        <div className="adm-stack">
+          <AccountPanel />
+          <BusinessProfileForm />
+          <DataCard />
+        </div>
+      </div>
     </>
   );
 }
