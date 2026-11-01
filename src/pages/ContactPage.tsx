@@ -1,6 +1,6 @@
 import { MapPin, MessageCircle, Navigation, Phone, UserRound } from 'lucide-react';
 import { ContactActions } from '../components/ContactActions';
-import { InquiryFormSlot } from '../components/InquiryFormSlot';
+import { EnquiryForm } from '../components/EnquiryForm';
 import { PageHero } from '../components/PageHero';
 import { Section } from '../components/Section';
 import { business } from '../content/business';
@@ -16,7 +16,7 @@ export default function ContactPage() {
     title: 'Contact',
     description: `Call, WhatsApp or visit ${business.name} at ${address.line1}, ${address.locality}, ${address.city}. Contact ${business.contactPerson} on ${business.phone.display}.`,
   });
-  // ?service=&destination= from "Enquire" links; the slot (phase 2: form) is prefilled with them.
+  // ?service=&destination= from "Enquire" links; the enquiry form is prefilled with them.
   const { defaultService, destination } = useEnquiryParams();
 
   return (
@@ -107,7 +107,7 @@ export default function ContactPage() {
           </div>
 
           <div className="contact-main__enquiry">
-            <InquiryFormSlot defaultService={defaultService} destination={destination} sourcePage="/contact" />
+            <EnquiryForm defaultService={defaultService} destination={destination} sourcePage="/contact" />
           </div>
         </div>
       </Section>

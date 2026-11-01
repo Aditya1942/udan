@@ -5,6 +5,7 @@
  *   white on --color-action (#4A7F19)     4.84  OK (buttons)
  *   white on --color-teal (#165D79)       7.30  OK
  *   --color-text-muted on all light bgs   >= 4.59 OK
+ *   --color-error (#B42318) on white      6.5  OK
  *   --color-sky / --color-lime            decorative accents only, never body text on light bgs
  */
 :root {
@@ -32,6 +33,10 @@
   --color-slate: #68757a;        /* icons, borders, large text only on tinted bgs */
   --color-text-muted: #5b686d;   /* secondary text (AA on all light surfaces) */
   --color-border: #e1e7e2;
+
+  /* Form feedback */
+  --color-error: #b42318;        /* error text/borders (6.5:1 on white, 5.9:1 on tint) */
+  --color-error-tint: #fdf0ee;   /* error panel background */
 
   /* Area tints */
   --color-travel-tint: #eff6e7;  /* faint green for travel areas */

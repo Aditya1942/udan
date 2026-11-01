@@ -1,11 +1,11 @@
 import { MapPin, Phone, UserRound } from 'lucide-react';
 import { ContactActions } from '../../components/ContactActions';
-import { InquiryFormSlot } from '../../components/InquiryFormSlot';
+import { EnquiryForm } from '../../components/EnquiryForm';
 import { Section, SectionHeading } from '../../components/Section';
 import { business } from '../../content/business';
 import { getCallHref } from '../../lib/contactActions';
 
-/** Contact details + enquiry. The section is #contact; the form slot keeps its default #enquiry id. */
+/** Contact details + enquiry. The section is #contact; the enquiry form keeps its default #enquiry id. */
 export function HomeContact() {
   const { address } = business;
   return (
@@ -57,7 +57,7 @@ export function HomeContact() {
           </ul>
           <ContactActions className="home-contact__actions" />
         </div>
-        <InquiryFormSlot sourcePage="/" />
+        <EnquiryForm sourcePage="/" />
       </div>
     </Section>
   );

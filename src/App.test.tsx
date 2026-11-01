@@ -40,15 +40,24 @@ describe('site shell', () => {
     expect(toggle).toHaveAttribute('aria-expanded', 'false');
   });
 
-  it('prefills the enquiry slot from query params', () => {
+  it('prefills the enquiry form from query params', () => {
     renderAt('/contact?service=visa-services&destination=Dubai#enquiry');
-    const slot = screen.getByRole('region', { name: 'Send us an enquiry' });
-    expect(slot).toHaveTextContent('Visa Services · Dubai');
-    expect(within(slot).getByRole('link', { name: /WhatsApp Us/ })).toHaveAttribute(
-      'href',
-      'https://wa.me/919687232015?text=' +
-        encodeURIComponent("Hi UDAN, I'd like to enquire about Visa Services (Dubai)"),
-    );
+    const form = screen.getByRole('region', { name: 'Send us an enquiry' });
+    expect(form).toHaveTextContent('Enquiring about: Visa Services · Dubai');
+    expect(within(form).getByLabelText('Service of interest')).toHaveValue('visa-services');
+  });
+
+  it('ignores an unknown service in the query', () => {
+    renderAt('/contact?service=free-holidays');
+    const form = screen.getByRole('region', { name: 'Send us an enquiry' });
+    expect(within(form).getByLabelText('Service of interest')).toHaveValue('');
+  });
+
+  it('shows the enquiry form on the home page', () => {
+    renderAt('/');
+    const form = screen.getByRole('region', { name: 'Send us an enquiry' });
+    expect(within(form).getByRole('button', { name: 'Send enquiry' })).toBeInTheDocument();
+    expect(within(form).getByRole('link', { name: 'Privacy' })).toHaveAttribute('href', '/privacy');
   });
 
   it('shows a 404 page for unknown routes', () => {
