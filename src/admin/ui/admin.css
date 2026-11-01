@@ -224,6 +224,15 @@
 .adm-money-stack dt { color: var(--color-text-muted); font-size: var(--fs-sm); }
 .adm-money-stack dd { margin: 0; text-align: right; font-family: var(--font-heading); font-weight: var(--fw-bold); font-size: var(--fs-lg); font-variant-numeric: tabular-nums; }
 
+/* documents card (ported from prototype/admin-screens) */
+.adm-docs { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-4); }
+.adm-docs li { display: grid; gap: var(--space-2); }
+.adm-docs li + li { padding-top: var(--space-4); border-top: 1px solid var(--color-border); }
+.adm-docs__name { display: flex; gap: var(--space-2); align-items: flex-start; }
+.adm-docs__name > svg { width: 1.25rem; height: 1.25rem; color: var(--color-teal); flex-shrink: 0; margin-top: 2px; }
+.adm-docs .adm-sub { overflow-wrap: anywhere; }
+.adm-docs__error { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; color: var(--color-error); font-size: var(--fs-sm); }
+
 /* ₹ input, chip input, client combobox */
 .adm-money, .adm-tags { display: flex; align-items: center; gap: var(--space-1); min-height: var(--adm-ctrl); padding: 0 var(--space-3); border: 1px solid var(--color-slate);
   border-radius: var(--radius); background: var(--color-white); font-size: var(--fs-sm); width: 100%; min-width: 0; }

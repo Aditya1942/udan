@@ -1,7 +1,7 @@
 /**
  * Booking detail = editor (Variant B, edit in place) and New booking (same page, every section open).
  * Main column: Client, Travel, Price, Service lines, [Client payments, DMC payments], Notes — each with its own
- * Edit / Save / Cancel. Rail: Money (live from unsaved values) + Documents slot, or Create booking on New.
+ * Edit / Save / Cancel. Rail: Money (live from unsaved values) + Documents card, or Create booking on New.
  * Under 60rem the rail moves above the sections and stops sticking (CSS).
  */
 import { Pencil } from 'lucide-react';
@@ -10,7 +10,7 @@ import { useNavigate } from 'react-router';
 import { createBooking, saveBookingSection, useAdminData } from '../../data';
 import { formatBookingNo, formatDate, todayIST, travelEndedNotCompleted, type Booking, type Client } from '../../model';
 import { Button, errorMessage, Note, PageHeader, Panel, StatusBadge, useToast } from '../../ui';
-import { DocumentsSlot } from './DocumentsSlot';
+import { DocumentsCard } from './DocumentsCard';
 import { ClientFields, LinesFields, NotesFields, PriceFields, TravelFields } from './fields';
 import {
   formFromBooking,
@@ -230,7 +230,7 @@ export function BookingDetail({ booking }: { booking: Booking }) {
         rail={
           <>
             <MoneyPanel input={liveMoneyInput(booking, editor.form, open)} />
-            <DocumentsSlot booking={booking} client={client} />
+            <DocumentsCard booking={booking} client={client} />
           </>
         }
       />
