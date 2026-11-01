@@ -77,6 +77,12 @@ export default defineConfig({
   test: {
     css: false,
     // Emulator-backed tests talk to a real (local) Firestore; give them headroom.
+    // Tests never use the real project from .env.
+    env: Object.fromEntries(
+      ['API_KEY', 'AUTH_DOMAIN', 'PROJECT_ID', 'STORAGE_BUCKET', 'MESSAGING_SENDER_ID', 'APP_ID']
+        .map((k) => [`VITE_FIREBASE_${k}`, ''])
+        .concat([['VITE_FIRESTORE_DATABASE_ID', '']]),
+    ),
     testTimeout: 20_000,
     hookTimeout: 30_000,
     // Convention: *.test.ts runs in node (pure modules, Firestore rules); *.test.tsx runs in jsdom (UI).
