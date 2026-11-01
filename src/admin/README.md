@@ -8,7 +8,7 @@ Spec: `docs/specs/udan-admin.md`. Vocabulary: `GLOSSARY.md`. Nothing outside `sr
 | `data/` | done (A1) | `src/admin/data` |
 | `auth/` | done (A2) | `src/admin/auth` |
 | `ui/` (primitives + `admin.css`) | done (A2) | `src/admin/ui` |
-| routes, `shell/`, `screens/` | A2: shell + placeholder screens | `routes.tsx` (lazy entry), `AdminApp.tsx` |
+| routes, `shell/`, `screens/` | A2: shell + placeholders; B: Booking detail + New booking | `routes.tsx` (lazy entry), `AdminApp.tsx` |
 | `pdf/`, `export/` | later phases | — |
 
 ## `model/` — pure TypeScript (no Firestore, no React)
@@ -50,7 +50,8 @@ Every function takes a `Firestore` first and rejects with `AdminDataError` (`cod
 
 - `createBooking(db, draft, { newClient?, enquiryId? }) → { id, bookingNo, bookingSeq, clientId }` — one transaction: counter, Client, Booking (Pending), Enquiry → converted.
 - `allocateInvoiceNo(db, bookingId, { today? }) → { invoiceNo, invoiceSeq, invoiceDate, allocated }` — idempotent; per-FY counter.
-- `saveBookingSection(db, bookingId, patch, { newClient? })` — `patch` key with `undefined` removes the field; `BOOKING_SECTIONS` lists keys per section.
+- `saveBookingSection(db, bookingId, patch, { newClient? })` — `patch` key with `undefined` removes the field; `BOOKING_SECTIONS` lists keys per section
+  (`clientBalanceDueBy` belongs to `price` only).
 - `setStatus(db, id, status)` (not `'Cancelled'`; leaving Cancelled un-cancels), `cancelBooking(db, id, { reason, clientCancellationCharge?, lineCharges?, today? })`, `uncancelBooking(db, id, status?)`.
 - Payments: `addClientPayment / updateClientPayment / deleteClientPayment`, `addDmcPayment / updateDmcPayment / deleteDmcPayment`
   (generic `addPayment / updatePayment / deletePayment(db, id, side, …)`). Each writes the whole list in a transaction; DMC entries must use a line DMC.
@@ -91,9 +92,30 @@ login?next= → `AdminDataProvider` + `ToastProvider` + `AdminShell`) wraps inde
 - States: `DataRegion({ status, error, onRetry, errorTitle, isEmpty, empty, loading })`, `LoadingState`, `EmptyState({ title, action })`,
   `ErrorState({ title, error, onRetry })`, `errorMessage(AdminDataError)`, `Spinner`, `FullScreenSpinner`.
 - `ToastProvider` (in the shell) + `useToast()(message, { tone: 'info'|'danger' })`. `StatusBadge({ status })`, `Note({ tone })`.
+- Inputs (forward id/aria from `Field`): `MoneyInput({ value, onChange })` (₹, en-IN grouping, whole rupees, empty = 0),
+  `ChipInput({ values, onChange, placeholder })` (Enter/comma adds, chip click / Backspace removes).
 - `useAdminTitle(page)` → `"<page> · UDAN admin"`; `useNoIndex()` (robots meta while mounted).
 - CSS classes for later screens (ported from the prototypes): `adm-table`, `adm-grid-2/3`, `adm-stack`, `adm-actions`, `is-overdue`, `is-refund`.
   Derived tokens (`--adm-*`, `--color-danger/warn`) are in `src/styles/tokens.css`.
+
+## Screens — Booking detail and New booking (phase B)
+
+`screens/booking/` (Variant B, edit in place; `BookingDetailScreen` / `NewBookingScreen` pick the data-region state and render these):
+
+- `BookingPage.tsx`: `BookingDetail({ booking })` (head + Status select, sections with Edit/Save/Cancel, payments, rail) and
+  `NewBooking({ initial, conversion? })` (all sections open, payments hidden, rail = Money + Create booking → `/admin/bookings/<no>`
+  with `state.created`). `BOOKINGS_BACK` = breadcrumb to the dashboard table, All time.
+- `form.ts` (pure): `BookingForm` (editable fields + `clientMode` + `newClient`), `formFromBooking`, `blankForm({ start, conversion })`,
+  `resetSection`, `sectionErrors(section, form, clients)` (incl. new-Client mobile uniqueness), `sectionPatch`, `liveMoneyInput`
+  (saved Booking + open sections' unsaved values), `toCreateArgs`, `toE164` (Indian formats → `+91…`).
+- `fields.tsx`: `ClientPicker` (combobox type-ahead on name/mobile), `ClientFields`, `TravelFields`, `PriceFields`, `LinesFields`, `NotesFields`.
+- `views.tsx`: read states + `paxText`, `dateRange`. `MoneyRail.tsx`: `MoneyPanel({ input })`. `StatusControl.tsx`: select + Cancel dialog.
+  `PaymentsSection.tsx`: inline add / edit / delete for either side.
+- **`DocumentsSlot.tsx` — placeholder for the Documents card.** The Documents phase replaces its body (it already gets `booking` + `client`
+  and sits in the rail under Money).
+- `screens/shared/DmcDialog.tsx`: `DmcDialog({ open, onClose, onCreated(dmcId) })` — "New DMC" dialog (reuse in the DMCs directory).
+- Enquiry Convert = `/admin/bookings/new?enquiry=<id>` (`enquiryConversion` prefill, mobile match note; a converted Enquiry shows "View UDN-xxx").
+  `?start=YYYY-MM-DD` prefills Travel start.
 
 ## Tests
 
@@ -101,6 +123,8 @@ login?next= → `AdminDataProvider` + `ToastProvider` + `AdminShell`) wraps inde
 - Seam 2: `src/test/rules/admin.test.ts` (helpers in `src/test/adminAuth.ts`: `seedAdmins`, `googleDb`, `seed`).
 - Seam 3: `data/data.test.ts`, `data/AdminDataProvider.test.tsx` (emulator, real rules).
 - Seam 5: `screens/LoginScreen.test.tsx` (Auth + Firestore emulators, real rules; `signIn` = Google credential sign-in instead of the popup).
+  `screens/BookingScreens.test.tsx` (same harness, signed in before render): New booking → detail, section Edit/Save/Cancel, lines + inline DMC,
+  payments → Money rail, Cancel dialog preview/write/un-cancel, Voucher Received warning, Enquiry Convert (match / no match / already converted).
 - `auth/next.test.ts` (redirect safety); `src/App.test.tsx` (`/admin` lazy, no site chrome, noindex).
 
 Run all with `npm test` (starts the Firestore + Auth emulators).
