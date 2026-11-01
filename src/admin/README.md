@@ -8,8 +8,9 @@ Spec: `docs/specs/udan-admin.md`. Vocabulary: `GLOSSARY.md`. Nothing outside `sr
 | `data/` | done (A1) | `src/admin/data` |
 | `auth/` | done (A2) | `src/admin/auth` |
 | `ui/` (primitives + `admin.css`) | done (A2) | `src/admin/ui` |
-| routes, `shell/`, `screens/` | A2: shell + placeholders; B: Booking detail + New booking | `routes.tsx` (lazy entry), `AdminApp.tsx` |
-| `pdf/`, `export/` | later phases | — |
+| routes, `shell/`, `screens/` | A2: shell + placeholders; B: Booking detail + New booking; C: Clients, DMCs, Enquiries, Settings | `routes.tsx` (lazy entry), `AdminApp.tsx` |
+| `export/` | done (C) | `src/admin/export` |
+| `pdf/` | later phase | — |
 
 ## `model/` — pure TypeScript (no Firestore, no React)
 
@@ -58,6 +59,7 @@ Every function takes a `Firestore` first and rejects with `AdminDataError` (`cod
 - `createClient / updateClient / deleteClient`, `createDmc / updateDmc / deleteDmc` (blank optional fields are removed; "in use" check is the UI's).
 - `setEnquiryStatus(db, id, 'new'|'contacted'|'closed', { closeReason? })`, `saveEnquiryNotes`, `deleteEnquiry`.
 - `getBusinessProfile(db, { seed = true })`, `saveBusinessProfile(db, profile)`.
+- `readBackupCollections(db) → RawCollections` (getDocs of clients/dmcs/bookings/counters/inquiries + getDoc `settings/business`; raw data, Timestamps intact), `projectIdOf(db)`.
 - `subscribeCollection(db, name, onChange)` — raw listener (`CollectionState<T> = { status, data, error? }`).
 - React: `<AdminDataProvider db>`; hooks `useAdminData()` (states + `retry(name)` + `clientsById`/`dmcsById` + `db`), `useAdminDb`,
   `useClients`, `useDmcs`, `useBookings`, `useEnquiries`, `useBookingRows(today?)`, `useBookingByNo(bookingNo)`, `useNewEnquiryCount`.
@@ -77,7 +79,7 @@ Every function takes a `Firestore` first and rejects with `AdminDataError` (`cod
 (or shows "not configured") and renders `<AdminApp auth db signIn?>`: `login` outside the guard; `shell/AdminLayout` (guard: spinner →
 login?next= → `AdminDataProvider` + `ToastProvider` + `AdminShell`) wraps index (Overview), `insights` (React.lazy chunk), `bookings/new`,
 `bookings/:bookingNo`, `clients`, `clients/:id`, `dmcs`, `dmcs/:id`, `enquiries`, `settings`, `*` (admin 404). Screens live in `screens/`
-(placeholders except Login and Settings → Account). Replace a placeholder file's body; keep its export name.
+(placeholders: Overview, Insights). Replace a placeholder file's body; keep its export name.
 `vite.config.ts` `bundleGuard` fails the build if the public entry's static chunk graph contains `src/admin/`, Firebase Auth, `@react-pdf` or `recharts`.
 
 ## `ui/` — primitives (import `admin.css` nowhere else; `routes.tsx` does)
@@ -117,14 +119,50 @@ login?next= → `AdminDataProvider` + `ToastProvider` + `AdminShell`) wraps inde
 - Enquiry Convert = `/admin/bookings/new?enquiry=<id>` (`enquiryConversion` prefill, mobile match note; a converted Enquiry shows "View UDN-xxx").
   `?start=YYYY-MM-DD` prefills Travel start.
 
+## `export/` — CSV, ledger, directory rows, Backup (pure except `download.ts`, `lastBackup.ts`)
+
+- `toCsv(header, rows)` / `csvFrom(columns, items)` / `csvCell`: UTF-8 BOM, RFC 4180 quoting, CRLF after every record. Text cells starting
+  `= + - @` tab CR get a `'` prefix (so mobiles read `'+91…`); **numbers are written raw** (negative Signed amounts stay numeric).
+- Payments Ledger: `ledgerRows(bookings, clientsById, dmcsById, { from, to, side: 'both'|'client'|'dmc' })` (incl. Cancelled; date asc, then
+  Booking ID), `signedAmount` (Client payment +, Client refund −, DMC payment −, DMC refund +), `ledgerCsv`, `ledgerFilename`,
+  `ledgerPeriod(preset: 'thisFy'|'lastFy'|'thisMonth'|'custom', today, custom?)`.
+- Directory: `clientCsvRows / dmcCsvRows(records, bookingRows)` (Bookings = counted, as in the lists) → `clientsCsv / dmcsCsv`, `clientsFilename / dmcsFilename`.
+- **Bookings table CSV (for the dashboard phase)**: `bookingsCsv(rows: BookingRow[])` — pass the filtered + sorted rows; `BOOKING_COLUMNS`, `bookingsFilename(today)`.
+- Backup: `serialiseBackup({ projectId, exportedAt, collections })` → `{ format: 'udan-admin-backup', version: 1, exportedAt, projectId, collections }`
+  (all 6 collections, Timestamps/Dates → ISO anywhere), `backupJson` (pretty), `backupFilename(today)`, `BACKUP_COLLECTIONS`.
+- `downloadText(filename, text, CSV_MIME|JSON_MIME)`.
+- Last backup (localStorage `udan-admin:last-backup`, IST date): `readLastBackup()`, `recordBackup(date)`, `useLastBackup()` (live).
+  **Overview phase: pass `useLastBackup()` as `needsAttention({ lastBackup })`.**
+
+## Screens — Clients, DMCs, Enquiries, Settings (phase C)
+
+- `screens/directory/shared.tsx`: `useSearchParam(key)` (URL state, replace), `SearchBox` (`?q=`), `matchesText`, `Outstanding` (negative →
+  "Refund"/"Due back" in warn), `ContactButtons`, Client/DMC form fields + converters, `clientErrors` (mobile uniqueness), `useRetryRows`.
+  `directory/ClientDialog.tsx` = New client. New DMC reuses `shared/DmcDialog`.
+- Clients `/admin/clients` (`?q=`), Client page (strip via `clientSummary`, Bookings, Details inline Edit/Save, delete disabled "Used in N
+  bookings"). New booking from a Client = `/admin/bookings/new?client=<id>` (`blankForm({ clientId })`).
+- DMCs `/admin/dmcs` (`?q=`, `?owing=1`), DMC page (strip + Bookings via `dmcSummary`, head Edit opens the Details form, delete gated by `usedIn`).
+- Enquiries `/admin/enquiries`: `?filter=open|new|contacted|converted|closed|all` (default open; Booking detail links `?filter=converted`),
+  `?q=`, `?service=`, `?from=`/`?to=` (received date IST). Rows: Call, WhatsApp (greeting), Mark contacted (new), Close (dialog, optional
+  reason) / Reopen, notes save on blur, Convert → `/admin/bookings/new?enquiry=<id>`, delete-as-spam (confirm); converted → "View UDN-xxx" only.
+  Nav badge (`useNewEnquiryCount`) was already live.
+- Settings: anchor nav; Account; `settings/BusinessProfileForm.tsx` (seeds on open, one Save with dirty state + Discard;
+  `settings/signature.ts` resizes a PNG on a canvas until ≤ 100 KB); `settings/DataCard.tsx` (Backup + last-backup + overdue note, Payments
+  ledger CSV with period/side and entry count, Clients/DMCs CSV).
+
 ## Tests
 
 - Seam 1: `model/**/*.test.ts` (pure).
 - Seam 2: `src/test/rules/admin.test.ts` (helpers in `src/test/adminAuth.ts`: `seedAdmins`, `googleDb`, `seed`).
 - Seam 3: `data/data.test.ts`, `data/AdminDataProvider.test.tsx` (emulator, real rules).
+- Seam 4: `export/export.test.ts` (toCsv, ledger signs/filters/sort, directory + bookings CSV, Backup serialiser); `data/data.test.ts` covers `readBackupCollections`.
 - Seam 5: `screens/LoginScreen.test.tsx` (Auth + Firestore emulators, real rules; `signIn` = Google credential sign-in instead of the popup).
   `screens/BookingScreens.test.tsx` (same harness, signed in before render): New booking → detail, section Edit/Save/Cancel, lines + inline DMC,
   payments → Money rail, Cancel dialog preview/write/un-cancel, Voucher Received warning, Enquiry Convert (match / no match / already converted).
+- `screens/DirectoryScreens.test.tsx`: Clients (list, search, New client uniqueness, edit, delete gating/delete, `?client=` prefill), DMCs (owing
+  filter, detail, edit, delete), Enquiries (filter + counts, converted row, status changes, notes, delete, Convert link), Settings (profile
+  save/discard, Backup download, ledger + Clients CSV), 4 data-region states. Screen tests call RTL `cleanup()` before `deleteApp` and use
+  `clearFirestore(env)` (retrying) from `src/test/firestoreEmulator.ts`.
 - `auth/next.test.ts` (redirect safety); `src/App.test.tsx` (`/admin` lazy, no site chrome, noindex).
 
 Run all with `npm test` (starts the Firestore + Auth emulators).
