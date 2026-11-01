@@ -31,7 +31,13 @@ export function readFirebaseOptions(env: Env = import.meta.env): FirebaseOptions
     appId: value(env.VITE_FIREBASE_APP_ID),
   };
   if (usesEmulator(env)) {
-    return { ...options, apiKey: options.apiKey ?? 'demo-api-key', projectId: options.projectId ?? EMULATOR_PROJECT_ID };
+    const projectId = options.projectId ?? EMULATOR_PROJECT_ID;
+    return {
+      ...options,
+      apiKey: options.apiKey ?? 'demo-api-key',
+      projectId,
+      authDomain: options.authDomain ?? `${projectId}.firebaseapp.com`,
+    };
   }
   return options.apiKey && options.projectId && options.appId ? options : null;
 }
