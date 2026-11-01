@@ -3,7 +3,7 @@
  * New booking → detail, section Edit/Save/Cancel, payments → Money rail, Cancel dialog, Enquiry Convert.
  */
 import type { RulesTestEnvironment } from '@firebase/rules-unit-testing';
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent, { type UserEvent } from '@testing-library/user-event';
 import { deleteApp, initializeApp, type FirebaseApp } from 'firebase/app';
 import { connectAuthEmulator, GoogleAuthProvider, inMemoryPersistence, initializeAuth, signInWithCredential, type Auth } from 'firebase/auth';
@@ -11,7 +11,7 @@ import { connectFirestoreEmulator, doc, getDoc, getFirestore, type Firestore } f
 import { createMemoryRouter, RouterProvider } from 'react-router';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { ADMIN_EMAIL, seed, seedAdmins } from '../../test/adminAuth';
-import { contextDb, createRulesEnv, readAll } from '../../test/firestoreEmulator';
+import { clearFirestore, contextDb, createRulesEnv, readAll } from '../../test/firestoreEmulator';
 import { AdminApp } from '../AdminApp';
 import { formatDate, todayIST } from '../model';
 
@@ -84,7 +84,7 @@ afterAll(async () => {
   await env?.cleanup();
 });
 beforeEach(async () => {
-  await env.clearFirestore();
+  await clearFirestore(env);
   await fetch(`http://${AUTH_HOST}/emulator/v1/projects/${PROJECT_ID}/accounts`, { method: 'DELETE' });
   await seedAdmins(env);
   await seed(env, {
@@ -102,6 +102,8 @@ beforeEach(async () => {
   connectFirestoreEmulator(db, host, port);
 });
 afterEach(async () => {
+  // Unmount (stop the app's listeners) before deleting the app; setup.ts's cleanup runs after this hook.
+  cleanup();
   await deleteApp(app);
 });
 

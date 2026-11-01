@@ -3,7 +3,7 @@
  * plus the four data-region states (loading / empty / error / full) on the Clients and Enquiries lists.
  */
 import type { RulesTestEnvironment } from '@firebase/rules-unit-testing';
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { deleteApp, initializeApp, type FirebaseApp } from 'firebase/app';
 import { connectAuthEmulator, GoogleAuthProvider, inMemoryPersistence, initializeAuth, signInWithCredential, type Auth } from 'firebase/auth';
@@ -11,7 +11,7 @@ import { connectFirestoreEmulator, doc, getDoc, getFirestore, type Firestore } f
 import { createMemoryRouter, MemoryRouter, RouterProvider } from 'react-router';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ADMIN_EMAIL, googleDb, seed, seedAdmins } from '../../test/adminAuth';
-import { contextDb, createRulesEnv } from '../../test/firestoreEmulator';
+import { clearFirestore, contextDb, createRulesEnv } from '../../test/firestoreEmulator';
 import { AdminApp } from '../AdminApp';
 import { AdminDataProvider } from '../data';
 import { LAST_BACKUP_KEY } from '../export';
@@ -88,7 +88,7 @@ afterAll(async () => {
 });
 beforeEach(async () => {
   localStorage.clear();
-  await env.clearFirestore();
+  await clearFirestore(env);
   await fetch(`http://${AUTH_HOST}/emulator/v1/projects/${PROJECT_ID}/accounts`, { method: 'DELETE' });
   await seedAdmins(env);
   await seed(env, {
@@ -112,6 +112,8 @@ beforeEach(async () => {
   connectFirestoreEmulator(db, host, port);
 });
 afterEach(async () => {
+  // Unmount (stop the app's listeners) before deleting the app; setup.ts's cleanup runs after this hook.
+  cleanup();
   vi.restoreAllMocks();
   await deleteApp(app);
 });
@@ -437,7 +439,7 @@ describe('Data-region states (Clients and Enquiries lists)', () => {
   });
 
   it('empty: what goes here + one action', async () => {
-    await env.clearFirestore();
+    await clearFirestore(env);
     await seedAdmins(env);
     renderScreen(<ClientsScreen />, googleDb(env));
     expect(await screen.findByRole('heading', { name: 'No Clients yet' })).toBeInTheDocument();

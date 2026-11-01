@@ -51,3 +51,19 @@ export async function readAll(env: RulesTestEnvironment, path: string): Promise<
   });
   return docs;
 }
+
+/**
+ * `env.clearFirestore()` with retries: under a full parallel run the emulator's DELETE endpoint sometimes answers
+ * 500 UNKNOWN while another project's listeners are being torn down. Retrying is safe (clearing is idempotent).
+ */
+export async function clearFirestore(env: RulesTestEnvironment, attempts = 5): Promise<void> {
+  for (let i = 1; ; i += 1) {
+    try {
+      await env.clearFirestore();
+      return;
+    } catch (err) {
+      if (i >= attempts) throw err;
+      await new Promise((r) => setTimeout(r, 100 * i));
+    }
+  }
+}
