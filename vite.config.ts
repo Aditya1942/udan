@@ -2,8 +2,16 @@
 import { defineConfig, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
 
-/** Code the public site must never download: admin screens, Firebase Auth, PDF and chart libraries. */
-const PUBLIC_FORBIDDEN: RegExp[] = [/src\/admin\//, /firebase\/auth|@firebase\/auth/, /@react-pdf/, /recharts/]
+/** Code the public site must never download: admin screens, Firebase Auth, PDF, QR and chart libraries. */
+const PUBLIC_FORBIDDEN: RegExp[] = [/src\/admin\//, /firebase\/auth|@firebase\/auth/, /@react-pdf/, /node_modules\/qrcode\//, /recharts/]
+/**
+ * Heavy code the admin routes chunk must leave to its nested lazy chunks: Recharts (only the Insights screen) and the
+ * PDF stack (react-pdf, qrcode, src/admin/pdf — loaded when Prepare is pressed).
+ */
+const ADMIN_ROUTES_FORBIDDEN: { pattern: RegExp; rule: string }[] = [
+  { pattern: /recharts/, rule: 'Recharts: only the lazy Insights screen may import it' },
+  { pattern: /@react-pdf|node_modules\/qrcode\/|src\/admin\/pdf\//, rule: 'the PDF stack (react-pdf, qrcode, src/admin/pdf): load it only with a dynamic import on Prepare' },
+]
 
 /**
  * Static chunk closure (the chunk + every chunk it imports statically) of the chunks matching `start`;
@@ -34,8 +42,8 @@ function staticLeaks(
 /**
  * Fails `npm run build` if the entry chunk, or any chunk it imports statically, contains admin code
  * (docs/specs/udan-admin.md, "Routing and bundle isolation"). Dynamic imports (lazy routes) are fine.
- * Also keeps Recharts out of the admin routes chunk (Overview and the other screens): only the lazy Insights
- * route may pull it.
+ * Also keeps Recharts and the PDF stack out of the admin routes chunk (Overview and the other screens): only the
+ * lazy Insights route may pull Recharts, and only the Documents card's Prepare (`import('…/pdf')`) the PDF code.
  */
 function bundleGuard(): Plugin {
   return {
@@ -54,11 +62,11 @@ function bundleGuard(): Plugin {
       // The lazy /admin chunk (its facadeModuleId can be null, so match on the modules it holds).
       const adminRoutes = (chunk: { modules: Record<string, unknown> }) => Object.keys(chunk.modules).some((id) => /src\/admin\/routes\.tsx$/.test(id))
       if (![...chunks.values()].some(adminRoutes)) this.error('bundleGuard: no chunk for src/admin/routes.tsx (is /admin still lazy?)')
-      const chartLeaks = staticLeaks(chunks, adminRoutes, [/recharts/])
-      if (chartLeaks.length) {
-        this.error(
-          `bundleGuard: the admin routes chunk statically pulls Recharts. Only the lazy Insights screen may import it.\n  ${chartLeaks.slice(0, 20).join('\n  ')}`,
-        )
+      for (const { pattern, rule } of ADMIN_ROUTES_FORBIDDEN) {
+        const heavy = staticLeaks(chunks, adminRoutes, [pattern])
+        if (heavy.length) {
+          this.error(`bundleGuard: the admin routes chunk statically pulls ${rule}.\n  ${heavy.slice(0, 20).join('\n  ')}`)
+        }
       }
     },
   }
