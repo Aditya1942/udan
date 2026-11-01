@@ -8,9 +8,9 @@ Spec: `docs/specs/udan-admin.md`. Vocabulary: `GLOSSARY.md`. Nothing outside `sr
 | `data/` | done (A1) | `src/admin/data` |
 | `auth/` | done (A2) | `src/admin/auth` |
 | `ui/` (primitives + `admin.css`) | done (A2) | `src/admin/ui` |
-| routes, `shell/`, `screens/` | A2: shell; B: Booking detail + New booking; C: Clients, DMCs, Enquiries, Settings; D: Dashboard Overview + Insights | `routes.tsx` (lazy entry), `AdminApp.tsx` |
+| routes, `shell/`, `screens/` | A2: shell; B: Booking detail + New booking; C: Clients, DMCs, Enquiries, Settings; D: Dashboard Overview + Insights; E: Documents card | `routes.tsx` (lazy entry), `AdminApp.tsx` |
 | `export/` | done (C) | `src/admin/export` |
-| `pdf/` | later phase | — |
+| `pdf/` | done (E) | lazy only: `import('../../pdf')` (`view.ts` is pure and may be imported directly) |
 
 ## `model/` — pure TypeScript (no Firestore, no React)
 
@@ -79,8 +79,9 @@ Every function takes a `Firestore` first and rejects with `AdminDataError` (`cod
 (or shows "not configured") and renders `<AdminApp auth db signIn?>`: `login` outside the guard; `shell/AdminLayout` (guard: spinner →
 login?next= → `AdminDataProvider` + `ToastProvider` + `AdminShell`) wraps index (Overview), `insights` (React.lazy chunk), `bookings/new`,
 `bookings/:bookingNo`, `clients`, `clients/:id`, `dmcs`, `dmcs/:id`, `enquiries`, `settings`, `*` (admin 404). Screens live in `screens/`.
-`vite.config.ts` `bundleGuard` fails the build if the public entry's static chunk graph contains `src/admin/`, Firebase Auth, `@react-pdf` or `recharts`,
-and if the admin routes chunk (the one holding `src/admin/routes.tsx`) statically pulls `recharts` (only the lazy Insights screen may).
+`vite.config.ts` `bundleGuard` fails the build if the public entry's static chunk graph contains `src/admin/`, Firebase Auth, `@react-pdf`, `qrcode` or `recharts`,
+and if the admin routes chunk (the one holding `src/admin/routes.tsx`) statically pulls `recharts` (only the lazy Insights screen may) or the PDF stack
+(`@react-pdf`, `qrcode`, `src/admin/pdf/`: only the Documents card's `import('../../pdf')` on Prepare).
 
 ## `ui/` — primitives (import `admin.css` nowhere else; `routes.tsx` does)
 
@@ -114,8 +115,7 @@ and if the admin routes chunk (the one holding `src/admin/routes.tsx`) staticall
 - `fields.tsx`: `ClientPicker` (combobox type-ahead on name/mobile), `ClientFields`, `TravelFields`, `PriceFields`, `LinesFields`, `NotesFields`.
 - `views.tsx`: read states + `paxText`, `dateRange`. `MoneyRail.tsx`: `MoneyPanel({ input })`. `StatusControl.tsx`: select + Cancel dialog.
   `PaymentsSection.tsx`: inline add / edit / delete for either side.
-- **`DocumentsSlot.tsx` — placeholder for the Documents card.** The Documents phase replaces its body (it already gets `booking` + `client`
-  and sits in the rail under Money).
+- `DocumentsCard.tsx` (rail, under Money; phase E): see "Documents" below.
 - `screens/shared/DmcDialog.tsx`: `DmcDialog({ open, onClose, onCreated(dmcId) })` — "New DMC" dialog (reuse in the DMCs directory).
 - Enquiry Convert = `/admin/bookings/new?enquiry=<id>` (`enquiryConversion` prefill, mobile match note; a converted Enquiry shows "View UDN-xxx").
   `?start=YYYY-MM-DD` prefills Travel start.
@@ -175,6 +175,31 @@ and if the admin routes chunk (the one holding `src/admin/routes.tsx`) staticall
   kept for `accessibilityLayer` and `isAnimationActive`. `insights/ChartFigure.tsx`: `<figure>` labelled by its caption, plot group with an
   `aria-label`, "View as table" toggle (`aria-pressed`) → `<table>` with `<caption>`; `preferTable` charts start as tables on phones.
 
+## `pdf/` + Documents card — Invoice and Voucher PDFs (phase E)
+
+- `view.ts` (pure, no react-pdf): `invoiceView({ booking, client, profile }) → InvoiceView` and `voucherView({ booking, client, profile, today }) → VoucherView`
+  decide every printed line, label, total and visibility (profile fields only if filled; `normaliseBusinessProfile`). Invoice: header lines, Billed to /
+  From, one priced row ("Holiday package — …" / "Cancellation charge — …"), Included services (type, description, dates or "—"; never price/DMC),
+  `servicesStruck` + struck `originalPrice` when Cancelled, totals (price, "Received <date> · <mode>" −, "Refunded …" +) → `result` Balance due (danger,
+  "by <due>") / Paid in full (action) / Refund due to you (warn), `payment` only when balance > 0 and bank or UPI filled (`qr.uri` = `upiPayUri`, incl.
+  `cu=INR`), terms, signature ("For <trading name>"), footer incl. "This is not a tax invoice.". Throws without `invoiceNo`. Voucher: never gets DMCs and
+  copies only customer fields; `days` (dated lines grouped by start, sorted), `throughout` (undated), confirmation or pending "To be confirmed",
+  emergency = profile emergency contacts else phones (empty → column hidden), itinerary lines, Good to know bullets, footer. Throws when Cancelled.
+  Helpers: `displayMobile` (`+91 98111 11111`), `paxLine`, `dateRangeText`, `upiPayUri`.
+- `InvoiceDocument.tsx` / `VoucherDocument.tsx`: react-pdf layouts of those views (ported from prototype Invoice A + C services / Voucher D + Timeline).
+  `theme.ts`: palette, base styles, `registerFonts(FontFiles)` (Inter 400/600, Manrope 600/700 static TTFs in `fonts/`; hyphenation off), `PdfAssets`.
+- `render.tsx`: `qrPng(uri)` (qrcode → PNG data URL, local), `renderInvoicePdf(view, assets)` / `renderVoucherPdf` → Blob. `assets.ts`: browser URLs
+  (`?url` TTFs + wordmark PNG).
+- `prepare.ts` (re-exported by `index.ts`, the lazy entry): `prepareInvoice(booking, { client, profile, assets? })` / `prepareVoucher(booking, { client,
+  profile, today?, assets? })` → `File` (`invoiceFilename` / `voucherFilename`, `application/pdf`). The Invoice number must already be on the Booking.
+- `screens/booking/DocumentsCard.tsx`: rows Invoice and Voucher. Prepare → (Invoice: `allocateInvoiceNo` in parallel with `getBusinessProfile`)
+  → lazy `import('../../pdf')` → File + Blob URL (memory only; revoked on replace/unmount). Ready: filename + Share (only if
+  `navigator.canShare({ files })`; `AbortError` silent, else toast "Sharing failed — use Download"), Preview (`<a target=_blank>`), Download
+  (`<a download>`), WhatsApp (`whatsappUrl`, hidden without mobile), Email (`mailtoUrl` + `emailSubject`, only with email), "Prepare again".
+  Message = `shareMessage` with the profile's trading name. Voucher row disabled "Booking cancelled" while Cancelled; idle Voucher notes how many
+  lines print "To be confirmed". Failure → inline `role=alert` + Retry. No sent tracking.
+- `sampleData.ts`: UDN-001 Kerala Booking, full profile, `cancelledSample` (tests + samples only).
+
 ## Tests
 
 - Seam 1: `model/**/*.test.ts` (pure).
@@ -191,6 +216,12 @@ and if the admin routes chunk (the one holding `src/admin/routes.tsx`) staticall
 - `screens/DashboardScreens.test.tsx`: Overview month figures + Needs attention (incl. Backup overdue and its absence after a recent backup),
   calendar bars / day links / month bar, table search + filters + sort in the URL, footer totals, URL-loaded filters, CSV content, pre-filtered
   links, 4 data-region states; Insights smoke (lazy route, period in the URL, KPIs, View as table, Top Clients). Stubs `ResizeObserver` for Recharts.
+- `pdf/view.test.ts` (pure): Invoice partial / paid / cancelled-refund / cancelled-due / empty / seeded profile, no DMC or line cost; Voucher
+  timeline grouping, To be confirmed, empty profile, phone fallback, no DMC name / money / payment (JSON scan). `pdf/render.test.ts` renders real
+  PDFs in Node (smoke); `PDF_SAMPLES=1 npx vitest run src/admin/pdf/render.test.ts` writes them to `.scratch/admin-bms/samples/`.
+- `screens/DocumentsCard.test.tsx` (emulators; `vi.mock('../pdf')`): Invoice Prepare allocates + stores the number once (re-Prepare keeps it),
+  file name, Preview/Download/WhatsApp/Email links, Share only with `canShare` (abort silent, failure toast), Voucher missing-confirmation note,
+  Cancelled → Voucher disabled + Invoice still prepares, render failure → Retry.
 - `auth/next.test.ts` (redirect safety); `src/App.test.tsx` (`/admin` lazy, no site chrome, noindex).
 
 Run all with `npm test` (starts the Firestore + Auth emulators).
