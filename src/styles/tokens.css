@@ -102,4 +102,18 @@
   --tap: 2.75rem;          /* 44px minimum touch target */
 
   --transition: 160ms ease;
+
+  /* Admin (derived only; see docs/specs/udan-admin.md "Admin shell and design").
+   * Status colours: text/bg pairs >= 4.5:1; white on the bar colours >= 4.84:1. */
+  --adm-pending-bg: #eef1f2;   --adm-pending-fg: #46525a;   --adm-pending-bar: #8a979c; /* bar = light fill + 1px outline */
+  --adm-confirmed-bg: #e3eef2; --adm-confirmed-fg: #165d79; --adm-confirmed-bar: var(--color-teal);
+  --adm-voucher-bg: #e0f2f7;   --adm-voucher-fg: #0b5a6e;   --adm-voucher-bar: #17788f;
+  --adm-completed-bg: #eaf3e0; --adm-completed-fg: #3f6e15; --adm-completed-bar: var(--color-action);
+  --adm-cancelled-bg: #f3f3f1; --adm-cancelled-fg: #5b686d; /* + line-through */
+  --color-danger: #b42318;     --color-danger-tint: #fdecea;
+  --color-warn: #8a5300;       --color-warn-tint: #fdf3e1;
+  --adm-chart-1: #9cc3d2;
+  --adm-ctrl: 2.25rem;         --dur-micro: 120ms; /* 36px app control */
+  --adm-on-dark-hover: rgb(255 255 255 / 0.08); --adm-on-dark-active: rgb(255 255 255 / 0.14); --adm-on-dark-rule: rgb(255 255 255 / 0.2);
+  --adm-scrim: rgb(37 50 56 / 0.4);
 }
