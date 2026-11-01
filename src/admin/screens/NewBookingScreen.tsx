@@ -6,7 +6,7 @@ import { ButtonLink, EmptyState, ErrorState, LoadingState, Note, PageHeader, use
 import { BOOKINGS_BACK, NewBooking } from './booking/BookingPage';
 import { blankForm } from './booking/form';
 
-/** `/admin/bookings/new` (`?start=YYYY-MM-DD` from a calendar day, `?enquiry=<id>` from Convert). */
+/** `/admin/bookings/new` (`?start=YYYY-MM-DD` from a calendar day, `?enquiry=<id>` from Convert, `?client=<id>` from a Client page). */
 export function NewBookingScreen() {
   const [params] = useSearchParams();
   useAdminTitle('New booking');
@@ -75,5 +75,7 @@ export function NewBookingScreen() {
       />
     );
   }
-  return <NewBooking key={start ?? 'blank'} initial={blankForm({ start })} />;
+  const clientParam = params.get('client');
+  const clientId = clientParam && clients.data.some((c) => c.id === clientParam) ? clientParam : undefined;
+  return <NewBooking key={`${start ?? 'blank'}:${clientId ?? ''}`} initial={blankForm({ start, clientId })} />;
 }

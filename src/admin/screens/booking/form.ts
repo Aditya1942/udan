@@ -74,12 +74,14 @@ export type BlankFormOptions = {
   start?: ISODate | null;
   /** Prefill from an Enquiry (`enquiryConversion`). */
   conversion?: { matchedClient?: Client; newClient: { name: string; mobile: string }; draft: Partial<BookingDraft> };
+  /** `?client=` prefill (New booking from a Client page). Ignored with a conversion. */
+  clientId?: string;
 };
 
-export function blankForm({ start, conversion }: BlankFormOptions = {}): BookingForm {
+export function blankForm({ start, conversion, clientId }: BlankFormOptions = {}): BookingForm {
   const draft = conversion?.draft ?? {};
   return {
-    clientId: conversion?.matchedClient?.id ?? '',
+    clientId: conversion ? (conversion.matchedClient?.id ?? '') : (clientId ?? ''),
     destination: draft.destination ?? '',
     travelStart: start ?? '',
     travelEnd: '',
