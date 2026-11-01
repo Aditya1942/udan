@@ -2,7 +2,9 @@ rules_version = '2';
 
 // UDAN Firestore rules. Default deny: anything not matched below is refused.
 // Website: the public may only create a well-formed Enquiry in `inquiries`.
-// Enquiries are read in the Firebase console (the admin build extends these rules).
+// Admin (docs/specs/udan-admin.md, "Firestore security rules"): allow-listed Google accounts read/write
+// the admin collections. Rules are guardrails against Admin-UI bugs, not an adversary model:
+// light schema checks (key allow-lists, scalar types, immutables); nothing is validated inside arrays.
 service cloud.firestore {
   match /databases/{database}/documents {
 
@@ -40,9 +42,217 @@ service cloud.firestore {
         && data.createdAt == request.time;
     }
 
+    // ---------------------------------------------------------------- admin
+
+    // Admin = Google sign-in with a verified email listed (lowercase) in config/admins.
+    function isAdmin() {
+      return request.auth != null
+        && request.auth.token.firebase.sign_in_provider == 'google.com'
+        && request.auth.token.email_verified == true
+        && request.auth.token.email.lower()
+             in get(/databases/$(database)/documents/config/admins).data.emails;
+    }
+
+    function isDate(v) {
+      return v is string && v.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$');
+    }
+
+    function isMoney(v) {
+      return v is int && v >= 0;
+    }
+
+    function optString(d, k) {
+      return !(k in d) || d[k] is string;
+    }
+
+    function optDate(d, k) {
+      return !(k in d) || isDate(d[k]);
+    }
+
+    function optMoney(d, k) {
+      return !(k in d) || isMoney(d[k]);
+    }
+
+    function nonEmptyString(v, max) {
+      return v is string && v.size() >= 1 && v.size() <= max;
+    }
+
+    // Every admin write stamps updatedAt with serverTimestamp().
+    function stamped(d) {
+      return d.updatedAt == request.time;
+    }
+
+    function createdNow() {
+      return request.resource.data.createdAt == request.time;
+    }
+
+    function unchanged(k) {
+      return request.resource.data[k] == resource.data[k];
+    }
+
+    // Absent → present is allowed once; afterwards never changed or removed.
+    function setOnce(k) {
+      return !(k in resource.data)
+        || (k in request.resource.data && request.resource.data[k] == resource.data[k]);
+    }
+
+    // The allow-list is edited only in the Firebase console.
+    match /config/{configId} {
+      allow read: if configId == 'admins' && isAdmin();
+      allow write: if false;
+    }
+
+    // clients/{autoId}
+    function isValidClient(d) {
+      return d.keys().hasOnly(['name', 'mobile', 'email', 'city', 'notes', 'createdAt', 'updatedAt'])
+        && d.keys().hasAll(['name', 'mobile', 'createdAt', 'updatedAt'])
+        && nonEmptyString(d.name, 200)
+        && d.mobile is string && d.mobile.matches('^[+][1-9][0-9]{6,14}$')
+        && optString(d, 'email') && optString(d, 'city') && optString(d, 'notes')
+        && stamped(d);
+    }
+
+    match /clients/{clientId} {
+      allow read, delete: if isAdmin();
+      allow create: if isAdmin() && isValidClient(request.resource.data) && createdNow();
+      allow update: if isAdmin() && isValidClient(request.resource.data) && unchanged('createdAt');
+    }
+
+    // dmcs/{autoId}
+    function isValidDmc(d) {
+      return d.keys().hasOnly(['name', 'contactPerson', 'phone', 'email', 'region', 'notes', 'createdAt', 'updatedAt'])
+        && d.keys().hasAll(['name', 'createdAt', 'updatedAt'])
+        && nonEmptyString(d.name, 200)
+        && optString(d, 'contactPerson') && optString(d, 'phone') && optString(d, 'email')
+        && optString(d, 'region') && optString(d, 'notes')
+        && stamped(d);
+    }
+
+    match /dmcs/{dmcId} {
+      allow read, delete: if isAdmin();
+      allow create: if isAdmin() && isValidDmc(request.resource.data) && createdNow();
+      allow update: if isAdmin() && isValidDmc(request.resource.data) && unchanged('createdAt');
+    }
+
+    // bookings/{autoId}
+    function bookingStatuses() {
+      return ['Pending', 'Confirmed', 'Voucher Received', 'Completed', 'Cancelled'];
+    }
+
+    function isValidPax(p) {
+      return p is map
+        && p.keys().hasOnly(['adults', 'children', 'infants'])
+        && p.keys().hasAll(['adults', 'children', 'infants'])
+        && isMoney(p.adults) && isMoney(p.children) && isMoney(p.infants);
+    }
+
+    function isValidBooking(d) {
+      return d.keys().hasOnly([
+          'bookingNo', 'bookingSeq', 'clientId', 'status', 'destination', 'travelStart', 'travelEnd',
+          'pax', 'travellerNames', 'itinerary', 'internalNotes', 'sellingPrice', 'clientBalanceDueBy',
+          'lines', 'clientPayments', 'dmcPayments', 'invoiceNo', 'invoiceSeq', 'invoiceDate', 'enquiryId',
+          'cancelledAt', 'cancelReason', 'clientCancellationCharge', 'createdAt', 'updatedAt'])
+        && d.keys().hasAll([
+          'bookingNo', 'bookingSeq', 'clientId', 'status', 'destination', 'travelStart', 'travelEnd',
+          'pax', 'travellerNames', 'itinerary', 'internalNotes', 'sellingPrice',
+          'lines', 'clientPayments', 'dmcPayments', 'createdAt', 'updatedAt'])
+        && d.bookingNo is string && d.bookingNo.matches('^UDN-[0-9]{3,}$')
+        && d.bookingSeq is int && d.bookingSeq >= 1
+        && nonEmptyString(d.clientId, 200)
+        && d.status in bookingStatuses()
+        && nonEmptyString(d.destination, 200)
+        && isDate(d.travelStart) && isDate(d.travelEnd) && d.travelEnd >= d.travelStart
+        && isValidPax(d.pax)
+        && d.travellerNames is list
+        && d.itinerary is string && d.internalNotes is string
+        && isMoney(d.sellingPrice)
+        && optDate(d, 'clientBalanceDueBy')
+        && d.lines is list && d.clientPayments is list && d.dmcPayments is list
+        && (!('invoiceNo' in d) || (d.invoiceNo is string && d.invoiceNo.matches('^UDAN/[0-9]{4}-[0-9]{2}/[0-9]{3,}$')))
+        && (!('invoiceSeq' in d) || (d.invoiceSeq is int && d.invoiceSeq >= 1))
+        && optDate(d, 'invoiceDate')
+        && optString(d, 'enquiryId')
+        && optDate(d, 'cancelledAt') && optString(d, 'cancelReason') && optMoney(d, 'clientCancellationCharge')
+        && stamped(d);
+    }
+
+    match /bookings/{bookingId} {
+      allow read: if isAdmin();
+      allow create: if isAdmin() && isValidBooking(request.resource.data) && createdNow();
+      allow update: if isAdmin() && isValidBooking(request.resource.data)
+        && unchanged('bookingNo') && unchanged('bookingSeq') && unchanged('createdAt')
+        && setOnce('invoiceNo') && setOnce('invoiceSeq') && setOnce('invoiceDate') && setOnce('enquiryId');
+      // delete: denied (Bookings are cancelled, never deleted).
+    }
+
+    // counters/booking, counters/invoice-2026-27: { seq } bumped by exactly 1 in the app's transaction.
+    function isValidCounter(counterId, d) {
+      return counterId.matches('^(booking|invoice-[0-9]{4}-[0-9]{2})$')
+        && d.keys().hasOnly(['seq']) && d.keys().hasAll(['seq'])
+        && d.seq is int;
+    }
+
+    match /counters/{counterId} {
+      allow read: if isAdmin();
+      allow create: if isAdmin() && isValidCounter(counterId, request.resource.data)
+        && request.resource.data.seq == 1;
+      allow update: if isAdmin() && isValidCounter(counterId, request.resource.data)
+        && request.resource.data.seq == resource.data.seq + 1;
+      // delete: denied.
+    }
+
+    // settings/business: Business profile; every field an optional string.
+    function isValidBusinessProfile(d) {
+      return d.keys().hasOnly([
+          'tradingName', 'address', 'phones', 'email', 'website',
+          'accountName', 'accountNumber', 'ifsc', 'bankBranch', 'upiId',
+          'invoiceTerms', 'emergencyContacts', 'voucherNotes', 'signature', 'updatedAt'])
+        && d.keys().hasAll(['updatedAt'])
+        && optString(d, 'tradingName') && optString(d, 'address') && optString(d, 'phones')
+        && optString(d, 'email') && optString(d, 'website')
+        && optString(d, 'accountName') && optString(d, 'accountNumber') && optString(d, 'ifsc')
+        && optString(d, 'bankBranch') && optString(d, 'upiId')
+        && optString(d, 'invoiceTerms') && optString(d, 'emergencyContacts') && optString(d, 'voucherNotes')
+        && (!('signature' in d)
+            || (d.signature is string
+                && d.signature.size() <= 140000
+                && d.signature.size() > 22
+                && d.signature[0:22] == 'data:image/png;base64,'))
+        && stamped(d);
+    }
+
+    match /settings/{settingsId} {
+      allow read: if settingsId == 'business' && isAdmin();
+      allow create, update: if settingsId == 'business' && isAdmin()
+        && isValidBusinessProfile(request.resource.data);
+      // delete: denied.
+    }
+
+    // ------------------------------------------------------------ inquiries
+
+    function enquiryStatuses() {
+      return ['new', 'contacted', 'converted', 'closed'];
+    }
+
+    function isValidEnquiryAdminUpdate() {
+      let d = request.resource.data;
+      return d.diff(resource.data).affectedKeys()
+          .hasOnly(['status', 'adminNotes', 'closeReason', 'clientId', 'bookingId', 'convertedAt', 'updatedAt'])
+        && d.status in enquiryStatuses()
+        && optString(d, 'adminNotes') && optString(d, 'closeReason') && optString(d, 'clientId')
+        && optString(d, 'bookingId')
+        && (!('convertedAt' in d) || d.convertedAt is timestamp)
+        // converted needs the Booking it became, and is final.
+        && (d.status != 'converted' || ('bookingId' in d && nonEmptyString(d.bookingId, 200)))
+        && (resource.data.status != 'converted' || d.status == 'converted')
+        && stamped(d);
+    }
+
     match /inquiries/{inquiryId} {
       allow create: if isValidNewInquiry(request.resource.data);
-      // read, update, delete: denied to clients.
+      allow read: if isAdmin();
+      allow update: if isAdmin() && isValidEnquiryAdminUpdate();
+      allow delete: if isAdmin() && resource.data.status != 'converted';
     }
   }
 }
