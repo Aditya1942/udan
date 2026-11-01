@@ -38,7 +38,7 @@ describe('AdminDataProvider', () => {
     );
     expect(result.current.rows.status).toBe('loading');
     await waitFor(() => expect(result.current.rows.status).toBe('ready'));
-    expect(result.current.newCount).toBe(1);
+    await waitFor(() => expect(result.current.newCount).toBe(1)); // enquiries load independently
     expect(result.current.data.clientsById.get('c1')?.name).toBe('Asha Patel');
 
     await createBooking(db, {
