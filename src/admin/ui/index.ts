@@ -17,3 +17,4 @@ export { Segmented, Tabs } from './Tabs';
 export type { SegmentedOption, TabItem } from './Tabs';
 export { ToastProvider, useToast } from './Toast';
 export type { ToastTone } from './Toast';
+export { ChipInput, MoneyInput } from './inputs';
