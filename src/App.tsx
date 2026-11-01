@@ -10,6 +10,11 @@ import PrivacyPage from './pages/PrivacyPage';
 import ToursPage from './pages/ToursPage';
 import VisaServicesPage from './pages/VisaServicesPage';
 
+/** Blank surface while the admin chunk loads on a first visit (keeps the admin out of the public bundle). */
+function AdminChunkLoading() {
+  return <div aria-busy="true" style={{ minHeight: '100vh', background: 'var(--color-surface)' }} />;
+}
+
 export const appRoutes: RouteObject[] = [
   {
     element: <SiteLayout />,
@@ -24,6 +29,8 @@ export const appRoutes: RouteObject[] = [
       { path: '*', element: <NotFoundPage /> },
     ],
   },
+  // Admin: a sibling of SiteLayout (no site header/footer), loaded only when visited. Nothing else imports src/admin.
+  { path: '/admin/*', HydrateFallback: AdminChunkLoading, lazy: () => import('./admin/routes') },
 ];
 
 const router = createBrowserRouter(appRoutes);

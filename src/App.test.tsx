@@ -64,4 +64,15 @@ describe('site shell', () => {
     renderAt('/nope');
     expect(screen.getByRole('heading', { level: 1, name: 'Page not found' })).toBeInTheDocument();
   });
+
+  it('lazy-loads /admin as a sibling of the site layout (no site header), marked noindex', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    renderAt('/admin/clients');
+    // Tests run without VITE_FIREBASE_* → the admin explains it isn't configured.
+    expect(await screen.findByRole('heading', { level: 1, name: "UDAN admin isn't configured" })).toBeInTheDocument();
+    expect(screen.queryByRole('navigation', { name: 'Main' })).not.toBeInTheDocument();
+    expect(document.head.querySelector('meta[name="robots"]')).toHaveAttribute('content', 'noindex, nofollow');
+    expect(warn.mock.calls.flat().join(' ')).not.toMatch(/HydrateFallback/);
+    warn.mockRestore();
+  });
 });
