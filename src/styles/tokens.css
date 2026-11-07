@@ -4,6 +4,7 @@
  *   white on --color-green (#57931E)      3.75  -> NOT for text; use --color-action
  *   white on --color-action (#4A7F19)     4.84  OK (buttons)
  *   white on --color-teal (#165D79)       7.30  OK
+ *   --color-green-text on all light bgs   >= 4.62 OK
  *   --color-text-muted on all light bgs   >= 4.59 OK
  *   --color-error (#B42318) on white      6.5  OK
  *   --color-sky / --color-lime            decorative accents only, never body text on light bgs
@@ -20,7 +21,7 @@
   --color-action-hover: #3f6e15;
   --color-teal-hover: #0f4a61;
   --color-teal-deep: #0f4a61;    /* darker teal surface */
-  --color-green-text: #4a7f19;   /* green text on light surfaces */
+  --color-green-text: #477a18;   /* green text on light surfaces (>= 4.62:1 on all light bgs) */
   --color-teal-text-soft: #d7e6ec; /* body text on teal surfaces */
   --color-sky-on-teal: #9fd9ea;  /* sky accent text on teal surfaces (AA) */
   --color-lime-on-teal: #c9f07a; /* lime accent text on teal surfaces (AA) */

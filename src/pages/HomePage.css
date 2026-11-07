@@ -43,24 +43,26 @@
 }
 
 /* Teal overlay keeps white text AA on any part of the photo.
-   Mobile: text spans the full width, so the overlay is near-even. */
+   Below 64em the text spans the full width, so the overlay stays near-even;
+   from 64em the content is confined to the left 65%, so the photo stays airy
+   on the right where only the plate (self-shaded) sits. */
 .home-hero__media::after {
   content: '';
   position: absolute;
   inset: 0;
   background: linear-gradient(
     180deg,
-    color-mix(in srgb, var(--color-teal-deep) 80%, transparent) 0%,
+    color-mix(in srgb, var(--color-teal-deep) 84%, transparent) 0%,
     color-mix(in srgb, var(--color-teal-deep) 88%, transparent) 100%
   );
 }
 
-@media (min-width: 48em) {
+@media (min-width: 64em) {
   .home-hero__media::after {
     background: linear-gradient(
       90deg,
       color-mix(in srgb, var(--color-teal-deep) 94%, transparent) 0%,
-      color-mix(in srgb, var(--color-teal-deep) 82%, transparent) 50%,
+      color-mix(in srgb, var(--color-teal-deep) 82%, transparent) 65%,
       color-mix(in srgb, var(--color-teal-deep) 30%, transparent) 100%
     );
   }
@@ -137,7 +139,9 @@
   align-self: flex-start;
   min-width: 0;
   padding: var(--space-3) var(--space-5) var(--space-3) var(--space-3);
-  background: color-mix(in srgb, var(--color-white) 10%, transparent);
+  /* Deep-teal plate: white phone/label text stays AA even over a bright
+     part of the photo (white 10% measured as low as 1.3:1 there). */
+  background: color-mix(in srgb, var(--color-teal-deep) 85%, transparent);
   border: 1px solid color-mix(in srgb, var(--color-white) 22%, transparent);
   border-radius: var(--radius);
   backdrop-filter: blur(6px);

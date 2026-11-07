@@ -27,6 +27,14 @@
 .adm .is-refund { color: var(--color-warn); font-weight: var(--fw-semibold); font-variant-numeric: tabular-nums; }
 .adm .is-struck { text-decoration: line-through; color: var(--color-text-muted); }
 
+/* Control boundaries (WCAG 1.4.11, >= 3:1): --color-border is decorative (1.26:1 on white), so a border that marks an
+ * interactive control uses the slate step (4.76:1 on white, 4.46:1 on surface); hover steps one stop darker (~6.5:1).
+ * Declared here because tokens.css is website-level; scoped to the admin roots. */
+:where(.adm, .adm-login, .adm-dialog) {
+  --adm-ctrl-border: color-mix(in srgb, var(--color-slate) 80%, var(--color-white)); /* ≥3:1 on white + surface (1.4.11) */
+  --adm-ctrl-border-hover: var(--color-slate);
+}
+
 /* buttons */
 .adm-btn { position: relative; display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2); min-height: var(--adm-ctrl); padding: 0 var(--space-4);
   border-radius: var(--radius); border: 1px solid transparent; font: var(--fw-semibold) var(--fs-sm)/1 var(--font-body); text-decoration: none; cursor: pointer; white-space: nowrap;
@@ -36,8 +44,8 @@
 .adm-btn--primary, .adm a.adm-btn--primary { background: var(--color-action); color: var(--color-white); }
 .adm-btn--primary:hover { background: var(--color-action-hover); }
 .adm-btn--primary:active { background: var(--color-teal-deep); }
-.adm-btn--outline { background: var(--color-white); border-color: var(--color-border); color: var(--color-ink); }
-.adm-btn--outline:hover { border-color: var(--color-slate); }
+.adm-btn--outline { background: var(--color-white); border-color: var(--adm-ctrl-border); color: var(--color-ink); }
+.adm-btn--outline:hover { border-color: var(--adm-ctrl-border-hover); }
 .adm-btn--ghost { background: none; color: var(--color-teal); }
 .adm-btn--ghost:hover { background: var(--color-surface-2); }
 .adm-btn--danger, .adm a.adm-btn--danger { background: var(--color-danger); color: var(--color-white); }
@@ -47,16 +55,16 @@
 .adm-btn--block { width: 100%; min-height: var(--tap); }
 .adm-btn:disabled, .adm-icon-btn:disabled, .adm-seg button:disabled { opacity: 0.55; cursor: not-allowed; }
 .adm-btn[aria-busy='true'] { cursor: progress; opacity: 0.85; }
-.adm-icon-btn { position: relative; display: inline-grid; place-items: center; width: var(--adm-ctrl); height: var(--adm-ctrl); padding: 0; border-radius: var(--radius); border: 1px solid var(--color-border);
+.adm-icon-btn { position: relative; display: inline-grid; place-items: center; width: var(--adm-ctrl); height: var(--adm-ctrl); padding: 0; border-radius: var(--radius); border: 1px solid var(--adm-ctrl-border);
   background: var(--color-white); color: var(--color-ink); cursor: pointer; list-style: none; }
-.adm-icon-btn:hover { border-color: var(--color-slate); }
+.adm-icon-btn:hover { border-color: var(--adm-ctrl-border-hover); }
 .adm-icon-btn--ghost { border-color: transparent; background: none; color: var(--color-text-muted); }
-.adm-icon-btn--ghost:hover { color: var(--color-ink); border-color: var(--color-border); }
+.adm-icon-btn--ghost:hover { color: var(--color-ink); border-color: var(--adm-ctrl-border); }
 .adm-link-btn { background: none; border: 0; padding: 0; color: var(--color-teal); font: inherit; font-size: var(--fs-sm); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
 .adm-link-btn:hover { color: var(--color-teal-hover); }
 
 /* segmented control + tabs */
-.adm-seg { display: inline-flex; border: 1px solid var(--color-border); border-radius: var(--radius); background: var(--color-white); padding: 2px; gap: 2px; flex-wrap: wrap; }
+.adm-seg { display: inline-flex; border: 1px solid var(--adm-ctrl-border); border-radius: var(--radius); background: var(--color-white); padding: 2px; gap: 2px; flex-wrap: wrap; }
 .adm-seg button { display: inline-flex; align-items: center; gap: var(--space-2); min-height: calc(var(--adm-ctrl) - 6px); padding: 0 var(--space-3); border: 0; border-radius: calc(var(--radius) - 3px);
   background: none; color: var(--color-text-muted); font: var(--fw-regular) var(--fs-sm)/1 var(--font-body); cursor: pointer; transition: background-color var(--dur-micro), color var(--dur-micro); }
 .adm-seg button:hover { color: var(--color-ink); }
@@ -262,13 +270,13 @@
 .adm-money:has([aria-invalid='true']) { border-color: var(--color-danger); }
 .adm-tags { flex-wrap: wrap; padding-block: var(--space-1); }
 .adm-field .adm-tags input:not([type='checkbox']):not([type='radio']):not([type='file']) { flex: 1 1 10rem; width: auto; min-height: 1.75rem; }
-.adm-chip { display: inline-flex; align-items: center; gap: var(--space-1); min-height: 1.75rem; padding: 0 var(--space-2) 0 var(--space-3); border: 1px solid var(--color-border);
+.adm-chip { display: inline-flex; align-items: center; gap: var(--space-1); min-height: 1.75rem; padding: 0 var(--space-2) 0 var(--space-3); border: 1px solid var(--adm-ctrl-border);
   border-radius: var(--radius-pill); background: var(--color-surface); font: inherit; font-size: var(--fs-xs); cursor: pointer; max-width: 100%; overflow-wrap: anywhere; }
-.adm-chip:hover { border-color: var(--color-slate); }
+.adm-chip:hover { border-color: var(--adm-ctrl-border-hover); }
 .adm-chip svg { width: 0.9rem; height: 0.9rem; }
 .adm-combo { position: relative; }
 .adm-combo__list { position: absolute; z-index: 6; inset-inline: 0; top: calc(100% + 2px); margin: 0; padding: var(--space-1); list-style: none; background: var(--color-white);
-  border: 1px solid var(--color-border); border-radius: var(--radius); box-shadow: var(--shadow-md); max-height: 18rem; overflow-y: auto; }
+  border: 1px solid var(--adm-ctrl-border); border-radius: var(--radius); box-shadow: var(--shadow-md); max-height: 18rem; overflow-y: auto; }
 .adm-combo__list li { display: flex; gap: var(--space-2); align-items: baseline; min-height: var(--tap); padding: var(--space-2) var(--space-3); border-radius: calc(var(--radius) - 2px); cursor: pointer; }
 .adm-combo__list li[aria-selected='true'], .adm-combo__list li:hover { background: var(--adm-confirmed-bg); }
 
