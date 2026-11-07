@@ -60,8 +60,10 @@ button {
   cursor: pointer;
 }
 
+/* Styled lists (any class) drop markers; bare prose lists keep them. */
 ul[role='list'],
-ol[role='list'] {
+ol[role='list'],
+:where(ul[class], ol[class]) {
   list-style: none;
   padding: 0;
 }
