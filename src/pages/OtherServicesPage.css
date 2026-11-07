@@ -76,7 +76,7 @@
 }
 
 .other-service--visa {
-  border-left: 4px solid var(--color-teal);
+  border-inline-start: 4px solid var(--color-teal);
 }
 
 .other-service__icon {
@@ -137,6 +137,11 @@
   display: flex;
   gap: var(--space-2);
   align-items: flex-start;
+  min-width: 0;
+}
+
+.other-service__list li > :last-child {
+  min-width: 0;
 }
 
 .other-service__list svg {

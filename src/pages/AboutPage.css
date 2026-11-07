@@ -97,7 +97,7 @@
 }
 
 .about-area--visa {
-  border-left: 4px solid var(--color-teal);
+  border-inline-start: 4px solid var(--color-teal);
 }
 
 .about-area__title {
@@ -121,6 +121,13 @@
   display: flex;
   align-items: center;
   gap: var(--space-3);
+  min-width: 0;
+}
+
+.about-area__list li > :last-child,
+.about-checklist li > :last-child,
+.about-strengths__list li > :last-child {
+  min-width: 0;
 }
 
 .about-area__list svg {
@@ -197,6 +204,7 @@
   display: flex;
   gap: var(--space-3);
   align-items: flex-start;
+  min-width: 0;
 }
 
 .about-checklist svg,

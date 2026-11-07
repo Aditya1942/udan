@@ -52,7 +52,7 @@ export function Dialog({ open, onClose, title, children, footer, onSubmit, wide 
           <X aria-hidden="true" />
         </IconButton>
       </div>
-      {children}
+      <div className="adm-dialog__body">{children}</div>
       {footer ? <div className="adm-dialog__foot">{footer}</div> : null}
     </>
   );

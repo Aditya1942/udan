@@ -1,17 +1,18 @@
 .site-layout {
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
+  min-height: 100dvh;
   /* room for the fixed mobile contact bar */
-  padding-bottom: calc(var(--mobile-bar-height) + env(safe-area-inset-bottom));
+  padding-block-end: calc(var(--mobile-bar-height) + env(safe-area-inset-bottom, 0px));
 }
 
 @media (min-width: 48em) {
   .site-layout {
-    padding-bottom: 0;
+    padding-block-end: 0;
   }
 }
 
 .site-main {
   flex: 1;
+  min-width: 0;
 }

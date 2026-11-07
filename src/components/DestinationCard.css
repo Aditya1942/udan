@@ -2,6 +2,7 @@
   display: flex;
   flex-direction: column;
   height: 100%;
+  min-width: 0;
   overflow: hidden;
   background: var(--color-white);
   border-radius: var(--radius);
@@ -39,8 +40,8 @@
 
 .destination-card__badge {
   position: absolute;
-  top: var(--space-3);
-  left: var(--space-3);
+  inset-block-start: var(--space-3);
+  inset-inline-start: var(--space-3);
   display: inline-flex;
   align-items: center;
   gap: var(--space-1);
@@ -72,6 +73,7 @@
   display: flex;
   flex-direction: column;
   flex: 1;
+  min-width: 0;
   gap: var(--space-2);
   padding: var(--space-4) var(--space-5) var(--space-3);
 }
@@ -91,6 +93,6 @@
 }
 
 .destination-card__link {
-  align-self: flex-start;
+  align-self: start;
   color: var(--color-green-text);
 }

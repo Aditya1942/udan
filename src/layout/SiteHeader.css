@@ -1,9 +1,9 @@
 .site-header {
   position: sticky;
-  top: 0;
+  inset-block-start: 0;
   z-index: 50;
   background: color-mix(in srgb, var(--color-white) 96%, transparent);
-  border-bottom: 1px solid var(--color-border);
+  border-block-end: 1px solid var(--color-border);
   backdrop-filter: saturate(1.4) blur(8px);
 }
 
@@ -17,12 +17,16 @@
 
 /* Compact Contact Us button beside the menu toggle (below 64em) */
 .site-header__cta {
-  margin-left: auto;
+  margin-inline-start: auto;
 }
 
 @media (max-width: 23.99em) {
+  .site-header__bar {
+    gap: var(--space-2);
+  }
+
   .site-header__cta {
-    padding-inline: var(--space-3);
+    padding-inline: var(--space-2);
     font-size: var(--fs-xs);
   }
 }
@@ -55,14 +59,13 @@
   flex-direction: column;
   gap: var(--space-4);
   position: absolute;
-  top: 100%;
-  left: 0;
-  right: 0;
+  inset-block-start: 100%;
+  inset-inline: 0;
   max-height: calc(100dvh - var(--header-height));
   overflow-y: auto;
   padding: var(--space-4) var(--gutter) var(--space-6);
   background: var(--color-white);
-  border-bottom: 1px solid var(--color-border);
+  border-block-end: 1px solid var(--color-border);
   box-shadow: var(--shadow-md);
 }
 
@@ -98,9 +101,8 @@
 .site-nav__link[aria-current='page']::before {
   content: '';
   position: absolute;
-  left: 0;
-  top: 25%;
-  bottom: 25%;
+  inset-inline-start: 0;
+  inset-block: 25%;
   width: 3px;
   border-radius: 0;
   background: var(--color-green);
@@ -155,10 +157,8 @@
   }
 
   .site-nav__link[aria-current='page']::before {
-    top: auto;
-    left: var(--space-3);
-    right: var(--space-3);
-    bottom: 0.35rem;
+    inset-block: auto var(--space-1);
+    inset-inline: var(--space-3);
     width: auto;
     height: 3px;
   }

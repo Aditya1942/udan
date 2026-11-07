@@ -60,8 +60,10 @@ export function NewBookingScreen() {
       return (
         <>
           {header}
-          <Note>This Enquiry was already converted.</Note>
-          {booking ? <ButtonLink to={`/admin/bookings/${booking.bookingNo}`}>View {booking.bookingNo}</ButtonLink> : null}
+          <div className="adm-stack">
+            <Note>This Enquiry was already converted.</Note>
+            {booking ? <ButtonLink to={`/admin/bookings/${booking.bookingNo}`}>View {booking.bookingNo}</ButtonLink> : null}
+          </div>
         </>
       );
     }
