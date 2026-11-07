@@ -102,6 +102,9 @@
 
 .about-area__title {
   font-size: var(--fs-xl);
+  letter-spacing: -0.01em;
+  line-height: var(--lh-snug);
+  text-wrap: balance;
 }
 
 .about-area--visa .about-area__title {
@@ -171,11 +174,15 @@
 
 .about-who__copy p:not(.lead) {
   color: var(--color-text-muted);
+  line-height: var(--lh-body);
+  text-wrap: pretty;
 }
 
 .about-area__note {
   font-size: var(--fs-sm);
   color: var(--color-text-muted);
+  line-height: var(--lh-body);
+  text-wrap: pretty;
 }
 
 /* Shared check list */
@@ -244,6 +251,7 @@
   font-weight: var(--fw-semibold);
   line-height: var(--lh-snug);
   color: var(--color-white);
+  text-wrap: pretty;
 }
 
 .about-mv__vision {
@@ -316,6 +324,8 @@
 
 .about-commitment__text p {
   color: var(--color-text-muted);
+  line-height: var(--lh-body);
+  text-wrap: pretty;
 }
 
 .about-clients {
@@ -335,4 +345,6 @@
 
 .about-clients p {
   color: var(--color-text-muted);
+  line-height: var(--lh-body);
+  text-wrap: pretty;
 }

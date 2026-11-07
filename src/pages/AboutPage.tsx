@@ -66,7 +66,7 @@ export default function AboutPage() {
       </Section>
 
       <Section tone="surface" labelledBy="about-mission-heading">
-        <SectionHeading id="about-mission-heading" eyebrow="Mission & vision" title="What we're working towards" />
+        <SectionHeading id="about-mission-heading" eyebrow="Mission & vision" title="What we’re working towards" />
         <div className="about-mv">
           <article className="about-mv__mission" aria-labelledby="about-mission-title">
             <h3 id="about-mission-title" className="about-mv__title">

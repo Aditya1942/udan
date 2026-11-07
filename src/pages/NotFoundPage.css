@@ -37,7 +37,9 @@
 .notfound__text {
   max-width: 32rem;
   font-size: var(--fs-md);
+  line-height: var(--lh-body);
   color: var(--color-text-muted);
+  text-wrap: pretty;
 }
 
 .notfound__actions {
@@ -56,6 +58,7 @@
 .notfound__links-title {
   margin-bottom: var(--space-3);
   font-size: var(--fs-base);
+  line-height: var(--lh-snug);
   color: var(--color-text-muted);
 }
 

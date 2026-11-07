@@ -29,7 +29,7 @@ export function HomeDestinations() {
           id="home-destinations-title"
           eyebrow="Tours & packages"
           title="Discover Your Next Destination"
-          intro="A few places to spark ideas, abroad and across India. Tell us where you'd like to go and we'll help you plan it."
+          intro="A few places to spark ideas, abroad and across India. Tell us where you’d like to go and we’ll help you plan it."
         />
         <div className="home-filter" role="group" aria-label="Filter destinations">
           {FILTERS.map(({ value, label }) => (

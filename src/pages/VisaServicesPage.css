@@ -12,6 +12,8 @@
   border-radius: var(--radius);
   color: var(--color-ink);
   font-size: var(--fs-sm);
+  line-height: var(--lh-body);
+  text-wrap: pretty;
 }
 
 .visa-disclaimer__icon {
@@ -102,12 +104,16 @@
   font-size: var(--fs-sm);
   font-weight: var(--fw-bold);
   letter-spacing: 0.08em;
+  font-variant-numeric: tabular-nums;
   color: var(--color-text-muted);
 }
 
 .visa-block__title {
   flex-basis: 100%;
   font-size: var(--fs-xl);
+  letter-spacing: -0.01em;
+  line-height: var(--lh-snug);
+  text-wrap: balance;
   color: var(--color-teal);
 }
 
@@ -119,6 +125,8 @@
 
 .visa-block__text {
   font-size: var(--fs-md);
+  line-height: var(--lh-body);
+  text-wrap: pretty;
 }
 
 .visa-block__subtitle {
@@ -203,11 +211,16 @@
 
 .visa-tours__title {
   font-size: var(--fs-xl);
+  letter-spacing: -0.01em;
+  line-height: var(--lh-snug);
+  text-wrap: balance;
 }
 
 .visa-tours__text {
   margin-top: var(--space-2);
   color: var(--color-text-muted);
+  line-height: var(--lh-body);
+  text-wrap: pretty;
 }
 
 .visa-tours__link {

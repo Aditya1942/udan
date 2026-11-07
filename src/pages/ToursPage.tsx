@@ -79,7 +79,7 @@ export default function ToursPage() {
         photo={heroPhoto}
         eyebrow="Tours & Packages"
         title="Holidays planned around you"
-        intro="From city breaks abroad to journeys across India, tell us where you'd like to go and we'll help you plan the trip, from tickets and hotels to insurance."
+        intro="From city breaks abroad to journeys across India, tell us where you’d like to go and we’ll help you plan the trip, from tickets and hotels to insurance."
       >
         <Link to={TOURS_ENQUIRY} className="btn btn--primary">
           Enquire about a trip
@@ -175,7 +175,7 @@ export default function ToursPage() {
               </ul>
               <p className="tours-plan__details-foot">
                 <Check aria-hidden="true" />
-                Not sure yet? That's fine. We can talk it through.
+                Not sure yet? That’s fine. We can talk it through.
               </p>
             </div>
 

@@ -42,7 +42,7 @@ export default function PrivacyPage() {
             <ul>
               <li>your name</li>
               <li>your phone number</li>
-              <li>the service you're interested in</li>
+              <li>the service you’re interested in</li>
               <li>your message, if you write one</li>
               <li>the page the enquiry was sent from (and the destination, if you enquired about one)</li>
               <li>the date and time the enquiry was sent</li>

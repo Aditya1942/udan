@@ -9,11 +9,11 @@ const STEPS: readonly { title: string; text: string }[] = [
   },
   {
     title: 'Share your plans',
-    text: "Tell us where you'd like to go, when, and what you need: a holiday, tickets, a stay or help with a visa or passport.",
+    text: "Tell us where you’d like to go, when, and what you need: a holiday, tickets, a stay or help with a visa or passport.",
   },
   {
     title: 'We guide your next steps',
-    text: "We'll talk you through the options, the documents involved and what happens next.",
+    text: "We’ll talk you through the options, the documents involved and what happens next.",
   },
 ];
 

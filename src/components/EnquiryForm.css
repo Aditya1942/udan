@@ -34,10 +34,15 @@
 
 .enquiry-form__title {
   font-size: var(--fs-xl);
+  line-height: var(--lh-snug);
+  letter-spacing: var(--tracking-tight);
+  text-wrap: balance;
 }
 
 .enquiry-form__intro {
   color: var(--color-text-muted);
+  line-height: var(--lh-body);
+  text-wrap: pretty;
 }
 
 .enquiry-form__context {
@@ -93,6 +98,10 @@
   transition: border-color var(--transition), box-shadow var(--transition);
 }
 
+.enquiry-form__field input[type='tel'] {
+  font-variant-numeric: tabular-nums;
+}
+
 .enquiry-form__field textarea {
   min-height: 7rem;
   resize: vertical;
@@ -120,7 +129,9 @@
 
 .enquiry-form__hint {
   font-size: var(--fs-xs);
+  line-height: 1.4;
   color: var(--color-text-muted);
+  text-wrap: pretty;
 }
 
 .enquiry-form__error {
@@ -179,7 +190,9 @@
 
 .enquiry-form__privacy {
   font-size: var(--fs-xs);
+  line-height: 1.4;
   color: var(--color-text-muted);
+  text-wrap: pretty;
 }
 
 /* Success */
@@ -197,6 +210,9 @@
   display: flex;
   gap: var(--space-2);
   font-size: var(--fs-lg);
+  line-height: var(--lh-snug);
+  letter-spacing: -0.01em;
+  text-wrap: balance;
   color: var(--color-ink);
 }
 

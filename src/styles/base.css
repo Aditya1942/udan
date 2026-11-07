@@ -32,6 +32,7 @@ body {
   color: var(--color-ink);
   background: var(--color-white);
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
 }
 
@@ -74,30 +75,43 @@ h4 {
   font-weight: var(--fw-bold);
   line-height: var(--lh-tight);
   color: var(--color-ink);
-  letter-spacing: -0.015em;
+  letter-spacing: var(--tracking-tight);
   text-wrap: balance;
 }
 
 h1 {
   font-size: var(--fs-3xl);
   font-weight: var(--fw-extrabold);
+  line-height: var(--lh-tight);
+  letter-spacing: -0.02em;
 }
 
 h2 {
   font-size: var(--fs-2xl);
+  line-height: 1.25;
+  letter-spacing: -0.015em;
 }
 
 h3 {
   font-size: var(--fs-lg);
   line-height: var(--lh-snug);
+  letter-spacing: -0.01em;
+}
+
+h4 {
+  font-size: var(--fs-md);
+  line-height: var(--lh-snug);
+  letter-spacing: 0;
 }
 
 p {
   text-wrap: pretty;
+  overflow-wrap: break-word;
 }
 
 a {
   color: var(--color-teal);
+  text-underline-position: from-font;
   text-underline-offset: 0.2em;
   text-decoration-thickness: 1px;
 }
@@ -216,6 +230,30 @@ main:focus {
 
 .text-muted {
   color: var(--color-text-muted);
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+.truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
 }
 
 .lead {

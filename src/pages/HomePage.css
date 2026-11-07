@@ -100,13 +100,16 @@
 .home-hero__title {
   color: var(--color-white);
   font-size: clamp(2rem, 1.1rem + 3.6vw, 4.25rem);
-  letter-spacing: -0.03em;
-  line-height: 1.05;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  text-wrap: balance;
 }
 
 .home-hero__lead {
   max-width: 34rem;
   font-size: var(--fs-md);
+  line-height: var(--lh-body);
+  text-wrap: pretty;
   color: var(--color-white);
 }
 
@@ -171,6 +174,7 @@
   color: var(--color-white);
   text-decoration: none;
   white-space: nowrap;
+  font-variant-numeric: tabular-nums;
 }
 
 .home-hero__contact-phone:hover {
@@ -442,6 +446,8 @@
   border-left: 3px solid var(--color-sky);
   border-radius: var(--radius);
   font-size: var(--fs-sm);
+  line-height: var(--lh-body);
+  text-wrap: pretty;
   color: var(--color-ink);
 }
 
@@ -508,6 +514,8 @@
 
 .home-visa__text {
   color: var(--color-text-muted);
+  line-height: var(--lh-body);
+  text-wrap: pretty;
 }
 
 .home-visa__body .link-arrow {
@@ -550,10 +558,14 @@
 
 .home-extras__title {
   font-size: var(--fs-xl);
+  letter-spacing: -0.01em;
+  line-height: var(--lh-snug);
+  text-wrap: balance;
 }
 
 .home-extras__intro {
   color: var(--color-text-muted);
+  text-wrap: pretty;
 }
 
 .home-extras__list {
@@ -617,7 +629,9 @@
 .home-extras__text {
   grid-column: 1 / -1;
   font-size: var(--fs-sm);
+  line-height: var(--lh-body);
   color: var(--color-text-muted);
+  text-wrap: pretty;
 }
 
 /* ------------------------------------------------------------------ */
@@ -704,11 +718,14 @@
 
 .home-why__title {
   font-size: var(--fs-md);
+  line-height: var(--lh-snug);
   margin-bottom: var(--space-1);
 }
 
 .home-why__text {
   color: var(--color-text-muted);
+  line-height: var(--lh-body);
+  text-wrap: pretty;
 }
 
 /* ------------------------------------------------------------------ */
@@ -760,11 +777,14 @@
   font-family: var(--font-heading);
   font-size: var(--fs-lg);
   font-weight: var(--fw-extrabold);
+  font-variant-numeric: tabular-nums;
   color: var(--color-lime-on-teal);
 }
 
 .home-steps__text {
   max-width: 20rem;
+  line-height: var(--lh-body);
+  text-wrap: pretty;
 }
 
 /* ------------------------------------------------------------------ */
@@ -833,6 +853,7 @@
 
 .home-contact__fact-value a {
   text-decoration: none;
+  font-variant-numeric: tabular-nums;
 }
 
 .home-contact__fact-value a:hover {

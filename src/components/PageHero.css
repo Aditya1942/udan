@@ -31,8 +31,10 @@
   font-family: var(--font-heading);
   font-size: var(--fs-xs);
   font-weight: var(--fw-bold);
-  letter-spacing: 0.12em;
+  line-height: var(--lh-tight);
+  letter-spacing: var(--tracking-caps);
   text-transform: uppercase;
+  white-space: nowrap;
   color: var(--color-green-text);
 }
 
@@ -40,9 +42,15 @@
   color: var(--color-teal);
 }
 
+.page-hero__title {
+  text-wrap: balance;
+}
+
 .page-hero__intro {
   font-size: var(--fs-md);
+  line-height: var(--lh-body);
   color: var(--color-text-muted);
+  text-wrap: pretty;
 }
 
 .page-hero__actions {

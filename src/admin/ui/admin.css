@@ -14,16 +14,17 @@
 .adm-container { max-width: 80rem; margin-inline: auto; padding-inline: var(--gutter); }
 .adm-main { padding-block: var(--space-5) var(--space-10); display: grid; gap: var(--space-5); align-content: start; scroll-margin-top: calc(4rem + var(--space-4)); }
 .adm-main:focus { outline: none; }
-.adm-h1 { font-family: var(--font-heading); font-size: var(--fs-xl); font-weight: var(--fw-bold); line-height: var(--lh-tight); }
-.adm-h2 { font-family: var(--font-heading); font-size: var(--fs-md); font-weight: var(--fw-bold); line-height: var(--lh-snug); }
-.adm-h3 { font-family: var(--font-heading); font-size: var(--fs-base); font-weight: var(--fw-bold); }
+.adm-h1, .adm-h2, .adm-h3 { text-wrap: balance; }
+.adm-h1 { font-family: var(--font-heading); font-size: var(--fs-xl); font-weight: var(--fw-bold); line-height: var(--lh-tight); letter-spacing: -0.015em; }
+.adm-h2 { font-family: var(--font-heading); font-size: var(--fs-md); font-weight: var(--fw-bold); line-height: var(--lh-snug); letter-spacing: -0.01em; }
+.adm-h3 { font-family: var(--font-heading); font-size: var(--fs-base); font-weight: var(--fw-bold); line-height: var(--lh-snug); }
 .adm-muted, .adm-sub { color: var(--color-text-muted); font-size: var(--fs-xs); }
 .adm-sub { display: block; }
 .adm-num, .adm .num { text-align: right; font-variant-numeric: tabular-nums; }
 .adm-stack { display: grid; gap: var(--space-3); }
 .adm-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; }
-.adm .is-overdue { color: var(--color-danger); font-weight: var(--fw-semibold); }
-.adm .is-refund { color: var(--color-warn); font-weight: var(--fw-semibold); }
+.adm .is-overdue { color: var(--color-danger); font-weight: var(--fw-semibold); font-variant-numeric: tabular-nums; }
+.adm .is-refund { color: var(--color-warn); font-weight: var(--fw-semibold); font-variant-numeric: tabular-nums; }
 .adm .is-struck { text-decoration: line-through; color: var(--color-text-muted); }
 
 /* buttons */
@@ -104,7 +105,7 @@
 .adm-badge--voucher-received { background: var(--adm-voucher-bg); color: var(--adm-voucher-fg); }
 .adm-badge--completed { background: var(--adm-completed-bg); color: var(--adm-completed-fg); }
 .adm-badge--cancelled { background: var(--adm-cancelled-bg); color: var(--adm-cancelled-fg); text-decoration: line-through; }
-.adm-note { padding: var(--space-2) var(--space-3); border-radius: var(--radius); background: var(--adm-confirmed-bg); color: var(--adm-confirmed-fg); font-size: var(--fs-sm); }
+.adm-note { padding: var(--space-2) var(--space-3); border-radius: var(--radius); background: var(--adm-confirmed-bg); color: var(--adm-confirmed-fg); font-size: var(--fs-sm); line-height: 1.4; text-wrap: pretty; }
 .adm-note--warn { background: var(--color-warn-tint); color: var(--color-warn); }
 .adm-note--danger { background: var(--color-danger-tint); color: var(--color-danger); }
 
@@ -129,12 +130,12 @@
 /* fields (borders use --color-slate: --color-border fails 3:1 for an input edge) */
 .adm-field { display: grid; gap: var(--space-1); font-size: var(--fs-sm); align-content: start; }
 .adm-field__label { font-weight: var(--fw-semibold); }
-.adm-field__hint { color: var(--color-text-muted); font-size: var(--fs-xs); }
-.adm-field__error { color: var(--color-danger); font-size: var(--fs-xs); font-weight: var(--fw-semibold); }
+.adm-field__hint { color: var(--color-text-muted); font-size: var(--fs-xs); line-height: 1.4; }
+.adm-field__error { color: var(--color-danger); font-size: var(--fs-xs); font-weight: var(--fw-semibold); line-height: 1.4; }
 .adm-input, .adm-field select, .adm-field textarea, .adm-field input:not([type='checkbox']):not([type='radio']):not([type='file']) {
   min-height: var(--adm-ctrl); padding: 0 var(--space-3); border: 1px solid var(--color-slate); border-radius: var(--radius); background: var(--color-white);
   font: inherit; font-size: var(--fs-sm); color: var(--color-ink); width: 100%; min-width: 0; }
-.adm-field textarea { padding-block: var(--space-2); resize: vertical; line-height: var(--lh-snug); }
+.adm-field textarea { padding-block: var(--space-2); resize: vertical; line-height: 1.4; }
 .adm-field :is(input, select, textarea):focus-visible { outline: 2px solid var(--focus-ring); outline-offset: -1px; }
 .adm-field :is(input, select, textarea)[aria-invalid='true'] { border-color: var(--color-danger); }
 .adm-fieldset { border: 0; padding: 0; margin: 0; display: grid; gap: var(--space-2); min-width: 0; }
@@ -148,17 +149,19 @@
 /* table base (only horizontal rules; numbers right-aligned in tabular figures) */
 .adm-table-wrap { overflow-x: auto; }
 .adm-table { width: 100%; border-collapse: collapse; background: var(--color-white); font-size: var(--fs-sm); }
-.adm-table th, .adm-table td { padding: var(--space-3); text-align: left; border-bottom: 1px solid var(--color-border); vertical-align: top; }
+.adm-table th, .adm-table td { padding: var(--space-3); text-align: left; border-bottom: 1px solid var(--color-border); vertical-align: top; line-height: var(--lh-snug); }
 .adm-table thead th { font-weight: var(--fw-semibold); color: var(--color-text-muted); white-space: nowrap; padding-block: var(--space-2); }
 .adm-table th.num, .adm-table td.num { text-align: right; }
+.adm-table tbody th { font-variant-numeric: tabular-nums; }
+.adm-table :is(th, td):is([data-label*='Date' i], [data-label*='Travel' i], [data-label*='Pay' i], [data-label='Mobile']) { font-variant-numeric: tabular-nums; }
 .adm-table tbody tr:hover { background: var(--color-surface); }
-.adm-table tfoot th, .adm-table tfoot td { font-weight: var(--fw-semibold); border-bottom: 0; }
+.adm-table tfoot th, .adm-table tfoot td { font-weight: var(--fw-semibold); border-bottom: 0; font-variant-numeric: tabular-nums; }
 
 /* the four data-region states */
 .adm-empty, .adm-error { display: grid; justify-items: start; gap: var(--space-3); padding: var(--space-6); background: var(--color-white); border: 1px dashed var(--color-border); border-radius: var(--radius); }
 .adm-error { border-style: solid; border-color: var(--color-danger-tint); }
 .adm-error .adm-h3 { color: var(--color-danger); }
-.adm-empty > p, .adm-error > p { color: var(--color-text-muted); font-size: var(--fs-sm); max-width: 60ch; }
+.adm-empty > p, .adm-error > p { color: var(--color-text-muted); font-size: var(--fs-sm); max-width: 60ch; line-height: 1.5; text-wrap: pretty; }
 .adm-skeleton { display: grid; gap: var(--space-3); padding: var(--space-4); background: var(--color-white); border: 1px solid var(--color-border); border-radius: var(--radius); }
 .adm-skeleton__line { height: 0.9rem; border-radius: 4px; background: linear-gradient(90deg, var(--color-surface-2), var(--color-surface), var(--color-surface-2)); background-size: 200% 100%;
   animation: adm-shimmer 1.4s ease-in-out infinite; }
@@ -182,7 +185,7 @@
 /* toasts */
 .adm-toasts { position: fixed; z-index: 50; inset-inline: 0; bottom: var(--space-5); display: grid; justify-items: center; gap: var(--space-2); pointer-events: none; padding-inline: var(--gutter); }
 .adm-toast { pointer-events: auto; display: flex; align-items: center; gap: var(--space-3); max-width: 32rem; padding: var(--space-2) var(--space-2) var(--space-2) var(--space-4);
-  background: var(--color-ink); color: var(--color-white); border-radius: var(--radius); box-shadow: var(--shadow-lg); font-size: var(--fs-sm); --focus-ring: var(--focus-ring-on-dark); }
+  background: var(--color-ink); color: var(--color-white); border-radius: var(--radius); box-shadow: var(--shadow-lg); font-size: var(--fs-sm); line-height: 1.4; --focus-ring: var(--focus-ring-on-dark); }
 .adm-toast--danger { background: var(--color-danger); }
 .adm-toast .adm-icon-btn { background: none; border-color: transparent; color: inherit; }
 .adm-toast .adm-icon-btn:hover { background: var(--adm-on-dark-hover); border-color: transparent; }
@@ -320,6 +323,19 @@
   .adm-brand__word { display: none; }
   .adm-grid-2, .adm-grid-3 { grid-template-columns: minmax(0, 1fr); }
   .adm-kv > div { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  /* Stop iOS auto-zoom by keeping form controls at >=16px (--fs-base) on mobile */
+  .adm-input,
+  .adm-field select,
+  .adm-field textarea,
+  .adm-field input:not([type='checkbox']):not([type='radio']):not([type='file']),
+  .adm-money,
+  .adm-money input,
+  .adm-tags,
+  .adm-field .adm-tags input:not([type='checkbox']):not([type='radio']):not([type='file']),
+  .adm-search input,
+  .adm-enq__notes textarea {
+    font-size: var(--fs-base);
+  }
 }
 /* directories (Clients, DMCs): tools row, search, tables, detail layout */
 .adm-table-tools { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-3); align-items: center; }
@@ -345,7 +361,7 @@
 .adm-enq__row.is-new { box-shadow: inset 3px 0 0 var(--color-teal); }
 .adm-enq__main { display: grid; gap: var(--space-1); min-width: 0; }
 .adm-enq__who { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; }
-.adm-enq__msg { max-width: 65ch; white-space: pre-line; overflow-wrap: anywhere; }
+.adm-enq__msg { max-width: 65ch; white-space: pre-line; overflow-wrap: anywhere; line-height: 1.5; }
 .adm-enq__notes summary { cursor: pointer; color: var(--color-teal); font-size: var(--fs-sm); min-height: var(--tap); display: inline-flex; align-items: center; }
 .adm-enq__notes textarea { width: 100%; max-width: 40rem; padding: var(--space-2) var(--space-3); border: 1px solid var(--color-slate); border-radius: var(--radius); font: inherit; font-size: var(--fs-sm); }
 .adm-enq__actions { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: flex-start; justify-content: flex-end; max-width: 26rem; }
@@ -491,7 +507,7 @@
 th.num .adm-th-btn { flex-direction: row-reverse; }
 .adm-table--bookings { border: 1px solid var(--color-border); border-radius: var(--radius); }
 .adm-table--bookings td[data-label='Client'] { min-width: 10rem; }
-.adm-table--bookings td[data-label='Travel dates'] { white-space: nowrap; }
+.adm-table--bookings td[data-label='Travel dates'] { white-space: nowrap; font-variant-numeric: tabular-nums; }
 .adm-table--bookings tbody th a { font-weight: var(--fw-semibold); }
 .adm-table--bookings tfoot :is(th, td) { border-top: 1px solid var(--color-border); font-variant-numeric: tabular-nums; }
 .adm-table-more { display: flex; justify-content: center; }

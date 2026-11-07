@@ -15,8 +15,8 @@ export function HomeContact() {
           <SectionHeading
             id="home-contact-title"
             eyebrow="Contact"
-            title="Let's Plan Your Journey"
-            intro="Call, message or drop by the office. We're happy to talk through your plans."
+            title="Let’s Plan Your Journey"
+            intro="Call, message or drop by the office. We’re happy to talk through your plans."
           />
           <ul role="list" className="home-contact__facts">
             <li className="home-contact__fact">

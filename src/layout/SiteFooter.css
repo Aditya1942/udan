@@ -28,13 +28,20 @@
   max-width: 24rem;
 }
 
+.site-footer__brand p {
+  text-wrap: pretty;
+  line-height: var(--lh-body);
+}
+
 .site-footer__heading {
   margin-bottom: var(--space-3);
   font-size: var(--fs-xs);
   font-weight: var(--fw-bold);
-  letter-spacing: 0.12em;
+  line-height: var(--lh-tight);
+  letter-spacing: var(--tracking-caps);
   text-transform: uppercase;
   color: var(--color-lime-on-teal);
+  text-wrap: balance;
 }
 
 .site-footer__nav a {
@@ -66,6 +73,7 @@
   display: inline-block;
   padding-block: var(--space-2);
   font-weight: var(--fw-semibold);
+  font-variant-numeric: tabular-nums;
 }
 
 .site-footer address {
@@ -80,6 +88,10 @@
   gap: var(--space-3);
   padding-block: var(--space-4);
   border-top: 1px solid color-mix(in srgb, var(--color-white) 15%, transparent);
+}
+
+.site-footer__bottom p {
+  font-variant-numeric: tabular-nums;
 }
 
 .site-footer__bottom a {

@@ -36,7 +36,7 @@ export default function VisaServicesPage() {
         tone="visa"
         eyebrow="Visa & passport guidance"
         title="Visa Services"
-        intro="Clear, practical guidance with visa and passport applications, so you know what's involved and can prepare with confidence."
+        intro="Clear, practical guidance with visa and passport applications, so you know what’s involved and can prepare with confidence."
       >
         <Link to={getEnquireHref({ service: 'visa-services' })} className="btn btn--primary">
           Enquire about a visa
@@ -53,7 +53,7 @@ export default function VisaServicesPage() {
           id="visa-services-heading"
           eyebrow="How we can help"
           title="Guidance for your next step abroad"
-          intro="Choose the service that fits your plans. If you're not sure which one you need, get in touch and we'll point you in the right direction."
+          intro="Choose the service that fits your plans. If you’re not sure which one you need, get in touch and we’ll point you in the right direction."
         />
 
         <VisaDisclaimer className="visa-main__disclaimer" />
@@ -107,7 +107,7 @@ export default function VisaServicesPage() {
             <h2 id="visa-contact-heading">Talk to {business.contactPerson} about your application</h2>
             <p>
               Call or WhatsApp to discuss your plans, or visit the office in {business.address.locality},{' '}
-              {business.address.city}. We'll explain what's involved and how we can help.
+              {business.address.city}. We’ll explain what’s involved and how we can help.
             </p>
           </div>
           <ContactActions onDark whatsappText={buildEnquiryMessage({ service: 'visa-services' })} />
