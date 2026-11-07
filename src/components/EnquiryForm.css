@@ -55,7 +55,7 @@
 .enquiry-form__context {
   padding: var(--space-3) var(--space-4);
   background: var(--color-visa-tint);
-  border-radius: var(--radius);
+  border-radius: var(--radius-sm);
   font-weight: var(--fw-semibold);
   color: var(--color-teal);
 }
@@ -115,10 +115,12 @@
   line-height: var(--lh-body);
 }
 
-.enquiry-form__field input:hover,
-.enquiry-form__field select:hover,
-.enquiry-form__field textarea:hover {
-  border-color: var(--color-teal);
+@media (hover: hover) {
+  .enquiry-form__field input:hover,
+  .enquiry-form__field select:hover,
+  .enquiry-form__field textarea:hover {
+    border-color: var(--color-teal);
+  }
 }
 
 .enquiry-form__field input:focus-visible,
@@ -176,7 +178,7 @@
   padding: var(--space-4);
   background: var(--color-error-tint);
   border-inline-start: 4px solid var(--color-error);
-  border-radius: var(--radius);
+  border-radius: var(--radius-sm);
 }
 
 .enquiry-form__failure-text {

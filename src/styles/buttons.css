@@ -26,11 +26,13 @@
   text-decoration: none;
   white-space: nowrap;
   cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
   transition:
     background-color var(--transition),
     border-color var(--transition),
     color var(--transition),
-    box-shadow var(--transition);
+    box-shadow var(--transition),
+    transform 150ms ease-out;
   width: 100%;
 }
 
@@ -48,8 +50,8 @@
   width: 100%;
 }
 
-.btn:hover {
-  text-decoration: none;
+.btn:not(:disabled):active {
+  transform: scale(0.97);
 }
 
 .btn svg {
@@ -58,9 +60,26 @@
   height: 1.25em;
 }
 
+/* Optical alignment: 2px less padding on the icon side */
+.btn:has(> svg:last-child:not(:first-child)) {
+  padding-inline-end: calc(var(--space-5) - 2px);
+}
+
+.btn:has(> svg:first-child:not(:last-child)) {
+  padding-inline-start: calc(var(--space-5) - 2px);
+}
+
 .btn--sm {
   padding: var(--space-2) var(--space-4);
   font-size: var(--fs-sm);
+}
+
+.btn--sm:has(> svg:last-child:not(:first-child)) {
+  padding-inline-end: calc(var(--space-4) - 2px);
+}
+
+.btn--sm:has(> svg:first-child:not(:last-child)) {
+  padding-inline-start: calc(var(--space-4) - 2px);
 }
 
 .btn--primary {
@@ -68,17 +87,9 @@
   color: var(--color-white);
 }
 
-.btn--primary:hover {
-  background: var(--color-action-hover);
-}
-
 .btn--secondary {
   background: var(--color-teal);
   color: var(--color-white);
-}
-
-.btn--secondary:hover {
-  background: var(--color-teal-hover);
 }
 
 .btn--outline {
@@ -87,19 +98,10 @@
   color: var(--color-teal);
 }
 
-.btn--outline:hover {
-  background: var(--color-teal);
-  color: var(--color-white);
-}
-
 .btn--ghost {
   background: transparent;
   color: var(--color-teal);
   padding-inline: var(--space-3);
-}
-
-.btn--ghost:hover {
-  background: var(--color-surface-2);
 }
 
 .btn--light {
@@ -107,8 +109,31 @@
   color: var(--color-teal);
 }
 
-.btn--light:hover {
-  background: var(--color-visa-tint);
+@media (hover: hover) {
+  .btn:hover {
+    text-decoration: none;
+  }
+
+  .btn--primary:hover {
+    background: var(--color-action-hover);
+  }
+
+  .btn--secondary:hover {
+    background: var(--color-teal-hover);
+  }
+
+  .btn--outline:hover {
+    background: var(--color-teal);
+    color: var(--color-white);
+  }
+
+  .btn--ghost:hover {
+    background: var(--color-surface-2);
+  }
+
+  .btn--light:hover {
+    background: var(--color-visa-tint);
+  }
 }
 
 /* Group of buttons that stack on mobile and sit in a row from tablet up */
@@ -137,7 +162,6 @@
   text-decoration: none;
 }
 
-.link-arrow:hover,
 .link-arrow:focus-visible {
   text-decoration: underline;
 }
@@ -148,12 +172,22 @@
   transition: transform var(--transition);
 }
 
-.link-arrow:hover svg,
 .link-arrow:focus-visible svg {
   transform: translateX(3px);
 }
 
+@media (hover: hover) {
+  .link-arrow:hover {
+    text-decoration: underline;
+  }
+
+  .link-arrow:hover svg {
+    transform: translateX(3px);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
+  .btn:not(:disabled):active,
   .link-arrow:hover svg,
   .link-arrow:focus-visible svg {
     transform: none;

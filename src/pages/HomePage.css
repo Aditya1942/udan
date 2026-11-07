@@ -159,8 +159,8 @@
 }
 
 .home-hero__contact-icon svg {
-  width: 1.25rem;
-  height: 1.25rem;
+  width: 1.375rem;
+  height: 1.375rem;
 }
 
 .home-hero__contact p {
@@ -185,8 +185,10 @@
   font-variant-numeric: tabular-nums;
 }
 
-.home-hero__contact-phone:hover {
-  text-decoration: underline;
+@media (hover: hover) {
+  .home-hero__contact-phone:hover {
+    text-decoration: underline;
+  }
 }
 
 @media (min-width: 64em) {
@@ -348,7 +350,8 @@
   padding: var(--space-1);
   background: var(--color-white);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius);
+  /* concentric: option radius (10 - 4) + 4px padding + 1px border */
+  border-radius: calc(var(--radius) + 1px);
 }
 
 @media (min-width: 56em) {
@@ -372,9 +375,11 @@
     color var(--transition);
 }
 
-.home-filter__option:hover {
-  color: var(--color-teal);
-  background: var(--color-surface-2);
+@media (hover: hover) {
+  .home-filter__option:hover {
+    color: var(--color-teal);
+    background: var(--color-surface-2);
+  }
 }
 
 /* selected state: filled + bold (not colour alone) */
@@ -846,8 +851,8 @@
 }
 
 .home-contact__fact-icon svg {
-  width: 1.25rem;
-  height: 1.25rem;
+  width: 1.375rem;
+  height: 1.375rem;
 }
 
 .home-contact__fact-label {
@@ -870,8 +875,10 @@
   font-variant-numeric: tabular-nums;
 }
 
-.home-contact__fact-value a:hover {
-  text-decoration: underline;
+@media (hover: hover) {
+  .home-contact__fact-value a:hover {
+    text-decoration: underline;
+  }
 }
 
 .home-contact__address {

@@ -42,6 +42,15 @@
   border-radius: var(--radius);
   background: var(--color-white);
   color: var(--color-teal);
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    transform 150ms ease-out,
+    background-color var(--transition),
+    border-color var(--transition);
+}
+
+.site-header__toggle:not(:disabled):active {
+  transform: scale(0.97);
 }
 
 .site-header__toggle svg {
@@ -63,6 +72,7 @@
   inset-inline: 0;
   max-height: calc(100dvh - var(--header-height));
   overflow-y: auto;
+  overscroll-behavior: contain;
   padding: var(--space-4) var(--gutter) var(--space-6);
   background: var(--color-white);
   border-block-end: 1px solid var(--color-border);
@@ -85,11 +95,22 @@
   color: var(--color-ink);
   text-decoration: none;
   border-radius: var(--radius);
+  transition:
+    color var(--transition),
+    background-color var(--transition);
 }
 
-.site-nav__link:hover {
-  color: var(--color-teal);
-  background: var(--color-surface);
+@media (hover: hover) {
+  .site-nav__link:hover {
+    color: var(--color-teal);
+    background: var(--color-surface);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .site-header__toggle:not(:disabled):active {
+    transform: none;
+  }
 }
 
 /* Current page: teal colour + a bar (non-colour indicator) */

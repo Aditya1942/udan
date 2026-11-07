@@ -90,12 +90,14 @@
 
   /* The one radius */
   --radius: 10px;
+  --radius-sm: calc(var(--radius) - 4px); /* concentric inner radius (6px) */
   --radius-pill: 999px; /* badges only */
 
   /* Shadows */
   --shadow-sm: 0 1px 2px rgb(37 50 56 / 0.06), 0 1px 3px rgb(37 50 56 / 0.06);
   --shadow-md: 0 4px 12px rgb(37 50 56 / 0.08), 0 2px 4px rgb(37 50 56 / 0.04);
   --shadow-lg: 0 16px 40px rgb(22 93 121 / 0.14);
+  --shadow-up: 0 -4px 16px rgb(37 50 56 / 0.08), 0 -2px 4px rgb(37 50 56 / 0.04);
 
   /* Layout */
   --container: 72rem;      /* 1152px */
@@ -105,7 +107,7 @@
   --mobile-bar-height: 4rem;
   --tap: 2.75rem;          /* 44px minimum touch target */
 
-  --transition: 160ms ease;
+  --transition: 160ms ease-out;
 
   /* Admin (derived only; see docs/specs/udan-admin.md "Admin shell and design").
    * Status colours: text/bg pairs >= 4.5:1; white on the bar colours >= 4.84:1. */

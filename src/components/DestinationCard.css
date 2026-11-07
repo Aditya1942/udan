@@ -5,13 +5,16 @@
   min-width: 0;
   overflow: hidden;
   background: var(--color-white);
+  border: 1px solid transparent;
   border-radius: var(--radius);
   box-shadow: var(--shadow-sm);
-  transition: box-shadow var(--transition);
+  transition:
+    box-shadow var(--transition),
+    transform 150ms ease-out;
 }
 
-.destination-card:hover {
-  box-shadow: var(--shadow-md);
+.destination-card:active {
+  transform: scale(0.98);
 }
 
 .destination-card__media {
@@ -19,20 +22,29 @@
   aspect-ratio: 4 / 3;
   overflow: hidden;
   background: var(--color-surface-2);
+  border-start-start-radius: calc(var(--radius) - 1px);
+  border-start-end-radius: calc(var(--radius) - 1px);
 }
 
 .destination-card__media img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 400ms ease;
+  transition: transform 200ms ease-out;
 }
 
-.destination-card:hover .destination-card__media img {
-  transform: scale(1.04);
+@media (hover: hover) {
+  .destination-card:hover {
+    box-shadow: var(--shadow-md);
+  }
+
+  .destination-card:hover .destination-card__media img {
+    transform: scale(1.04);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .destination-card:active,
   .destination-card:hover .destination-card__media img {
     transform: none;
   }
@@ -46,6 +58,7 @@
   align-items: center;
   gap: var(--space-1);
   padding: var(--space-1) var(--space-3);
+  padding-inline-start: calc(var(--space-3) - 2px);
   border-radius: var(--radius-pill);
   background: color-mix(in srgb, var(--color-white) 94%, transparent);
   font-size: var(--fs-xs);
