@@ -3,10 +3,16 @@
  * Weights 400/600/700 only; sentence-case labels; 36px controls with 44px tap targets; one radius. */
 
 .adm { min-height: 100vh; background: var(--color-surface); color: var(--color-ink); font-size: var(--fs-base); line-height: var(--lh-snug); overflow-x: clip; }
-.adm :focus-visible, .adm-login :focus-visible, .adm-dialog :focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+.adm :focus-visible, .adm-login :focus-visible, .adm-dialog:focus-visible, .adm-dialog :focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+@media (forced-colors: active) {
+  .adm :focus-visible, .adm-login :focus-visible, .adm-dialog:focus-visible, .adm-dialog :focus-visible,
+  .adm-field :is(input, select, textarea):focus-visible, .adm-money:focus-within, .adm-tags:focus-within, .adm-search:focus-within {
+    outline: 2px solid Highlight;
+  }
+}
 .adm a { color: inherit; }
 .adm-container { max-width: 80rem; margin-inline: auto; padding-inline: var(--gutter); }
-.adm-main { padding-block: var(--space-5) var(--space-10); display: grid; gap: var(--space-5); align-content: start; }
+.adm-main { padding-block: var(--space-5) var(--space-10); display: grid; gap: var(--space-5); align-content: start; scroll-margin-top: calc(4rem + var(--space-4)); }
 .adm-main:focus { outline: none; }
 .adm-h1 { font-family: var(--font-heading); font-size: var(--fs-xl); font-weight: var(--fw-bold); line-height: var(--lh-tight); }
 .adm-h2 { font-family: var(--font-heading); font-size: var(--fs-md); font-weight: var(--fw-bold); line-height: var(--lh-snug); }

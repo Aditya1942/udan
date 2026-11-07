@@ -47,12 +47,12 @@ export function HomeServices() {
         title="Everything You Need for Your Next Journey"
         intro="From the holiday itself to the tickets, stays and paperwork around it, UDAN brings it together under one roof."
       />
-      <ul role="list" className="home-services__focus" aria-label="Our focus areas">
+      <ul className="home-services__focus" aria-label="Our focus areas">
         {business.focusAreas.map((area) => (
           <li key={area}>{area}</li>
         ))}
       </ul>
-      <ul role="list" className="home-services__grid">
+      <ul className="home-services__grid">
         {overview.map((item) => (
           <li key={item.title}>
             <ServiceCard {...item} />

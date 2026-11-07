@@ -63,6 +63,7 @@ export function ClientsScreen() {
         ) : (
           <div className="adm-table-wrap">
             <table className="adm-table adm-table--dir adm-table--cards">
+              <caption className="visually-hidden">Clients</caption>
               <thead>
                 <tr>
                   <th scope="col">Name</th>

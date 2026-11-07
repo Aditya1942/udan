@@ -36,7 +36,7 @@ export default function NotFoundPage() {
           <h2 id="notfound-links-heading" className="notfound__links-title">
             Or try one of these
           </h2>
-          <ul role="list">
+          <ul>
             {SUGGESTIONS.map(({ to, label }) => (
               <li key={to}>
                 <Link to={to} className="link-arrow">

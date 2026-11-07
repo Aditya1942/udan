@@ -115,6 +115,7 @@ function DmcPage({ dmc }: { dmc: Dmc }) {
           ) : (
             <div className="adm-table-wrap">
               <table className="adm-table adm-table--cards">
+                <caption className="visually-hidden">Bookings with {dmc.name}</caption>
                 <thead>
                   <tr>
                     <th scope="col">Booking</th>

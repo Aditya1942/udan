@@ -307,7 +307,7 @@ export function EnquiryForm({
             </div>
 
             {/* Honeypot: hidden from people and assistive tech; bots tend to fill every field. */}
-            <div className="enquiry-form__hp" aria-hidden="true">
+            <div className="enquiry-form__hp" inert>
               <label htmlFor={fieldId('website')}>Leave this field empty</label>
               <input ref={honeypotRef} id={fieldId('website')} name="website" type="text" tabIndex={-1} autoComplete="off" />
             </div>

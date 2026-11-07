@@ -24,7 +24,7 @@ export function HomeOtherServices() {
             <ArrowRight aria-hidden="true" />
           </Link>
         </div>
-        <ul role="list" className="home-extras__list">
+        <ul className="home-extras__list">
           {EXTRAS.map((id) => {
             const { label, description, icon: Icon } = getService(id);
             return (

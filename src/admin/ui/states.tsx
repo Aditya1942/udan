@@ -9,8 +9,8 @@ export function Spinner({ large = false, label }: { large?: boolean; label?: str
 /** Centred full-screen spinner (auth checks, lazy screens): no shell flash. */
 export function FullScreenSpinner({ label = 'Loading' }: { label?: string }) {
   return (
-    <div className="adm-fullscreen" role="status" aria-live="polite">
-      <span className="adm-spinner adm-spinner--lg" aria-hidden />
+    <div className="adm-fullscreen" role="status" aria-live="polite" aria-atomic="true">
+      <span className="adm-spinner adm-spinner--lg" aria-hidden="true" />
       <span className="visually-hidden">{label}</span>
     </div>
   );
@@ -19,10 +19,10 @@ export function FullScreenSpinner({ label = 'Loading' }: { label?: string }) {
 /** Skeleton lines in a bordered box. */
 export function LoadingState({ lines = 4, label = 'Loading' }: { lines?: number; label?: string }) {
   return (
-    <div className="adm-skeleton" role="status" aria-live="polite">
+    <div className="adm-skeleton" role="status" aria-live="polite" aria-atomic="true">
       <span className="visually-hidden">{label}</span>
       {Array.from({ length: lines }, (_, i) => (
-        <span key={i} className="adm-skeleton__line" aria-hidden />
+        <span key={i} className="adm-skeleton__line" aria-hidden="true" />
       ))}
     </div>
   );

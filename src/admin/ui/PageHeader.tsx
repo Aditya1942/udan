@@ -23,7 +23,7 @@ export function PageHeader({ title, titleExtra, subtitle, back, actions, childre
       {back ? (
         <nav className="adm-crumbs" aria-label="Breadcrumb">
           <Link to={back.to}>
-            <ChevronLeft aria-hidden /> {back.label}
+            <ChevronLeft aria-hidden="true" /> {back.label}
           </Link>
         </nav>
       ) : null}

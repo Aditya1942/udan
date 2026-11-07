@@ -19,18 +19,28 @@ export type DialogProps = {
 export function Dialog({ open, onClose, title, children, footer, onSubmit, wide }: DialogProps) {
   const ref = useRef<HTMLDialogElement>(null);
   const titleId = useId();
+  const previousActive = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
     const dialog = ref.current;
     if (!dialog) return;
     if (open && !dialog.open) {
+      previousActive.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
       if (typeof dialog.showModal === 'function') dialog.showModal();
       else dialog.setAttribute('open', ''); // jsdom
     } else if (!open && dialog.open) {
       if (typeof dialog.close === 'function') dialog.close();
       else dialog.removeAttribute('open');
+      previousActive.current?.focus();
+      previousActive.current = null;
     }
   }, [open]);
+
+  useEffect(() => {
+    return () => {
+      previousActive.current?.focus();
+    };
+  }, []);
 
   const content = (
     <>
@@ -39,7 +49,7 @@ export function Dialog({ open, onClose, title, children, footer, onSubmit, wide 
           {title}
         </h2>
         <IconButton label="Close" variant="ghost" onClick={onClose}>
-          <X aria-hidden />
+          <X aria-hidden="true" />
         </IconButton>
       </div>
       {children}
@@ -52,6 +62,7 @@ export function Dialog({ open, onClose, title, children, footer, onSubmit, wide 
       ref={ref}
       className={wide ? 'adm-dialog adm-dialog--wide' : 'adm-dialog'}
       aria-labelledby={titleId}
+      aria-modal="true"
       onCancel={(e) => {
         e.preventDefault();
         onClose();
@@ -101,7 +112,7 @@ export function ConfirmDialog({ open, title, children, confirmLabel, danger, bus
       onSubmit={onConfirm}
       footer={
         <>
-          <Button onClick={onClose} disabled={busy}>
+          <Button onClick={onClose} disabled={busy} autoFocus={danger ? true : undefined}>
             Cancel
           </Button>
           <Button type="submit" variant={danger ? 'danger' : 'primary'} busy={busy}>

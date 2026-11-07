@@ -36,7 +36,7 @@ export default function ContactPage() {
             <h2 id="contact-details-heading" className="contact-details__title">
               Contact details
             </h2>
-            <ul role="list" className="contact-details__list">
+            <ul className="contact-details__list">
               <li className="contact-details__item">
                 <span className="contact-details__icon" aria-hidden="true">
                   <UserRound strokeWidth={1.75} />

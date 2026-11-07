@@ -45,7 +45,7 @@ type GalleryProps = { items: readonly Destination[] };
 function DestinationGallery({ items }: GalleryProps) {
   const classes = ['tours-gallery', items.length % 3 === 0 && 'tours-gallery--even'].filter(Boolean).join(' ');
   return (
-    <ul role="list" className={classes}>
+    <ul className={classes}>
       {items.map((destination, index) => {
         const featured = index === 0;
         return (
@@ -134,7 +134,7 @@ export default function ToursPage() {
             {tourHighlights.length > 0 && (
               <div className="tours-plan__highlights">
                 <h3 className="tours-plan__highlights-title">How we help with holidays</h3>
-                <ul role="list" className="tours-plan__chips">
+                <ul className="tours-plan__chips">
                   {tourHighlights.map((item) => (
                     <li key={item}>
                       <Check aria-hidden="true" />
@@ -146,7 +146,7 @@ export default function ToursPage() {
             )}
 
             <h3 className="tours-plan__services-title">Also arranged alongside your trip</h3>
-            <ul role="list" className="tours-plan__services">
+            <ul className="tours-plan__services">
               {PLAN_SERVICES.map((id) => {
                 const { label, description, icon: Icon } = getService(id);
                 return (
@@ -165,7 +165,7 @@ export default function ToursPage() {
 
             <div className="tours-plan__details">
               <h3 className="tours-plan__details-title">To get started, it helps to share</h3>
-              <ul role="list" className="tours-plan__checklist">
+              <ul className="tours-plan__checklist">
                 {TRIP_DETAILS.map(({ icon: Icon, text }) => (
                   <li key={text}>
                     <Icon aria-hidden="true" />

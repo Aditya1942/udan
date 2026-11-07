@@ -85,6 +85,7 @@ export function LinesTable({ booking, dmcsById }: { booking: Booking; dmcsById: 
   return (
     <div className="adm-table-wrap">
       <table className="adm-table adm-table--lines">
+        <caption className="visually-hidden">Service lines</caption>
         <thead>
           <tr>
             <th scope="col">Service</th>

@@ -137,7 +137,8 @@
   text-decoration: none;
 }
 
-.link-arrow:hover {
+.link-arrow:hover,
+.link-arrow:focus-visible {
   text-decoration: underline;
 }
 
@@ -147,6 +148,14 @@
   transition: transform var(--transition);
 }
 
-.link-arrow:hover svg {
+.link-arrow:hover svg,
+.link-arrow:focus-visible svg {
   transform: translateX(3px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .link-arrow:hover svg,
+  .link-arrow:focus-visible svg {
+    transform: none;
+  }
 }

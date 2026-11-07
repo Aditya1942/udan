@@ -27,7 +27,7 @@ export function HomeSteps() {
         intro="Three simple steps from first question to next steps."
         align="center"
       />
-      <ol role="list" className="home-steps__list">
+      <ol className="home-steps__list">
         {STEPS.map(({ title, text }, index) => (
           <li key={title} className="home-steps__item">
             <span className="home-steps__number" aria-hidden="true">

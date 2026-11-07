@@ -41,9 +41,9 @@ export function ChartFigure({
   return (
     <figure className={wide ? 'adm-chart adm-chart--wide' : 'adm-chart'} aria-labelledby={titleId}>
       <figcaption className="adm-chart__head">
-        <span id={titleId} className="adm-h3">
+        <h3 id={titleId} className="adm-h3">
           {title}
-        </span>
+        </h3>
         {!empty ? (
           <button type="button" className="adm-link-btn" aria-pressed={asTable} onClick={() => setChoice(!asTable)}>
             {asTable ? 'View as chart' : 'View as table'}

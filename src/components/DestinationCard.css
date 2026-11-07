@@ -31,6 +31,12 @@
   transform: scale(1.04);
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .destination-card:hover .destination-card__media img {
+    transform: none;
+  }
+}
+
 .destination-card__badge {
   position: absolute;
   top: var(--space-3);
@@ -44,6 +50,7 @@
   font-size: var(--fs-xs);
   font-weight: var(--fw-semibold);
   color: var(--color-ink);
+  pointer-events: none;
 }
 
 .destination-card__badge svg {

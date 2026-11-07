@@ -30,7 +30,7 @@ export function HomeVisa() {
           </Link>
         </div>
 
-        <ul role="list" className="home-visa__list">
+        <ul className="home-visa__list">
           {VISA_SERVICES.map((id) => {
             const { label, description, icon: Icon } = getService(id);
             return (

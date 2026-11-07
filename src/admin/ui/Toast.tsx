@@ -37,12 +37,12 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   return (
     <ToastContext.Provider value={show}>
       {children}
-      <div className="adm-toasts" role="status" aria-live="polite">
+      <div className="adm-toasts" role="status" aria-live="polite" aria-atomic="true">
         {toasts.map((t) => (
           <div key={t.id} className={t.tone === 'danger' ? 'adm-toast adm-toast--danger' : 'adm-toast'}>
             <span>{t.message}</span>
             <IconButton label="Dismiss" onClick={() => dismiss(t.id)}>
-              <X aria-hidden />
+              <X aria-hidden="true" />
             </IconButton>
           </div>
         ))}

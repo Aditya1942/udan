@@ -127,18 +127,20 @@ function ProfileForm({ saved, onSaved }: { saved: Values; onSaved: (v: Values) =
                 accept="image/png"
                 className="adm-file-input"
                 aria-label={v.signature ? 'Replace signature' : 'Upload signature'}
+                aria-describedby={sigError ? 'sig-hint sig-error' : 'sig-hint'}
+                aria-invalid={sigError ? true : undefined}
                 onChange={(e) => {
                   void pickSignature(e.target.files?.[0]);
                   e.target.value = '';
                 }}
               />
-              <label htmlFor="sig-file" className="adm-btn adm-btn--outline adm-btn--sm" aria-hidden>
+              <label htmlFor="sig-file" className="adm-btn adm-btn--outline adm-btn--sm">
                 <Upload aria-hidden /> {sigBusy ? 'Resizing…' : v.signature ? 'Replace' : 'Upload'}
               </label>
               {v.signature ? <LinkButton onClick={() => setV({ ...v, signature: '' })}>Remove</LinkButton> : null}
             </div>
-            <span className="adm-field__hint">Optional PNG, resized to under 100 KB.</span>
-            {sigError ? <span className="adm-field__error">{sigError}</span> : null}
+            <span id="sig-hint" className="adm-field__hint">Optional PNG, resized to under 100 KB.</span>
+            {sigError ? <span id="sig-error" className="adm-field__error">{sigError}</span> : null}
           </div>
         </div>
       </Panel>

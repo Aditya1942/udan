@@ -50,7 +50,7 @@ export function HomeWhy() {
         </figure>
         <div>
           <SectionHeading id="home-why-title" eyebrow={business.promise} title="Why Choose UDAN" />
-          <ul role="list" className="home-why__list">
+          <ul className="home-why__list">
             {POINTS.map(({ icon: Icon, title, text }) => (
               <li key={title} className="home-why__item">
                 <span className="home-why__icon" aria-hidden="true">

@@ -17,6 +17,12 @@
   transform: translateY(-2px);
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .service-card:hover {
+    transform: none;
+  }
+}
+
 .service-card__icon {
   display: inline-grid;
   place-items: center;
@@ -67,6 +73,7 @@
   height: 1.5rem;
   background: linear-gradient(225deg, var(--color-visa-tint) 50%, var(--color-border) 50%);
   border-top-right-radius: var(--radius);
+  pointer-events: none;
 }
 
 .service-card--visa .service-card__icon {

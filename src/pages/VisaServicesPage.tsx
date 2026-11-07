@@ -58,7 +58,7 @@ export default function VisaServicesPage() {
 
         <VisaDisclaimer className="visa-main__disclaimer" />
 
-        <ol role="list" className="visa-blocks">
+        <ol className="visa-blocks">
           {VISA_SERVICE_IDS.map((id, index) => {
             const { label, description, icon: Icon, highlights } = getService(id);
             const headingId = `visa-block-${id}`;

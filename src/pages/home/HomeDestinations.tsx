@@ -50,7 +50,7 @@ export function HomeDestinations() {
         {status}
       </p>
 
-      <ul role="list" className="home-destinations__grid">
+      <ul className="home-destinations__grid">
         {shown.map((destination) => (
           <li key={destination.name}>
             <DestinationCard destination={destination} />

@@ -119,6 +119,7 @@ function ClientPage({ client }: { client: Client }) {
           ) : (
             <div className="adm-table-wrap">
               <table className="adm-table adm-table--cards">
+                <caption className="visually-hidden">Bookings for {client.name}</caption>
                 <thead>
                   <tr>
                     <th scope="col">Booking</th>

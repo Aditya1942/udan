@@ -142,6 +142,7 @@ export function PaymentsSection({ booking, side, dmcsById }: { booking: Booking;
       ) : (
         <div className="adm-table-wrap">
           <table className="adm-table adm-table--pay">
+            <caption className="visually-hidden">{side === 'client' ? 'Client payments' : 'DMC payments'}</caption>
             <thead>
               <tr>
                 <th scope="col">Date</th>

@@ -98,7 +98,7 @@ export default function OtherServicesPage() {
                 className="other-category__heading"
               />
               <div className="other-category__body">
-                <ul role="list" className="other-category__cards">
+                <ul className="other-category__cards">
                   {category.services.map((id) => {
                     const { label, description, icon: Icon, highlights } = getService(id);
                     const titleId = `other-service-${id}`;
@@ -118,7 +118,7 @@ export default function OtherServicesPage() {
                           {highlights.length > 0 && (
                             <>
                               <h4 className="other-service__subtitle">How we help</h4>
-                              <ul role="list" className="other-service__list">
+                              <ul className="other-service__list">
                                 {highlights.map((item) => (
                                   <li key={item}>
                                     <Check aria-hidden="true" />

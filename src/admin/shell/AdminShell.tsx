@@ -36,7 +36,7 @@ function NavLinks({ vertical = false, onNavigate }: { vertical?: boolean; onNavi
       {ADMIN_NAV.map(({ label, to, icon: Icon, match }) => (
         <li key={label}>
           <Link to={to} aria-current={match(pathname) ? 'page' : undefined} onClick={onNavigate}>
-            <Icon aria-hidden /> {label}
+            <Icon aria-hidden="true" /> {label}
             {label === 'Enquiries' && newEnquiries > 0 ? (
               <>
                 {' '}
@@ -81,7 +81,7 @@ function MobileMenu() {
   return (
     <div className="adm-mobile-menu" ref={root}>
       <IconButton ref={toggle} label={open ? 'Close menu' : 'Menu'} aria-expanded={open} aria-controls="adm-mobile-nav" onClick={() => setOpen((o) => !o)}>
-        {open ? <X aria-hidden /> : <Menu aria-hidden />}
+        {open ? <X aria-hidden="true" /> : <Menu aria-hidden="true" />}
       </IconButton>
       <nav id="adm-mobile-nav" aria-label="Admin menu" className="adm-mobile-menu__panel" hidden={!open}>
         <NavLinks vertical onNavigate={() => setOpen(false)} />
@@ -102,7 +102,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
           <nav aria-label="Admin" className="adm-topbar__nav">
             <NavLinks />
           </nav>
-          <ButtonLink to="/admin/bookings/new" variant="primary" icon={<Plus aria-hidden />}>
+          <ButtonLink to="/admin/bookings/new" variant="primary" icon={<Plus aria-hidden="true" />}>
             New booking
           </ButtonLink>
           <MobileMenu />

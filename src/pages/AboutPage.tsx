@@ -78,7 +78,7 @@ export default function AboutPage() {
             <h3 id="about-vision-title" className="about-mv__title">
               Our vision
             </h3>
-            <ul role="list" className="about-checklist">
+            <ul className="about-checklist">
               {profile.vision.map((item) => (
                 <li key={item}>
                   <Check aria-hidden="true" />
@@ -102,7 +102,7 @@ export default function AboutPage() {
             <h3 id="about-area-travel" className="about-area__title">
               Travel
             </h3>
-            <ul role="list" className="about-area__list">
+            <ul className="about-area__list">
               {travelServices.map(({ id, label, icon: Icon }) => (
                 <li key={id}>
                   <Icon aria-hidden="true" strokeWidth={1.75} />
@@ -125,7 +125,7 @@ export default function AboutPage() {
             <h3 id="about-area-visa" className="about-area__title">
               Visa &amp; passport guidance
             </h3>
-            <ul role="list" className="about-area__list">
+            <ul className="about-area__list">
               {visaServices.map(({ id, label, icon: Icon }) => (
                 <li key={id}>
                   <Icon aria-hidden="true" strokeWidth={1.75} />
@@ -147,7 +147,7 @@ export default function AboutPage() {
       <Section tone="travel" labelledBy="about-strengths-heading">
         <div className="about-strengths">
           <SectionHeading id="about-strengths-heading" eyebrow="Our strengths" title="What we bring to every booking" />
-          <ul role="list" className="about-strengths__list">
+          <ul className="about-strengths__list">
             {profile.strengths.map((item) => (
               <li key={item}>
                 <Check aria-hidden="true" />

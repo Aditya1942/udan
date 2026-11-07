@@ -108,6 +108,7 @@ function TopTables({ data }: { data: InsightsData }) {
         {data.topClients.length ? (
           <div className="adm-table-wrap">
             <table className="adm-table">
+              <caption className="visually-hidden">Top Clients</caption>
               <thead>
                 <tr>
                   <th scope="col">Client</th>
@@ -140,6 +141,7 @@ function TopTables({ data }: { data: InsightsData }) {
         {data.topDmcs.length ? (
           <div className="adm-table-wrap">
             <table className="adm-table">
+              <caption className="visually-hidden">Top DMCs</caption>
               <thead>
                 <tr>
                   <th scope="col">DMC</th>
@@ -174,6 +176,7 @@ function TopTables({ data }: { data: InsightsData }) {
         {data.destinations.length ? (
           <div className="adm-table-wrap">
             <table className="adm-table">
+              <caption className="visually-hidden">Destinations</caption>
               <thead>
                 <tr>
                   <th scope="col">Destination</th>

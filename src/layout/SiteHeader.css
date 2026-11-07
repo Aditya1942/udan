@@ -106,6 +106,12 @@
   background: var(--color-green);
 }
 
+@media (forced-colors: active) {
+  .site-nav__link[aria-current='page']::before {
+    background: Highlight;
+  }
+}
+
 /* The in-menu CTA is only used on desktop; mobile uses .site-header__cta */
 .site-nav__cta {
   display: none;

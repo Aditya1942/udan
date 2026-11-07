@@ -18,9 +18,10 @@ export function MoneyInput({
 }: ForwardedProps & { value: number; onChange: (value: number) => void; disabled?: boolean }) {
   return (
     <span className="adm-money">
-      <span aria-hidden>₹</span>
+      <span aria-hidden="true">₹</span>
       <input
         {...aria}
+        type="text"
         inputMode="numeric"
         autoComplete="off"
         disabled={disabled}
@@ -62,10 +63,10 @@ export function ChipInput({
     <div className="adm-tags">
       {values.map((v) => (
         <button key={v} type="button" className="adm-chip" aria-label={`Remove ${v}`} onClick={() => onChange(values.filter((x) => x !== v))}>
-          {v} <X aria-hidden />
+          {v} <X aria-hidden="true" />
         </button>
       ))}
-      <input {...aria} value={text} placeholder={placeholder} onChange={(e) => setText(e.target.value)} onKeyDown={onKeyDown} onBlur={commit} />
+      <input {...aria} type="text" value={text} placeholder={placeholder} onChange={(e) => setText(e.target.value)} onKeyDown={onKeyDown} onBlur={commit} />
     </div>
   );
 }
