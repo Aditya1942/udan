@@ -1,7 +1,8 @@
 /** Enquiry helpers: service labels, Client match by mobile, conversion prefill, filters and counts. */
 import { getService, isServiceId } from '../../content/business';
+import { categoryForService } from './category';
 import { formatDate, toISTDate } from './dates';
-import type { BookingDraft, Client, Enquiry, EnquiryStatus } from './types';
+import type { BookingCategory, BookingDraft, Client, Enquiry, EnquiryStatus } from './types';
 
 export function serviceLabel(serviceId: string): string {
   return isServiceId(serviceId) ? getService(serviceId).label : serviceId;
@@ -17,7 +18,9 @@ export type EnquiryConversion = {
   matchedClient?: Client;
   /** Prefill for a new Client when there is no match. */
   newClient: { name: string; mobile: string };
-  /** Booking prefill; status starts Pending and there are no Service Lines. */
+  /** Category preset from the enquiry's service, when it maps to one. */
+  category?: BookingCategory;
+  /** Booking prefill; status starts Pending. */
   draft: Partial<BookingDraft>;
 };
 
@@ -29,11 +32,11 @@ export function enquiryConversion(enquiry: Enquiry, clients: readonly Client[]):
   return {
     matchedClient,
     newClient: { name: enquiry.name, mobile: enquiry.phone },
+    category: categoryForService(enquiry.service),
     draft: {
       clientId: matchedClient?.id,
       destination: enquiry.destination ?? '',
       internalNotes: `From enquiry ${received}: ${serviceLabel(enquiry.service)}${message ? ` — ${message}` : ''}`,
-      lines: [],
     },
   };
 }

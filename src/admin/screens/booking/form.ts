@@ -5,43 +5,65 @@
 import { normalisePhone } from '../../../lib/enquiry/validation';
 import { BOOKING_SECTIONS, type BookingSectionPatch } from '../../data';
 import {
+  divisionOf,
+  isSingleService,
   matchClientByMobile,
   newId,
+  untagStalePayments,
   validateBookingFields,
   validateClient,
   validateLine,
   type Booking,
+  type BookingCategory,
   type BookingDraft,
   type BookingEditableFields,
   type Client,
   type ClientFields,
+  type EnquiryConversion,
   type Errors,
   type ISODate,
+  type LineType,
   type MoneyInput,
   type ServiceLine,
 } from '../../model';
 
 export type SectionKey = keyof typeof BOOKING_SECTIONS;
-/** Section order on the page (Client → Travel → Price → Service lines → Notes). */
-export const SECTION_KEYS: SectionKey[] = ['client', 'travel', 'price', 'lines', 'notes'];
+/** Section order on the page (Customer → Service → Travel → Travellers → Price → Notes). */
+export const SECTION_KEYS: SectionKey[] = ['client', 'service', 'travel', 'travellers', 'price', 'notes'];
 export const SECTION_TITLES: Record<SectionKey, string> = {
   client: 'Customer',
+  service: 'Service',
   travel: 'Travel',
+  travellers: 'Travellers',
   price: 'Price',
-  lines: 'Service lines',
   notes: 'Notes',
 };
 
 export type ClientMode = 'existing' | 'new';
 export type NewClientInput = { name: string; mobile: string; email: string; city: string };
 
-export type BookingForm = BookingEditableFields & { clientMode: ClientMode; newClient: NewClientInput };
+/** `category: ''` until the Admin picks one. */
+export type BookingForm = Omit<BookingEditableFields, 'category'> & {
+  category: BookingCategory | '';
+  clientMode: ClientMode;
+  newClient: NewClientInput;
+};
+
+const isImmigration = (form: BookingForm) => !!form.category && divisionOf(form.category) === 'Immigration';
+
+/** Sections shown on the page; Travellers only for Immigration. */
+export function visibleSections(form: BookingForm): SectionKey[] {
+  return SECTION_KEYS.filter((k) => k !== 'travellers' || isImmigration(form));
+}
 
 const blankNewClient = (): NewClientInput => ({ name: '', mobile: '', email: '', city: '' });
 
 export function formFromBooking(b: Booking): BookingForm {
   return {
     clientId: b.clientId,
+    category: b.category,
+    tripScope: b.tripScope,
+    hasTravel: b.hasTravel,
     destination: b.destination,
     travelStart: b.travelStart,
     travelEnd: b.travelEnd,
@@ -73,19 +95,21 @@ export type BlankFormOptions = {
   /** `?start=` prefill for travelStart. */
   start?: ISODate | null;
   /** Prefill from an Enquiry (`enquiryConversion`). */
-  conversion?: { matchedClient?: Client; newClient: { name: string; mobile: string }; draft: Partial<BookingDraft> };
+  conversion?: EnquiryConversion;
   /** `?client=` prefill (New booking from a Client page). Ignored with a conversion. */
   clientId?: string;
 };
 
 export function blankForm({ start, conversion, clientId }: BlankFormOptions = {}): BookingForm {
   const draft = conversion?.draft ?? {};
-  return {
+  const form: BookingForm = {
     clientId: conversion ? (conversion.matchedClient?.id ?? '') : (clientId ?? ''),
+    category: '',
+    hasTravel: !!start,
     destination: draft.destination ?? '',
     travelStart: start ?? '',
     travelEnd: '',
-    pax: { adults: 2, children: 0, infants: 0 },
+    pax: { adults: 1, children: 0, infants: 0 },
     travellerNames: [],
     itinerary: '',
     internalNotes: draft.internalNotes ?? '',
@@ -95,10 +119,41 @@ export function blankForm({ start, conversion, clientId }: BlankFormOptions = {}
     clientMode: conversion && !conversion.matchedClient ? 'new' : 'existing',
     newClient: conversion && !conversion.matchedClient ? { ...blankNewClient(), ...conversion.newClient } : blankNewClient(),
   };
+  return conversion?.category ? setCategory(form, conversion.category) : form;
 }
 
-export function blankLine(): ServiceLine {
-  return { id: newId(), type: 'Hotel', dmcId: '', description: '', netCost: 0 };
+export function blankLine(type: LineType = 'Hotel'): ServiceLine {
+  return { id: newId(), type, description: '', netCost: 0 };
+}
+
+/** Package → single is only possible while there is at most one line to keep. */
+export function canSetCategory(form: BookingForm, c: BookingCategory): boolean {
+  return !(form.category === 'Package' && isSingleService(c) && form.lines.length > 1);
+}
+
+function retype(l: ServiceLine, type: LineType): ServiceLine {
+  const { visaType, visaCountry, ...rest } = l;
+  return type === 'Visa' ? { ...l, type } : { ...rest, type };
+}
+
+/** Picks the Category and shapes the lines to match; returns `form` unchanged when not allowed. */
+export function setCategory(form: BookingForm, c: BookingCategory): BookingForm {
+  if (!canSetCategory(form, c)) return form;
+  const lines = !form.category
+    ? [blankLine(isSingleService(c) ? c : 'Hotel')]
+    : isSingleService(c)
+      ? [retype(form.lines[0] ?? blankLine(c), c)]
+      : form.lines;
+  return { ...form, category: c, tripScope: c === 'Package' ? form.tripScope : undefined, lines };
+}
+
+/** "Add service" on a single-service Booking: it becomes a Package with one more line. */
+export function addService(form: BookingForm): BookingForm {
+  return { ...form, category: 'Package', lines: [...form.lines, blankLine()] };
+}
+
+export function setTravel(form: BookingForm, on: boolean): BookingForm {
+  return { ...form, hasTravel: on };
 }
 
 /** Mobile as typed → E.164 (Indian formats normalised; other `+…` numbers kept, spaces dropped). */
@@ -133,15 +188,16 @@ export function sectionErrors(section: SectionKey, form: BookingForm, clients: r
     if (taken) fields.mobile = `${taken.name} already has this mobile. Pick them under Existing.`;
     return { fields, lines };
   }
-  if (section === 'lines') {
+  if (section === 'travel' && !form.hasTravel) return { fields: {}, lines };
+  if (section === 'service') {
     for (const l of form.lines) {
       const e = validateLine(l);
       if (Object.keys(e).length) lines[l.id] = e;
     }
-    return { fields: {}, lines };
   }
-  const all = validateBookingFields(form, { requireClient: false });
-  const keys: readonly string[] = section === 'travel' ? [...BOOKING_SECTIONS.travel, 'pax'] : BOOKING_SECTIONS[section];
+  const all = validateBookingFields({ ...form, category: form.category || undefined }, { requireClient: false });
+  const keys: readonly string[] =
+    section === 'travel' && isImmigration(form) ? BOOKING_SECTIONS.travel.filter((k) => k !== 'pax' && k !== 'travellerNames') : BOOKING_SECTIONS[section];
   return { fields: pick(all, keys), lines };
 }
 
@@ -153,16 +209,30 @@ export function isValid(e: SectionErrors): boolean {
 export function sectionPatch(section: SectionKey, form: BookingForm): BookingSectionPatch {
   const patch: Record<string, unknown> = {};
   for (const key of BOOKING_SECTIONS[section]) patch[key] = form[key];
-  if (section === 'travel') patch.destination = form.destination.trim();
+  if (section === 'service') {
+    patch.tripScope = form.category === 'Package' ? form.tripScope : undefined;
+    patch.lines = form.lines.map(trimLine);
+  }
+  if (section === 'travel') {
+    if (isImmigration(form)) {
+      delete patch.pax;
+      delete patch.travellerNames;
+    }
+    if (form.hasTravel) patch.destination = form.destination.trim();
+    else Object.assign(patch, { destination: '', travelStart: undefined, travelEnd: undefined, itinerary: '' });
+  }
   if (section === 'price') patch.clientBalanceDueBy = form.clientBalanceDueBy || undefined;
-  if (section === 'lines') patch.lines = form.lines.map(trimLine);
   return patch as BookingSectionPatch;
 }
 
 function trimLine(l: ServiceLine): ServiceLine {
   const opt = (v?: string) => (v && v.trim() ? v.trim() : undefined);
+  const visa = l.type === 'Visa';
   return {
     ...l,
+    dmcId: opt(l.dmcId),
+    visaType: visa ? l.visaType : undefined,
+    visaCountry: visa ? opt(l.visaCountry) : undefined,
     description: l.description.trim(),
     start: opt(l.start),
     end: opt(l.end),
@@ -178,20 +248,23 @@ export function liveMoneyInput(booking: Booking | undefined, form: BookingForm, 
   return {
     ...base,
     sellingPrice: open.has('price') || !booking ? form.sellingPrice : base.sellingPrice,
-    lines: open.has('lines') || !booking ? form.lines : base.lines,
+    lines: open.has('service') || !booking ? form.lines : base.lines,
   };
 }
 
 /** New booking → `createBooking` arguments. */
 export function toCreateArgs(form: BookingForm): { draft: BookingDraft; newClient?: ClientFields } {
-  const patch = { ...sectionPatch('travel', form), ...sectionPatch('price', form), ...sectionPatch('lines', form), ...sectionPatch('notes', form) };
+  const patch = { ...sectionPatch('travel', form), ...sectionPatch('price', form), ...sectionPatch('service', form), ...sectionPatch('notes', form) };
   const draft: BookingDraft = {
-    destination: form.destination.trim(),
-    travelStart: form.travelStart,
-    travelEnd: form.travelEnd,
+    category: form.category as BookingCategory,
+    tripScope: patch.tripScope,
+    hasTravel: form.hasTravel,
+    destination: patch.destination ?? '',
+    travelStart: patch.travelStart ?? '',
+    travelEnd: patch.travelEnd ?? '',
     pax: form.pax,
     travellerNames: form.travellerNames,
-    itinerary: form.itinerary,
+    itinerary: patch.itinerary ?? '',
     internalNotes: form.internalNotes,
     sellingPrice: form.sellingPrice,
     clientBalanceDueBy: patch.clientBalanceDueBy,
@@ -199,4 +272,10 @@ export function toCreateArgs(form: BookingForm): { draft: BookingDraft; newClien
     clientId: form.clientMode === 'existing' ? form.clientId : undefined,
   };
   return { draft, newClient: form.clientMode === 'new' ? newClientFields(form.newClient) : undefined };
+}
+
+/** Note shown before saving the Service section when DMC Payments would lose their service tag. */
+export function untagWarning(booking: Booking, form: BookingForm): string | null {
+  const n = untagStalePayments(booking, form.lines).untagged.dmc;
+  return n ? `${n} DMC payment${n === 1 ? '' : 's'} tagged to a changed service will stay with the old DMC, untagged.` : null;
 }
