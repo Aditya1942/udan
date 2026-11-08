@@ -739,9 +739,18 @@ th.num .adm-th-btn { flex-direction: row-reverse; }
 
 /* ---------------------------------------------------------------- Documents card: template picker + live link */
 .adm-docs__head { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: flex-start; justify-content: space-between; min-width: 0; }
-.adm-docs__tpl { display: flex; align-items: center; gap: var(--space-2); font-size: var(--fs-sm); color: var(--color-text-muted); min-width: 0; }
-.adm-docs__tpl select { font: inherit; font-size: var(--fs-sm); min-height: 36px; max-width: 100%; padding: 0 var(--space-2); border: 1px solid var(--adm-ctrl-border); border-radius: var(--radius-sm); background: var(--color-white); color: var(--color-ink); }
-.adm-docs__tpl select:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 1px; }
+/* Picker takes its own row in the narrow rail; the select shrinks (ellipsis) instead of overflowing past its widest option. */
+.adm-docs__tpl { display: flex; flex: 1 1 100%; align-items: center; gap: var(--space-2); font-size: var(--fs-sm); color: var(--color-text-muted); min-width: 0; }
+.adm-docs__tpl > span { flex-shrink: 0; }
+.adm-docs__tpl select { flex: 1 1 auto; width: 100%; min-width: 0; min-height: 36px; font: inherit; font-size: var(--fs-sm); color: var(--color-ink);
+  padding: 0 calc(var(--space-2) + 1.25rem) 0 var(--space-2); border: 1px solid var(--adm-ctrl-border); border-radius: var(--radius); background-color: var(--color-white);
+  appearance: none; -webkit-appearance: none; cursor: pointer; text-overflow: ellipsis; white-space: nowrap; overflow: hidden;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235b686d' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right var(--space-2) center; background-size: 1rem; }
+.adm-docs__tpl select:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: -1px; }
+@media (hover: hover) { .adm-docs__tpl select:hover { border-color: var(--color-ink); } }
+@media (forced-colors: active) { .adm-docs__tpl select { appearance: auto; -webkit-appearance: auto; background-image: none; padding-inline-end: var(--space-2); } }
+@media (max-width: 40rem) { .adm-docs__tpl select { font-size: var(--fs-base); } } /* no iOS focus zoom */
 .adm-docs__link { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-1) var(--space-3); font-size: var(--fs-sm); color: var(--color-text-muted); }
 .adm-docs__link-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--color-green); flex-shrink: 0; }
 .adm-docs__link > span:first-child { display: inline-flex; align-items: center; gap: var(--space-2); }
