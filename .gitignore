@@ -21,3 +21,8 @@ coverage/
 *.sqlite
 *.sqlite3
 *.log
+
+# local tooling / scratch
+.scratch/
+.hallmark/
+.zcode/
