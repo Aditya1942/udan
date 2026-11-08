@@ -11,8 +11,6 @@ import {
   activeFilterCount,
   ALL_TIME_PAGE_SIZE,
   applyTableQuery,
-  bookingDate,
-  bookingEndDate,
   clearFilters,
   formatINR,
   formatMonthShort,
@@ -21,7 +19,7 @@ import {
 } from '../../model';
 import type { BookingRow, Client, Dmc, ISODate, SortKey, TableQuery } from '../../model';
 import { Button, ButtonLink, Checkbox, EmptyState, Segmented, StatusBadge } from '../../ui';
-import { dateRange, paxText } from '../booking/views';
+import { paxText, travelRange } from '../booking/views';
 import { Outstanding } from '../directory/shared';
 import { FilterChips, FilterFields } from './TableFilters';
 import { Popover } from './Popover';
@@ -84,7 +82,7 @@ function Cell({ col, row }: { col: ColumnKey; row: BookingRow }) {
     case 'travel':
       return (
         <>
-          {dateRange(bookingDate(b), bookingEndDate(b))}
+          {travelRange(b)}
           {row.flags.travelEnded ? <span className="adm-flag">Not marked Completed</span> : null}
         </>
       );

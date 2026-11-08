@@ -6,6 +6,7 @@
  * The Voucher builder never receives DMCs and copies only customer-facing line fields: no DMC name, cost or payment.
  */
 import {
+  divisionOf,
   serviceDates,
   bookingMoney,
   formatDate,
@@ -33,17 +34,20 @@ export function paxLine(p: Pax): string {
   return [part(p.adults, 'adult', 'adults'), part(p.children, 'child', 'children'), part(p.infants, 'infant', 'infants')].filter(Boolean).join(', ');
 }
 
-/** `18 Dec 2026 – 24 Dec 2026`, or one date when start = end. */
 /** Entered service dates (never the createdAt fallback) as `dateRangeText` arguments. */
 const dateArgs = (b: Parameters<typeof serviceDates>[0]): [ISODate?, ISODate?] => {
   const d = serviceDates(b);
   return [d.start, d.end];
 };
 
+/** `18 Dec 2026 – 24 Dec 2026`, or one date when start = end. */
 export function dateRangeText(start?: ISODate, end?: ISODate): string {
   if (!start) return '';
   return end && end !== start ? `${formatDate(start)} – ${formatDate(end)}` : formatDate(start);
 }
+
+/** Pax is printed only when entered: with Travel details, or for Immigration (Travellers section). */
+const paxText = (b: Booking) => (b.hasTravel || divisionOf(b.category) === 'Immigration' ? paxLine(b.pax) : '');
 
 const textLines = (text?: string) => (text ? text.split('\n').map((l) => l.trim()).filter(Boolean) : []);
 /** Phones are one free-text field: one per line or comma-separated. */
@@ -111,7 +115,7 @@ export function invoiceView({ booking, client, profile: raw }: InvoiceInput): In
   const name = p.tradingName;
 
   const entries = [...booking.clientPayments].sort((a, b) => a.date.localeCompare(b.date));
-  const tripDetail = [dateRangeText(...dateArgs(booking)), paxLine(booking.pax)].filter(Boolean).join(' · ');
+  const tripDetail = [dateRangeText(...dateArgs(booking)), paxText(booking)].filter(Boolean).join(' · ');
   const subject = booking.hasTravel ? booking.destination : (booking.lines[0]?.description ?? '');
   const kind = cancelled ? 'Cancellation charge' : booking.category === 'Package' ? 'Holiday package' : booking.category;
 
@@ -266,7 +270,7 @@ export function voucherView({ booking, client, profile: raw, today }: VoucherInp
       lines: client?.mobile ? [displayMobile(client.mobile)] : [],
       travellers: booking.travellerNames.length ? `Travellers: ${booking.travellerNames.join(', ')}` : undefined,
     },
-    trip: { destination: booking.hasTravel ? booking.destination : '', dates: dateRangeText(...dateArgs(booking)), pax: paxLine(booking.pax) },
+    trip: { destination: booking.hasTravel ? booking.destination : '', dates: dateRangeText(...dateArgs(booking)), pax: paxText(booking) },
     emergency: emergency.length ? emergency : phoneList(p.phones),
     days,
     throughout: booking.lines.filter((l) => !l.start).map(item),

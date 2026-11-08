@@ -1,7 +1,7 @@
 /** Read states of the Booking sections (Customer, Service, Travel, Travellers, Price, Notes). */
 import { ExternalLink, MessageCircle, Phone, Plus } from 'lucide-react';
 import { Link } from 'react-router';
-import { clientWhatsapp, divisionOf, formatDate, formatINR, lineMoney, telUrl, whatsappUrl, type Booking, type Client, type Dmc, type Pax } from '../../model';
+import { clientWhatsapp, divisionOf, formatDate, formatINR, lineMoney, serviceDates, telUrl, whatsappUrl, type Booking, type Client, type Dmc, type Pax } from '../../model';
 import { Button, EmptyState, KeyValues } from '../../ui';
 
 export function paxText(p: Pax): string {
@@ -12,6 +12,12 @@ export function paxText(p: Pax): string {
 export function dateRange(start?: string, end?: string): string {
   if (!start) return '';
   return end && end !== start ? `${formatDate(start)} – ${formatDate(end)}` : formatDate(start);
+}
+
+/** Entered service dates only (never the createdAt fallback) as a range. */
+export function travelRange(b: Parameters<typeof serviceDates>[0]): string {
+  const d = serviceDates(b);
+  return dateRange(d.start, d.end);
 }
 
 export function ClientView({ client }: { client?: Client }) {

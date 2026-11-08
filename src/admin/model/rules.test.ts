@@ -76,18 +76,24 @@ describe('flags', () => {
   const today = '2026-11-10';
 
   it('flags travel ended for Confirmed / Voucher Received only', () => {
-    expect(travelEndedNotCompleted(booking({ travelEnd: '2026-11-09', status: 'Confirmed' }), today)).toBe(true);
-    expect(travelEndedNotCompleted(booking({ travelEnd: '2026-11-09', status: 'Voucher Received' }), today)).toBe(true);
-    expect(travelEndedNotCompleted(booking({ travelEnd: '2026-11-10', status: 'Confirmed' }), today)).toBe(false);
-    expect(travelEndedNotCompleted(booking({ travelEnd: '2026-11-09', status: 'Completed' }), today)).toBe(false);
-    expect(travelEndedNotCompleted(booking({ travelEnd: '2026-11-09', status: 'Pending' }), today)).toBe(false);
+    expect(travelEndedNotCompleted(booking({ travelStart: '2026-11-01', travelEnd: '2026-11-09', status: 'Confirmed' }), today)).toBe(true);
+    expect(travelEndedNotCompleted(booking({ travelStart: '2026-11-01', travelEnd: '2026-11-09', status: 'Voucher Received' }), today)).toBe(true);
+    expect(travelEndedNotCompleted(booking({ travelStart: '2026-11-01', travelEnd: '2026-11-10', status: 'Confirmed' }), today)).toBe(false);
+    expect(travelEndedNotCompleted(booking({ travelStart: '2026-11-01', travelEnd: '2026-11-09', status: 'Completed' }), today)).toBe(false);
+    expect(travelEndedNotCompleted(booking({ travelStart: '2026-11-01', travelEnd: '2026-11-09', status: 'Pending' }), today)).toBe(false);
   });
 
   it('travelEnded uses the latest line end when travelEnd is empty; false with no dates', () => {
     const lines = [line({ end: '2026-11-05' }), line({ end: '2026-11-09' })];
-    expect(travelEndedNotCompleted(booking({ travelEnd: '', lines }), today)).toBe(true);
-    expect(travelEndedNotCompleted(booking({ travelEnd: '', lines: [line({ end: '2026-11-10' })] }), today)).toBe(false);
-    expect(travelEndedNotCompleted(booking({ travelEnd: '', lines: [line()] }), today)).toBe(false);
+    expect(travelEndedNotCompleted(booking({ travelStart: '2026-11-01', travelEnd: '', lines }), today)).toBe(true);
+    expect(travelEndedNotCompleted(booking({ travelStart: '2026-11-01', travelEnd: '', lines: [line({ end: '2026-11-10' })] }), today)).toBe(false);
+    expect(travelEndedNotCompleted(booking({ travelStart: '2026-11-01', travelEnd: '', lines: [line()] }), today)).toBe(false);
+  });
+
+  it('travelEnded never fires from an end date before the Booking date', () => {
+    const early = booking({ travelStart: '2026-11-20', travelEnd: '2026-11-05', status: 'Confirmed' });
+    expect(travelEndedNotCompleted(early, today)).toBe(false);
+    expect(travelEndedNotCompleted({ ...early, travelEnd: '2026-11-09', travelStart: '2026-11-05' }, today)).toBe(true);
   });
 
   it('flags a Customer balance overdue only after the due date and while owed', () => {

@@ -169,6 +169,15 @@ describe('Voucher view-model', () => {
     expect(v.footer).toBe('UDAN Immigration & Tours · +91 96872 32015 · hello@udantours.in · udantours.in');
   });
 
+  it('prints pax only when entered: with Travel, or for Immigration', () => {
+    const noTravel = { hasTravel: false, destination: '', travelStart: '', travelEnd: '', lines: [] };
+    expect(view(sampleBooking(noTravel)).trip.pax).toBe('');
+    expect(view(sampleBooking({ ...noTravel, category: 'Visa' })).trip.pax).toBe('2 adults, 1 child');
+    expect(view(sampleBooking()).trip.pax).toBe('2 adults, 1 child');
+    const hotel = sampleBooking({ ...noTravel, category: 'Hotel' });
+    expect(invoiceView({ booking: hotel, client: SAMPLE_CLIENT, profile: FULL_PROFILE }).item.detail).toBe('');
+  });
+
   it('a Booking without travel details leaves out the destination and dates and does not crash', () => {
     const v = view(sampleBooking({ hasTravel: false, destination: '', travelStart: '', travelEnd: '', lines: [] }));
     expect(v.trip.destination).toBe('');

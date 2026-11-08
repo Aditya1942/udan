@@ -361,9 +361,11 @@ function LineFields({
       <Field label="Net cost" error={e.netCost}>
         <MoneyInput value={l.netCost} onChange={(netCost) => onChange({ netCost })} />
       </Field>
-      <Field label="Pay DMC by" hint="Optional" error={e.dmcPayBy}>
-        <input type="date" value={l.dmcPayBy ?? ''} onChange={(ev) => onChange({ dmcPayBy: opt(ev.target.value) })} />
-      </Field>
+      {l.dmcId ? (
+        <Field label="Pay DMC by" hint="Optional" error={e.dmcPayBy}>
+          <input type="date" value={l.dmcPayBy ?? ''} onChange={(ev) => onChange({ dmcPayBy: opt(ev.target.value) })} />
+        </Field>
+      ) : null}
       <Field label="Confirmation no." hint="Optional">
         <input value={l.confirmationNo ?? ''} onChange={(ev) => onChange({ confirmationNo: ev.target.value })} />
       </Field>
@@ -453,6 +455,7 @@ export function ServiceFields({
         <p className="adm-muted">Add one line per thing a DMC supplies. The lines' Net cost adds up to the booking's Net cost.</p>
       ) : null}
       {lineSummary ? <p className="adm-field__error">{lineSummary}</p> : null}
+      {errors.travellers ? <p className="adm-field__error">{errors.travellers}</p> : null}
 
       {single && form.lines[0] ? (
         <>

@@ -230,6 +230,15 @@ describe('Customers', () => {
     expect(stored).not.toHaveProperty('email');
   });
 
+  it('Customer page Travel column shows entered dates only, never the createdAt fallback', async () => {
+    const { travelStart: _s, travelEnd: _e, ...undated } = BOOKING;
+    await seed(env, { 'bookings/b1': { ...undated, hasTravel: false, destination: '' } });
+    await renderAdmin('/admin/customers/c1');
+    const row = (await screen.findByRole('link', { name: 'UDN-001' })).closest('tr')!;
+    expect(within(row).getByText('UDN-001')).toBeInTheDocument();
+    expect(row).not.toHaveTextContent(/\d{4}/);
+  });
+
   it('New booking from a Customer page starts with that Customer picked', async () => {
     await renderAdmin('/admin/bookings/new?client=c2');
     const client = await screen.findByRole('region', { name: 'Customer' });

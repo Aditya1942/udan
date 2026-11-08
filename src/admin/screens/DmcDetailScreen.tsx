@@ -2,7 +2,7 @@ import { Pencil, Trash2 } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router';
 import { deleteDmc, updateDmc, useAdminData, useBookingRows } from '../data';
-import { bookingDate, bookingEndDate, dmcSummary, formatDate, formatINR, hasErrors, todayIST, validateDmc, type Dmc } from '../model';
+import { dmcSummary, formatDate, formatINR, hasErrors, todayIST, validateDmc, type Dmc } from '../model';
 import {
   Button,
   ButtonLink,
@@ -20,7 +20,7 @@ import {
   useAdminTitle,
   useToast,
 } from '../ui';
-import { dateRange } from './booking/views';
+import { travelRange } from './booking/views';
 import { ContactButtons, DmcFormFields, dmcFieldsOf, dmcInputOf, NONE, Outstanding, useRetryRows } from './directory/shared';
 
 const BACK = { to: '/admin/dmcs', label: 'DMCs' };
@@ -147,7 +147,7 @@ function DmcPage({ dmc }: { dmc: Dmc }) {
                         </th>
                         <td data-label="Customer">
                           {r.row.client?.name ?? <span className="adm-muted">Missing Customer</span>}
-                          <span className="adm-sub">{dateRange(bookingDate(b), bookingEndDate(b))}</span>
+                          <span className="adm-sub">{travelRange(b)}</span>
                         </td>
                         <td data-label="Services">{r.lines.map((l) => l.type).join(', ') || <span className="adm-muted">Payments only</span>}</td>
                         <td>

@@ -2,7 +2,7 @@
  * Booking flags, all relative to an IST "today" (`todayIST()`).
  * Money flags ignore Pending Bookings (quotes carry no outstanding under the counting rules).
  */
-import { bookingEndDate } from './category';
+import { serviceDates } from './category';
 import { addDays } from './dates';
 import { bookingMoney, dmcOutstandingFor, type BookingMoney } from './money';
 import type { Booking, ISODate, INR } from './types';
@@ -36,11 +36,13 @@ export type BookingFlags = {
 
 type FlagInput = Pick<
   Booking,
-  'status' | 'travelEnd' | 'clientBalanceDueBy' | 'lines' | 'sellingPrice' | 'clientPayments' | 'dmcPayments' | 'clientCancellationCharge'
+  'status' | 'travelStart' | 'travelEnd' | 'clientBalanceDueBy' | 'lines' | 'sellingPrice' | 'clientPayments' | 'dmcPayments' | 'clientCancellationCharge'
 >;
 
-export function travelEndedNotCompleted(b: Pick<Booking, 'status' | 'travelEnd' | 'lines'>, today: ISODate): boolean {
-  const end = bookingEndDate(b);
+export function travelEndedNotCompleted(b: Pick<Booking, 'status' | 'travelStart' | 'travelEnd' | 'lines'>, today: ISODate): boolean {
+  // An end entered before the start can't make the trip "ended" early.
+  const { start, end: entered } = serviceDates(b);
+  const end = entered && start && entered < start ? start : entered;
   return !!end && end < today && (b.status === 'Confirmed' || b.status === 'Voucher Received');
 }
 

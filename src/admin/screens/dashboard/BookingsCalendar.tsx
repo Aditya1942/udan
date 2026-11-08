@@ -10,7 +10,7 @@ import { Link } from 'react-router';
 import { addDays, BOOKING_STATUSES, bookingDate, bookingEndDate, daysBetween, formatDate, formatMonth, isoWeekday, monthEnd, monthOf, monthStart } from '../../model';
 import type { BookingRow, BookingStatus, ISODate, ISOMonth } from '../../model';
 import { ButtonLink, Checkbox, StatusBadge } from '../../ui';
-import { dateRange } from '../booking/views';
+import { travelRange } from '../booking/views';
 import { PHONE_QUERY, useMediaQuery } from './hooks';
 import { Popover } from './Popover';
 
@@ -24,9 +24,11 @@ const clientName = (r: BookingRow) => r.client?.name ?? 'Unknown customer';
 /** Booking date and end (the end defaults to the start); a Booking with neither (no createdAt) never lands on the calendar. */
 const span = (r: BookingRow): { start: ISODate; end: ISODate } | undefined => {
   const start = bookingDate(r.booking);
-  return start ? { start, end: bookingEndDate(r.booking) ?? start } : undefined;
+  if (!start) return undefined;
+  const end = bookingEndDate(r.booking);
+  return { start, end: end && end > start ? end : start };
 };
-const dates = (r: BookingRow) => dateRange(bookingDate(r.booking), bookingEndDate(r.booking));
+const dates = (r: BookingRow) => travelRange(r.booking);
 const describe = (r: BookingRow) =>
   [r.booking.bookingNo, clientName(r), r.booking.destination, dates(r), r.booking.status].filter(Boolean).join(', ');
 

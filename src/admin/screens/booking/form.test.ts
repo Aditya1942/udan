@@ -7,6 +7,7 @@ import {
   blankLine,
   canSetCategory,
   formFromBooking,
+  isValid,
   liveMoneyInput,
   sectionErrors,
   sectionPatch,
@@ -128,6 +129,26 @@ describe('service section', () => {
     expect(Object.keys(e.fields)).not.toContain('sellingPrice');
   });
 
+  it('Service save on an Immigration form also needs Traveller names and a traveller count', () => {
+    const hotel = setCategory(blankForm(), 'Hotel');
+    const visa = { ...setCategory(hotel, 'Visa'), lines: [{ ...blankLine('Visa'), description: 'UAE visa', visaType: 'Visitor' as const, visaCountry: 'UAE' }] };
+    const blocked = sectionErrors('service', visa, clients);
+    expect(blocked.fields.travellers).toMatch(/Travellers/);
+    expect(isValid(blocked)).toBe(false);
+    expect(isValid(sectionErrors('service', { ...visa, travellerNames: ['Asha'] }, clients))).toBe(true);
+    expect(isValid(sectionErrors('service', { ...visa, travellerNames: ['Asha'], pax: { adults: 0, children: 0, infants: 0 } }, clients))).toBe(false);
+    // Travel Division: no Traveller rule.
+    expect(sectionErrors('service', { ...hotel, lines: [{ ...hotel.lines[0], description: 'Resort' }] }, clients).fields).not.toHaveProperty('travellers');
+  });
+
+  it('a line without a DMC drops its stale Pay DMC by', () => {
+    const f = { ...setCategory(blankForm(), 'Hotel') };
+    const patch = (dmcId?: string) => sectionPatch('service', { ...f, lines: [{ ...f.lines[0], description: 'x', dmcId, dmcPayBy: '2026-12-01' }] }).lines![0];
+    expect(patch('d1').dmcPayBy).toBe('2026-12-01');
+    expect(patch(undefined).dmcPayBy).toBeUndefined();
+    expect(patch('').dmcPayBy).toBeUndefined();
+  });
+
   it('patch: tripScope only for Package, empty dmcId → undefined, Visa fields only on Visa lines', () => {
     const pkg = { ...setCategory(blankForm(), 'Package'), tripScope: 'Domestic' as const };
     const withLines = {
@@ -205,5 +226,12 @@ describe('blankForm and conversion', () => {
     const none = enquiryConversion(enquiry({ service: 'something-else' }), clients);
     expect(none.category).toBeUndefined();
     expect(blankForm({ conversion: none }).category).toBe('');
+  });
+
+  it('a converted Enquiry with a destination starts with Travel on and keeps it in the travel patch', () => {
+    const f = blankForm({ conversion: enquiryConversion(enquiry({ destination: 'Dubai' }), clients) });
+    expect(f).toMatchObject({ hasTravel: true, destination: 'Dubai' });
+    expect(sectionPatch('travel', f)).toMatchObject({ hasTravel: true, destination: 'Dubai' });
+    expect(blankForm({ conversion: enquiryConversion(enquiry({ destination: ' ' }), clients) }).hasTravel).toBe(false);
   });
 });

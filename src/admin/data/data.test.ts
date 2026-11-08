@@ -241,6 +241,16 @@ describe('section saves and payments', () => {
     expect(b).not.toHaveProperty('clientBalanceDueBy');
   });
 
+  it('removing Travel on an existing Booking leaves no travelStart/travelEnd keys', async () => {
+    const { id } = await createBooking(db, draft());
+    expect(await readDoc(`bookings/${id}`)).toHaveProperty('travelStart');
+    await saveBookingSection(db, id, { hasTravel: false, destination: '', travelStart: undefined, travelEnd: undefined, itinerary: '' });
+    const b = await readDoc(`bookings/${id}`);
+    expect(b).toMatchObject({ hasTravel: false, destination: '' });
+    expect(b).not.toHaveProperty('travelStart');
+    expect(b).not.toHaveProperty('travelEnd');
+  });
+
   it('creates a new Customer in the same write as the Customer section', async () => {
     const { id } = await createBooking(db, draft());
     const { clientId } = await saveBookingSection(db, id, {}, { newClient: { name: 'Ravi', mobile: '+919812345678' } });

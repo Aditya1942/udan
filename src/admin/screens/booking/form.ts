@@ -105,7 +105,7 @@ export function blankForm({ start, conversion, clientId }: BlankFormOptions = {}
   const form: BookingForm = {
     clientId: conversion ? (conversion.matchedClient?.id ?? '') : (clientId ?? ''),
     category: '',
-    hasTravel: !!start,
+    hasTravel: !!start || !!draft.destination?.trim(),
     destination: draft.destination ?? '',
     travelStart: start ?? '',
     travelEnd: '',
@@ -198,7 +198,12 @@ export function sectionErrors(section: SectionKey, form: BookingForm, clients: r
   const all = validateBookingFields({ ...form, category: form.category || undefined }, { requireClient: false });
   const keys: readonly string[] =
     section === 'travel' && isImmigration(form) ? BOOKING_SECTIONS.travel.filter((k) => k !== 'pax' && k !== 'travellerNames') : BOOKING_SECTIONS[section];
-  return { fields: pick(all, keys), lines };
+  const fields = pick(all, keys);
+  // Switching a saved Booking to Visa/Passport: the Travellers rule applies to the Service save too.
+  if (section === 'service' && isImmigration(form) && (all.travellerNames || all.pax)) {
+    fields.travellers = 'Add traveller names and a traveller count under Travellers first.';
+  }
+  return { fields, lines };
 }
 
 export function isValid(e: SectionErrors): boolean {
@@ -228,9 +233,10 @@ export function sectionPatch(section: SectionKey, form: BookingForm): BookingSec
 function trimLine(l: ServiceLine): ServiceLine {
   const opt = (v?: string) => (v && v.trim() ? v.trim() : undefined);
   const visa = l.type === 'Visa';
+  const dmcId = opt(l.dmcId);
   return {
     ...l,
-    dmcId: opt(l.dmcId),
+    dmcId,
     visaType: visa ? l.visaType : undefined,
     visaCountry: visa ? opt(l.visaCountry) : undefined,
     description: l.description.trim(),
@@ -238,7 +244,7 @@ function trimLine(l: ServiceLine): ServiceLine {
     end: opt(l.end),
     confirmationNo: opt(l.confirmationNo),
     voucherNotes: opt(l.voucherNotes),
-    dmcPayBy: opt(l.dmcPayBy),
+    dmcPayBy: dmcId ? opt(l.dmcPayBy) : undefined,
   };
 }
 
