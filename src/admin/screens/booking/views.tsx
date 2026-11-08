@@ -72,14 +72,12 @@ export function TravelView({ booking, onAdd }: { booking: Booking; onAdd: () => 
       items={[
         { label: 'Destination', value: booking.destination },
         { label: 'Travel', value: dateRange(booking.travelStart, booking.travelEnd) },
-        ...(divisionOf(booking.category) === 'Immigration' ? [] : [travellersItem(booking)]),
         ...(booking.clientBalanceDueBy ? [{ label: 'Customer balance due by', value: formatDate(booking.clientBalanceDueBy) }] : []),
       ]}
     />
   );
 }
 
-/** Immigration only. */
 export function TravellersView({ booking }: { booking: Booking }) {
   return <KeyValues items={[travellersItem(booking)]} />;
 }

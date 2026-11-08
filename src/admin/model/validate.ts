@@ -65,19 +65,16 @@ export function validateBookingFields(
   if (!category) e.category = 'Choose a category.';
   if (category === 'Package' && !b.tripScope) e.tripScope = 'Choose Domestic or International.';
   if (b.hasTravel) {
+    if (category && divisionOf(category) === 'Immigration') e.hasTravel = 'Visa and Passport bookings have no travel details.';
     if (isBlank(b.destination)) e.destination = 'Enter a destination.';
     if (!isISODate(b.travelStart)) e.travelStart = 'Enter the travel start date.';
-    if (!isISODate(b.travelEnd)) e.travelEnd = 'Enter the travel end date.';
-    else if (isISODate(b.travelStart) && b.travelEnd < b.travelStart) e.travelEnd = 'Travel end must be on or after the start.';
+    if (b.travelEnd && !isISODate(b.travelEnd)) e.travelEnd = 'Enter a valid date.';
+    else if (b.travelEnd && isISODate(b.travelStart) && b.travelEnd < b.travelStart) e.travelEnd = 'Travel end must be on or after the start.';
   }
   if (!isRupees(b.sellingPrice)) e.sellingPrice = 'Enter a whole rupee amount (0 or more).';
   if (b.clientBalanceDueBy !== undefined && !isISODate(b.clientBalanceDueBy)) e.clientBalanceDueBy = 'Enter a valid date.';
   if (b.pax && !(isRupees(b.pax.adults) && isRupees(b.pax.children) && isRupees(b.pax.infants)))
     e.pax = 'Passenger counts must be whole numbers.';
-  if (category && divisionOf(category) === 'Immigration') {
-    if (!b.travellerNames?.some((n) => !isBlank(n))) e.travellerNames = 'Add at least one traveller name.';
-    if (b.pax && !e.pax && b.pax.adults + b.pax.children + b.pax.infants === 0) e.pax = 'Add at least one traveller.';
-  }
   if (category) {
     const count = b.lines?.length ?? 0;
     if (!isSingleService(category)) {

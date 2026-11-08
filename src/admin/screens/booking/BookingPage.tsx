@@ -1,6 +1,6 @@
 /**
  * Booking detail = editor (Variant B, edit in place) and New booking (same page, every section open).
- * Main column: Customer, Service, Travel (behind "Add travel details"), Travellers (Immigration), Price,
+ * Main column: Customer, Service, Travel (behind "Add travel details"; not for Visa/Passport), Travellers, Price,
  * [Customer payments, DMC payments], Notes — each with its own Edit / Save / Cancel. Rail: Money (live from unsaved values) + Documents card, or Create booking on New.
  * Under 60rem the rail moves above the sections and stops sticking (CSS).
  */
@@ -182,7 +182,7 @@ export function BookingDetail({ booking }: { booking: Booking }) {
       const newClient = section === 'client' && editor.form.clientMode === 'new' ? newClientFields(editor.form.newClient) : undefined;
       if (section === 'service') {
         const patch = sectionPatch('service', editor.form);
-        await saveServiceSection(db, booking.id, { category: editor.form.category as BookingCategory, tripScope: patch.tripScope, lines: patch.lines ?? [] });
+        await saveServiceSection(db, booking.id, { ...patch, category: editor.form.category as BookingCategory, lines: patch.lines ?? [] });
       } else {
         await saveBookingSection(db, booking.id, newClient ? {} : sectionPatch(section, editor.form), { newClient });
       }

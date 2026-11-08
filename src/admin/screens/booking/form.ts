@@ -51,10 +51,13 @@ export type BookingForm = Omit<BookingEditableFields, 'category'> & {
 
 const isImmigration = (form: BookingForm) => !!form.category && divisionOf(form.category) === 'Immigration';
 
-/** Sections shown on the page; Travellers only for Immigration. */
+/** Sections shown on the page; Travel is hidden for Visa/Passport (Immigration has no travel details). */
 export function visibleSections(form: BookingForm): SectionKey[] {
-  return SECTION_KEYS.filter((k) => k !== 'travellers' || isImmigration(form));
+  return SECTION_KEYS.filter((k) => k !== 'travel' || !isImmigration(form));
 }
+
+/** Travel details a Visa/Passport save writes: none. */
+const NO_TRAVEL = { hasTravel: false, destination: '', travelStart: undefined, travelEnd: undefined, itinerary: '' } as const;
 
 const blankNewClient = (): NewClientInput => ({ name: '', mobile: '', email: '', city: '' });
 
@@ -140,11 +143,20 @@ function retype(l: ServiceLine, type: LineType): ServiceLine {
 export function setCategory(form: BookingForm, c: BookingCategory): BookingForm {
   if (!canSetCategory(form, c)) return form;
   const lines = !form.category
-    ? [blankLine(isSingleService(c) ? c : 'Hotel')]
+    ? [firstLine(form, c)]
     : isSingleService(c)
       ? [retype(form.lines[0] ?? blankLine(c), c)]
       : form.lines;
-  return { ...form, category: c, tripScope: c === 'Package' ? form.tripScope : undefined, lines };
+  // Visa/Passport have no travel details; the typed values stay in the form if the Admin switches back.
+  const hasTravel = divisionOf(c) === 'Immigration' ? false : form.hasTravel;
+  return { ...form, category: c, tripScope: c === 'Package' ? form.tripScope : undefined, hasTravel, lines };
+}
+
+/** First line for a new Category; a Visa line takes the prefilled destination (e.g. from an Enquiry) as its Country. */
+function firstLine(form: BookingForm, c: BookingCategory): ServiceLine {
+  const line = blankLine(isSingleService(c) ? c : 'Hotel');
+  const country = form.destination.trim();
+  return c === 'Visa' && country ? { ...line, visaCountry: country } : line;
 }
 
 /** "Add service" on a single-service Booking: it becomes a Package with one more line. */
@@ -196,14 +208,7 @@ export function sectionErrors(section: SectionKey, form: BookingForm, clients: r
     }
   }
   const all = validateBookingFields({ ...form, category: form.category || undefined }, { requireClient: false });
-  const keys: readonly string[] =
-    section === 'travel' && isImmigration(form) ? BOOKING_SECTIONS.travel.filter((k) => k !== 'pax' && k !== 'travellerNames') : BOOKING_SECTIONS[section];
-  const fields = pick(all, keys);
-  // Switching a saved Booking to Visa/Passport: the Travellers rule applies to the Service save too.
-  if (section === 'service' && isImmigration(form) && (all.travellerNames || all.pax)) {
-    fields.travellers = 'Add traveller names and a traveller count under Travellers first.';
-  }
-  return { fields, lines };
+  return { fields: pick(all, BOOKING_SECTIONS[section]), lines };
 }
 
 export function isValid(e: SectionErrors): boolean {
@@ -217,14 +222,11 @@ export function sectionPatch(section: SectionKey, form: BookingForm): BookingSec
   if (section === 'service') {
     patch.tripScope = form.category === 'Package' ? form.tripScope : undefined;
     patch.lines = form.lines.map(trimLine);
+    if (isImmigration(form)) Object.assign(patch, NO_TRAVEL);
   }
   if (section === 'travel') {
-    if (isImmigration(form)) {
-      delete patch.pax;
-      delete patch.travellerNames;
-    }
     if (form.hasTravel) patch.destination = form.destination.trim();
-    else Object.assign(patch, { destination: '', travelStart: undefined, travelEnd: undefined, itinerary: '' });
+    else Object.assign(patch, NO_TRAVEL);
   }
   if (section === 'price') patch.clientBalanceDueBy = form.clientBalanceDueBy || undefined;
   return patch as BookingSectionPatch;
@@ -264,7 +266,7 @@ export function toCreateArgs(form: BookingForm): { draft: BookingDraft; newClien
   const draft: BookingDraft = {
     category: form.category as BookingCategory,
     tripScope: patch.tripScope,
-    hasTravel: form.hasTravel,
+    hasTravel: patch.hasTravel ?? form.hasTravel,
     destination: patch.destination ?? '',
     travelStart: patch.travelStart ?? '',
     travelEnd: patch.travelEnd ?? '',

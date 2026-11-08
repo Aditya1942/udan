@@ -145,6 +145,12 @@ describe('createBooking', () => {
   it('accepts same-day travel', async () => {
     await expect(createBooking(db, draft({ travelEnd: '2026-12-01' }))).resolves.toMatchObject({ bookingNo: 'UDN-001' });
   });
+
+  it('accepts Travel with no end date (one-way); rejects Visa/Passport with Travel', async () => {
+    const { id } = await createBooking(db, draft({ travelEnd: '' }));
+    expect(await readDoc(`bookings/${id}`)).not.toHaveProperty('travelEnd');
+    await expect(createBooking(db, draft({ category: 'Visa', tripScope: undefined, lines: [] }))).rejects.toBeTruthy();
+  });
 });
 
 describe('Booking documents', () => {
@@ -291,6 +297,18 @@ describe('section saves and payments', () => {
     expect(b.dmcPayments).toHaveLength(1);
     expect(b.dmcPayments[0]).toMatchObject({ amount: 300, dmcId: 'd1' });
     expect(b.dmcPayments[0]).not.toHaveProperty('lineId');
+  });
+
+  it('saveServiceSection to Passport clears the travel details in the same write', async () => {
+    const { id } = await createBooking(db, draft());
+    await saveServiceSection(db, id, {
+      category: 'Passport', tripScope: undefined, lines: [{ id: 'lp', type: 'Passport', description: 'Renewal', netCost: 0 }],
+      hasTravel: false, destination: '', travelStart: undefined, travelEnd: undefined, itinerary: '',
+    });
+    const raw = await readDoc(`bookings/${id}`);
+    expect(raw).toMatchObject({ category: 'Passport', hasTravel: false, destination: '', itinerary: '' });
+    expect(raw).not.toHaveProperty('travelStart');
+    expect(raw).not.toHaveProperty('travelEnd');
   });
 
   it('saveServiceSection leaves payment lists alone when no tag goes stale, and removes a cleared tripScope', async () => {

@@ -60,7 +60,8 @@ Vocabulary follows `GLOSSARY.md` (Admin, Client, DMC, Booking, Booking Status, S
 - 22b. As an Admin, I want a single-service Booking to show its service's fields inline, and an "Add more service" button that turns it into a Package, so that simple sales stay simple and can grow.
 - 22c. As an Admin, I want to set a Package's Trip Scope (Domestic / International), so that I can tell the two apart.
 - 22d. As an Admin, I want a Visa service to carry its Visa Type (Visitor / Business) and country, so that I know what is being applied for.
-- 22e. As an Admin, I want travel details behind an "Add travel details" button, so that I skip them when they don't apply.
+- 22e. As an Admin, I want travel details behind an "Add travel details" button, shown only for travel Categories (Package, Hotel, Flight, Train, Bus), so that I skip them when they don't apply.
+- 22g. As an Admin, I want a Travellers section (head-counts and names, all optional) on every Booking, so that I can record who the service is for whatever the Category.
 - 22f. As an Admin, I want each Booking's Division (Travel / Immigration) to follow from its Category, so that I can filter by line of business without extra input.
 
 ### Dashboard — Overview
@@ -201,10 +202,10 @@ type Booking = {
   status: BookingStatus;
   category: BookingCategory;                  // absent on legacy docs = 'Package'
   tripScope?: TripScope;                      // Package only; required on save of a Package
-  hasTravel?: boolean;                        // false = Travel section skipped ("Add travel details")
+  hasTravel?: boolean;                        // false = Travel section skipped ("Add travel details"); always false for Visa/Passport
   destination: string;                        // '' when Travel skipped
-  travelStart?: ISODate; travelEnd?: ISODate; // entered, not derived from lines; optional with Travel
-  pax: { adults: number; children: number; infants: number };
+  travelStart?: ISODate; travelEnd?: ISODate; // entered, not derived from lines; with Travel: start required, end optional (one-way)
+  pax: { adults: number; children: number; infants: number }; // Travellers section; 0 allowed
   travellerNames: string[];                   // optional names
   itinerary: string;                          // free text, printed as-is on the Voucher
   internalNotes: string;
@@ -443,19 +444,21 @@ H1 "Dashboard", then underline tabs **Overview | Insights**. These are real rout
 - **Layout**: main column (1fr) + a **sticky rail** (16–20rem). Under 60rem the rail moves above the sections and stops sticking.
 - **Sections**: Client, Service, Travel, Travellers, Price, Client payments, DMC payments, Notes. Each is a panel with its own **Edit** button.
   - **Service** sits right after Client, one panel (section key `service`, title "Service"): Category select; Trip scope (Package only, required); Division shown read-only; then either the single service's fields inline (non-Package, with **Add more service**, which converts to Package) or the line cards (Package, with **Add service line**). Save writes category, tripScope and lines together in one transaction (`saveServiceSection`), which also clears payment tags that point at deleted lines or lines whose DMC changed.
-  - **Travel**: hidden behind **Add travel details** on every Category (`hasTravel`); removable again.
-  - **Travellers** (pax + names): for Immigration, shown outside Travel, always and required.
+  - **Travel** (destination, dates, itinerary): travel Categories only (Package, Hotel, Flight, Train, Bus), hidden behind **Add travel details** (`hasTravel`); removable again. Not shown for Visa/Passport; picking Visa/Passport turns Travel off, and the Service save clears any saved travel details in the same write.
+  - **Travellers** (pax + names): its own section on every Category, all optional.
   - **Edit** swaps the section into its fields with **Save / Cancel**. Save = one `updateDoc` of that section's fields + `updatedAt`. Cancel discards.
   - Several sections may be open at once. The Money rail recomputes live from unsaved values.
 - **Read states**:
   - **Client**: link to the Client, city/email, tel + WhatsApp.
-  - **Travel**: destination, dates, pax breakdown, traveller names, balance due by.
+  - **Travel**: destination, dates, balance due by.
+  - **Travellers**: pax breakdown ("None" at 0), traveller names ("Names not added").
   - **Price**: Selling Price, balance due by.
   - **Service lines** table: Type + description, DMC link, dates or "Whole trip", Confirmation no. or "Missing" (warn), Pay DMC by, Net cost. While Cancelled, adds a DMC charge column and strikes through the net cost. Footer total.
   - **Notes**: itinerary, internal notes, "From enquiry" link.
-- **Field sets** (used by section Edit and New booking, in order Client → Service → Travel → Price → Notes):
+- **Field sets** (used by section Edit and New booking, in order Client → Service → Travel → Travellers → Price → Notes):
   - **Client**: segmented Existing / New. Existing = type-ahead on name/mobile. New = name + mobile (required), email, city inline; the Client is created in the same write. From an Enquiry: note "Matched existing Client X by mobile" or "A new Client will be created", with fields prefilled.
-  - **Travel**: destination, start, end (min = start), adults/children/infants, traveller names as chip input (Enter adds), itinerary textarea.
+  - **Travel**: destination, start, end (optional, min = start), itinerary textarea.
+  - **Travellers**: adults/children/infants (default 1 adult, 0 allowed), traveller names as chip input (Enter adds).
   - **Price**: Selling Price (₹ input with en-IN grouping) + Client balance due by.
   - **Service lines**: repeatable cards — Type, DMC select (optional, "In-house" when empty) with "+ New DMC…" dialog, Description, Start/End (optional), Net cost, Pay DMC by, Confirmation no., Voucher notes; Visa lines add Visa Type + Country. A new Package starts with one blank card. Deleting a line asks to confirm and warns if payments are tagged to it or that DMC has payments.
   - **Notes**: internal notes.
@@ -473,7 +476,8 @@ H1 "Dashboard", then underline tabs **Overview | Insights**. These are real rout
   - **Create** is one Firestore transaction: read `counters/booking` → create/bump it → create the Client (if new) → create the Booking with `bookingNo`/`bookingSeq` → update the Enquiry (if converting). On success, navigate to `/admin/bookings/<bookingNo>`. Cancel/leave = nothing written.
 - **Validation (in the form)**:
   - Required: Client, Category, sellingPrice ≥ 0 integer. Package: Trip Scope, ≥ 1 line. Other Categories: exactly 1 line.
-  - With Travel added: destination, travelStart, travelEnd ≥ travelStart. Immigration: ≥ 1 traveller name and pax.
+  - With Travel added: destination, travelStart; travelEnd optional, ≥ travelStart when set. Visa/Passport never have Travel.
+  - Travellers: optional on every Category; counts must be whole numbers ≥ 0.
   - Each line needs type, description, netCost ≥ 0 integer; DMC optional; end ≥ start when both are set. Visa lines need Visa Type + Country.
   - Payments need date, kind, mode, amount > 0 integer.
   - Rules don't validate inside arrays, so the form is the only guard for array contents.
@@ -521,7 +525,7 @@ H1 "Dashboard", then underline tabs **Overview | Insights**. These are real rout
   - A converted row shows only "View UDN-xxx".
 - **Convert** → `/admin/bookings/new?enquiry=<id>`:
   - **Client**: exact E.164 match of the enquiry phone against `clients.mobile` → suggest that Client (Admin confirms or picks another). Otherwise, a new Client prefilled with name + mobile.
-  - **Booking prefill**: `destination` ← enquiry destination; `internalNotes` ← "From enquiry <date>: <service label> — <message>"; status Pending; `enquiryId` set.
+  - **Booking prefill**: `destination` ← enquiry destination (opens Travel; for a Visa preset it fills the Visa line's Country instead, and Passport drops it); `internalNotes` ← "From enquiry <date>: <service label> — <message>"; status Pending; `enquiryId` set.
   - **Category preset** from the enquiry service: international-domestic-tours → Package; hotel-booking → Hotel; flight-train-tickets → Flight; visa-services, visitor-business-visa → Visa (Visa Type left to the Admin); passport-services → Passport; others → none.
   - **On save** (same Create transaction): Enquiry → `status: 'converted'`, `clientId`, `bookingId`, `convertedAt`, `updatedAt`.
   - One Enquiry → at most one Booking. Any service may convert.
@@ -637,7 +641,7 @@ function isAdmin() {
   - **No validation inside arrays** (`lines`, `clientPayments`, `dmcPayments`, `travellerNames`) beyond `is list`.
 - **`bookings`**:
   - `bookingNo`, `bookingSeq` and `createdAt` are immutable.
-  - Allows `category`, `tripScope`, `hasTravel`; `category`/`tripScope` in their enums when present. `destination` may be empty and `travelStart`/`travelEnd` absent when `hasTravel == false`; when both dates are present, `travelEnd >= travelStart`.
+  - Allows `category`, `tripScope`, `hasTravel`; `category`/`tripScope` in their enums when present. `destination` may be empty and `travelStart`/`travelEnd` absent when `hasTravel == false`; with Travel, `destination` and `travelStart` are required and `travelEnd` optional; when both dates are present, `travelEnd >= travelStart`. A Visa/Passport Booking must have `hasTravel == false`.
   - `invoiceNo`, `invoiceSeq`, `invoiceDate` and `enquiryId` can be **set once** (absent → present), then never changed or removed.
   - **Delete denied.**
 - **`clients`, `dmcs`**: Admin may delete. The "in use" check is client-side only.

@@ -115,7 +115,7 @@ and if the admin routes chunk (the one holding `src/admin/routes.tsx`) staticall
 - `form.ts` (pure): `BookingForm` (editable fields + `clientMode` + `newClient`), `formFromBooking`, `blankForm({ start, conversion })`,
   `resetSection`, `sectionErrors(section, form, clients)` (incl. new-Client mobile uniqueness), `sectionPatch`, `liveMoneyInput`
   (saved Booking + open sections' unsaved values), `toCreateArgs`, `toE164` (Indian formats → `+91…`).
-- `fields.tsx`: `ClientPicker` (combobox type-ahead on name/mobile), `ClientFields`, `TravelFields`, `PriceFields`, `LinesFields`, `NotesFields`.
+- `fields.tsx`: `ClientPicker` (combobox type-ahead on name/mobile), `ClientFields`, `TravelFields` (travel Categories only), `TravellersFields` (every Category, optional), `PriceFields`, `LinesFields`, `NotesFields`.
 - `views.tsx`: read states + `paxText`, `dateRange`. `MoneyRail.tsx`: `MoneyPanel({ input })`. `StatusControl.tsx`: select + Cancel dialog.
   `PaymentsSection.tsx`: inline add / edit / delete for either side.
 - `DocumentsCard.tsx` (rail, under Money; phase E): see "Documents" below.

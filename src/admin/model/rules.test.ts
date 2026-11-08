@@ -170,9 +170,22 @@ describe('validation', () => {
     expect(validateBookingFields({ ...base, category: 'Package', lines: [] }, { requireClient: false })).toEqual({ tripScope: 'Choose Domestic or International.', lines: 'Add at least one service.' });
     expect(validateBookingFields({ ...base, lines: [line(), line()] }, { requireClient: false })).toHaveProperty('lines');
   });
-  it('Immigration needs travellers', () => {
-    const e = validateBookingFields({ ...base, category: 'Passport', pax: { adults: 0, children: 0, infants: 0 }, lines: [line({ type: 'Passport' })] }, { requireClient: false });
-    expect(e).toMatchObject({ travellerNames: 'Add at least one traveller name.', pax: 'Add at least one traveller.' });
+  it('travellers are optional on every Category', () => {
+    for (const category of ['Passport', 'Hotel'] as const) {
+      const e = validateBookingFields(
+        { ...base, category, hasTravel: false, pax: { adults: 0, children: 0, infants: 0 }, travellerNames: [], lines: [line({ type: category })] },
+        { requireClient: false },
+      );
+      expect(e).not.toHaveProperty('pax');
+      expect(e).not.toHaveProperty('travellerNames');
+    }
+  });
+  it('travel end is optional (≥ start when entered); Visa/Passport cannot have travel details', () => {
+    const travel = { ...base, category: 'Flight' as const, hasTravel: true, destination: 'Delhi', travelStart: '2026-12-01', lines: [line({ type: 'Flight' })] };
+    const v = (o: object) => validateBookingFields({ ...travel, ...o }, { requireClient: false });
+    expect(v({ travelEnd: '' })).toEqual({});
+    expect(v({ travelEnd: '2026-11-30' })).toHaveProperty('travelEnd');
+    expect(v({ category: 'Visa', lines: [line({ type: 'Visa', visaType: 'Visitor', visaCountry: 'UAE' })] })).toHaveProperty('hasTravel');
   });
   it('DMC optional on lines; Visa lines need type and country', () => {
     expect(validateLine(line({ dmcId: undefined }))).toEqual({});

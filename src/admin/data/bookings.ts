@@ -160,7 +160,7 @@ export type BookingSectionPatch = Partial<BookingEditableFields>;
 export const BOOKING_SECTIONS = {
   client: ['clientId'],
   service: ['category', 'tripScope', 'lines'],
-  travel: ['hasTravel', 'destination', 'travelStart', 'travelEnd', 'itinerary', 'pax', 'travellerNames'],
+  travel: ['hasTravel', 'destination', 'travelStart', 'travelEnd', 'itinerary'],
   travellers: ['pax', 'travellerNames'],
   price: ['sellingPrice', 'clientBalanceDueBy'],
   notes: ['internalNotes'],
@@ -192,10 +192,12 @@ export function saveBookingSection(
   });
 }
 
-export type ServiceSectionPatch = Pick<BookingEditableFields, 'category' | 'tripScope' | 'lines'>;
+/** Visa/Passport saves also clear the travel details (`hasTravel: false`, travel keys removed). */
+export type ServiceSectionPatch = Pick<BookingEditableFields, 'category' | 'tripScope' | 'lines'> &
+  Partial<Pick<BookingEditableFields, 'hasTravel' | 'destination' | 'travelStart' | 'travelEnd' | 'itinerary'>>;
 
 /**
- * Service section Save: one transaction writes Category, Trip Scope and lines, and drops payment tags that
+ * Service section Save: one transaction writes Category, Trip Scope and lines (plus the travel clear for Visa/Passport), and drops payment tags that
  * the new lines make stale (deleted line, or a DMC Payment whose line changed DMC). Payments stay; `untagged` counts them.
  */
 export function saveServiceSection(

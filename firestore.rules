@@ -172,7 +172,8 @@ service cloud.firestore {
         && optDate(d, 'travelStart') && optDate(d, 'travelEnd')
         && (!('travelStart' in d) || !('travelEnd' in d) || d.travelEnd >= d.travelStart)
         && (d.get('hasTravel', true) == false
-            || (nonEmptyString(d.get('destination', ''), 200) && 'travelStart' in d && 'travelEnd' in d))
+            || (nonEmptyString(d.get('destination', ''), 200) && 'travelStart' in d))
+        && (!(d.get('category', 'Package') in ['Visa', 'Passport']) || d.get('hasTravel', true) == false)
         && isValidPax(d.pax)
         && d.travellerNames is list
         && d.itinerary is string && d.internalNotes is string

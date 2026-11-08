@@ -195,10 +195,10 @@ export function ClientFields({
 
 const count = (v: string) => Math.max(0, Math.floor(Number(v) || 0));
 
-/** Adults / children / infants + traveller names: in Travel for the Travel Division, in Travellers for Immigration. */
-function PaxFields({ form, set, errors }: { form: BookingForm; set: SetForm; errors: Errors }) {
+/** Travellers section (every Category, all optional): adults / children / infants + traveller names. */
+export function TravellersFields({ form, set, errors }: { form: BookingForm; set: SetForm; errors: Errors }) {
   return (
-    <>
+    <div className="adm-stack">
       <div className="adm-grid-3">
         <Field label="Adults" error={errors.pax}>
           <input type="number" min={0} value={form.pax.adults} onChange={(e) => set({ pax: { ...form.pax, adults: count(e.target.value) } })} />
@@ -210,10 +210,10 @@ function PaxFields({ form, set, errors }: { form: BookingForm; set: SetForm; err
           <input type="number" min={0} value={form.pax.infants} onChange={(e) => set({ pax: { ...form.pax, infants: count(e.target.value) } })} />
         </Field>
       </div>
-      <Field label="Traveller names" hint="Printed on the Voucher. Press Enter after each name." error={errors.travellerNames}>
+      <Field label="Traveller names" hint="Optional. Press Enter after each name." error={errors.travellerNames}>
         <ChipInput values={form.travellerNames} onChange={(travellerNames) => set({ travellerNames })} placeholder="Type a name, press Enter" />
       </Field>
-    </>
+    </div>
   );
 }
 
@@ -230,7 +230,6 @@ export function TravelFields({ form, set, errors }: { form: BookingForm; set: Se
       </div>
     );
   }
-  const immigration = !!form.category && divisionOf(form.category) === 'Immigration';
   return (
     <div className="adm-stack">
       <div className="adm-grid-3">
@@ -240,11 +239,10 @@ export function TravelFields({ form, set, errors }: { form: BookingForm; set: Se
         <Field label="Travel start" error={errors.travelStart}>
           <input type="date" value={form.travelStart} onChange={(e) => set({ travelStart: e.target.value })} />
         </Field>
-        <Field label="Travel end" error={errors.travelEnd}>
+        <Field label="Travel end" hint="Optional" error={errors.travelEnd}>
           <input type="date" value={form.travelEnd} min={form.travelStart || undefined} onChange={(e) => set({ travelEnd: e.target.value })} />
         </Field>
       </div>
-      {immigration ? null : <PaxFields form={form} set={set} errors={errors} />}
       <Field label="Itinerary" hint="Printed as typed on the Voucher">
         <textarea rows={4} value={form.itinerary} onChange={(e) => set({ itinerary: e.target.value })} />
       </Field>
@@ -253,15 +251,6 @@ export function TravelFields({ form, set, errors }: { form: BookingForm; set: Se
           Remove travel details
         </Button>
       </div>
-    </div>
-  );
-}
-
-/** Immigration only. */
-export function TravellersFields({ form, set, errors }: { form: BookingForm; set: SetForm; errors: Errors }) {
-  return (
-    <div className="adm-stack">
-      <PaxFields form={form} set={set} errors={errors} />
     </div>
   );
 }
