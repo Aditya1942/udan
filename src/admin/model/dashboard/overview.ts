@@ -1,5 +1,5 @@
 /** Overview: month stat row and Needs attention. */
-import { bookingDate } from '../category';
+import { bookingDate, bookingEndDate } from '../category';
 import { totals } from '../counting';
 import { daysBetween, formatDate, monthOf } from '../dates';
 import { formatINR } from '../money';
@@ -105,7 +105,7 @@ export function needsAttention({ rows, enquiries, lastBackup, today }: Attention
     if (flags.dmcDueBack)
       for (const d of money.dmcs)
         if (d.outstanding < 0) refunds.push(item(r, `${dmcName(r, d.dmcId)} due back ${formatINR(-d.outstanding)}`));
-    if (flags.travelEnded) travelEnded.push(item(r, `Travel ended ${formatDate(booking.travelEnd)}`));
+    if (flags.travelEnded) travelEnded.push(item(r, `Travel ended ${formatDate(bookingEndDate(booking)!)}`));
   }
 
   const out: AttentionCategory[] = [];

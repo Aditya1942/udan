@@ -205,6 +205,12 @@ describe('overview', () => {
     expect(cats[2].items.map((i) => i.detail)).toEqual(['Refund ₹15,000 to Customer', 'Gulf Holidays due back ₹4,000']);
   });
 
+  it('Travel ended detail uses the latest line end when Travel was skipped', () => {
+    const b = booking({ status: 'Confirmed', travelStart: '', travelEnd: '', lines: [line({ start: '2026-10-01', end: '2026-10-04' })] });
+    const cats = needsAttention({ rows: buildBookingRows([b], clients, dmcs, today), enquiries: [], lastBackup: '2026-10-11', today });
+    expect(cats.find((c) => c.key === 'travelEnded')?.items[0].detail).toBe('Travel ended 4 Oct 2026');
+  });
+
   it('hides empty categories and a recent backup', () => {
     const cats = needsAttention({ rows: [], enquiries: [], lastBackup: '2026-10-11', today });
     expect(cats).toEqual([]);
