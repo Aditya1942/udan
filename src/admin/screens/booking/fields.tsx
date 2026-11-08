@@ -1,10 +1,28 @@
 /** Edit states of the Booking sections. Each takes the whole form + `set(patch)` and shows errors once a save was tried. */
 import { Plus, Trash2 } from 'lucide-react';
 import { useEffect, useId, useMemo, useState, type KeyboardEvent } from 'react';
-import { formatINR, LINE_TYPES, type Client, type Dmc, type DmcPayment, type Errors, type LineType, type ServiceLine } from '../../model';
+import {
+  BOOKING_CATEGORIES,
+  divisionOf,
+  formatINR,
+  isSingleService,
+  LINE_TYPES,
+  TRIP_SCOPES,
+  VISA_TYPES,
+  type BookingCategory,
+  type Client,
+  type ClientPayment,
+  type Dmc,
+  type DmcPayment,
+  type Errors,
+  type LineType,
+  type ServiceLine,
+  type TripScope,
+  type VisaType,
+} from '../../model';
 import { Button, ChipInput, ConfirmDialog, Field, IconButton, MoneyInput, Note, Segmented } from '../../ui';
 import { DmcDialog } from '../shared/DmcDialog';
-import { blankLine, type BookingForm, type ClientMode, type LineErrors } from './form';
+import { addService, blankLine, canSetCategory, setCategory, setTravel, type BookingForm, type ClientMode, type LineErrors } from './form';
 
 type SetForm = (patch: Partial<BookingForm>) => void;
 
@@ -173,11 +191,46 @@ export function ClientFields({
   );
 }
 
-/* ---------------- Travel / Price / Notes ---------------- */
+/* ---------------- Travel / Travellers / Price / Notes ---------------- */
 
 const count = (v: string) => Math.max(0, Math.floor(Number(v) || 0));
 
+/** Adults / children / infants + traveller names: in Travel for the Travel Division, in Travellers for Immigration. */
+function PaxFields({ form, set, errors }: { form: BookingForm; set: SetForm; errors: Errors }) {
+  return (
+    <>
+      <div className="adm-grid-3">
+        <Field label="Adults" error={errors.pax}>
+          <input type="number" min={0} value={form.pax.adults} onChange={(e) => set({ pax: { ...form.pax, adults: count(e.target.value) } })} />
+        </Field>
+        <Field label="Children">
+          <input type="number" min={0} value={form.pax.children} onChange={(e) => set({ pax: { ...form.pax, children: count(e.target.value) } })} />
+        </Field>
+        <Field label="Infants">
+          <input type="number" min={0} value={form.pax.infants} onChange={(e) => set({ pax: { ...form.pax, infants: count(e.target.value) } })} />
+        </Field>
+      </div>
+      <Field label="Traveller names" hint="Printed on the Voucher. Press Enter after each name." error={errors.travellerNames}>
+        <ChipInput values={form.travellerNames} onChange={(travellerNames) => set({ travellerNames })} placeholder="Type a name, press Enter" />
+      </Field>
+    </>
+  );
+}
+
 export function TravelFields({ form, set, errors }: { form: BookingForm; set: SetForm; errors: Errors }) {
+  if (!form.hasTravel) {
+    return (
+      <div className="adm-stack">
+        <p className="adm-muted">No travel details.</p>
+        <div>
+          <Button icon={<Plus aria-hidden />} onClick={() => set(setTravel(form, true))}>
+            Add travel details
+          </Button>
+        </div>
+      </div>
+    );
+  }
+  const immigration = !!form.category && divisionOf(form.category) === 'Immigration';
   return (
     <div className="adm-stack">
       <div className="adm-grid-3">
@@ -190,23 +243,25 @@ export function TravelFields({ form, set, errors }: { form: BookingForm; set: Se
         <Field label="Travel end" error={errors.travelEnd}>
           <input type="date" value={form.travelEnd} min={form.travelStart || undefined} onChange={(e) => set({ travelEnd: e.target.value })} />
         </Field>
-        <span aria-hidden className="adm-hide-sm" />
-        <Field label="Adults" error={errors.pax}>
-          <input type="number" min={0} value={form.pax.adults} onChange={(e) => set({ pax: { ...form.pax, adults: count(e.target.value) } })} />
-        </Field>
-        <Field label="Children">
-          <input type="number" min={0} value={form.pax.children} onChange={(e) => set({ pax: { ...form.pax, children: count(e.target.value) } })} />
-        </Field>
-        <Field label="Infants">
-          <input type="number" min={0} value={form.pax.infants} onChange={(e) => set({ pax: { ...form.pax, infants: count(e.target.value) } })} />
-        </Field>
       </div>
-      <Field label="Traveller names" hint="Optional, printed on the Voucher. Press Enter after each name.">
-        <ChipInput values={form.travellerNames} onChange={(travellerNames) => set({ travellerNames })} placeholder="Type a name, press Enter" />
-      </Field>
+      {immigration ? null : <PaxFields form={form} set={set} errors={errors} />}
       <Field label="Itinerary" hint="Printed as typed on the Voucher">
         <textarea rows={4} value={form.itinerary} onChange={(e) => set({ itinerary: e.target.value })} />
       </Field>
+      <div>
+        <Button variant="ghost" icon={<Trash2 aria-hidden />} onClick={() => set(setTravel(form, false))}>
+          Remove travel details
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+/** Immigration only. */
+export function TravellersFields({ form, set, errors }: { form: BookingForm; set: SetForm; errors: Errors }) {
+  return (
+    <div className="adm-stack">
+      <PaxFields form={form} set={set} errors={errors} />
     </div>
   );
 }
@@ -232,109 +287,222 @@ export function NotesFields({ form, set }: { form: BookingForm; set: SetForm }) 
   );
 }
 
-/* ---------------- Service lines ---------------- */
+/* ---------------- Service ---------------- */
 
 const NEW_DMC = '__new__';
 
-export function LinesFields({
+type LinePatch = (patch: Partial<ServiceLine>) => void;
+
+/** One line's fields. `showType` is off for a single-service Booking (the Category is the type). */
+function LineFields({
+  line: l,
+  errors: e,
+  dmcs,
+  showType,
+  onChange,
+  onNewDmc,
+}: {
+  line: ServiceLine;
+  errors: Errors<keyof ServiceLine>;
+  dmcs: readonly Dmc[];
+  showType: boolean;
+  onChange: LinePatch;
+  onNewDmc: () => void;
+}) {
+  const opt = (v: string) => v || undefined;
+  return (
+    <div className="adm-line__grid">
+      {showType ? (
+        <Field label="Type" error={e.type}>
+          <select value={l.type} onChange={(ev) => onChange({ type: ev.target.value as LineType })}>
+            {LINE_TYPES.map((t) => (
+              <option key={t}>{t}</option>
+            ))}
+          </select>
+        </Field>
+      ) : null}
+      <Field label="DMC" error={e.dmcId}>
+        <select value={l.dmcId ?? ''} onChange={(ev) => (ev.target.value === NEW_DMC ? onNewDmc() : onChange({ dmcId: opt(ev.target.value) }))}>
+          <option value="">In-house</option>
+          {dmcs.map((d) => (
+            <option key={d.id} value={d.id}>
+              {d.name}
+            </option>
+          ))}
+          <option value={NEW_DMC}>+ New DMC…</option>
+        </select>
+      </Field>
+      {l.type === 'Visa' ? (
+        <>
+          <Field label="Visa type" error={e.visaType}>
+            <select value={l.visaType ?? ''} onChange={(ev) => onChange({ visaType: opt(ev.target.value) as VisaType | undefined })}>
+              <option value="" disabled>
+                Choose visa type
+              </option>
+              {VISA_TYPES.map((t) => (
+                <option key={t}>{t}</option>
+              ))}
+            </select>
+          </Field>
+          <Field label="Country" error={e.visaCountry}>
+            <input value={l.visaCountry ?? ''} onChange={(ev) => onChange({ visaCountry: ev.target.value })} />
+          </Field>
+        </>
+      ) : null}
+      <Field label="Description" hint="Printed on the Voucher" error={e.description} className="adm-span-2">
+        <input value={l.description} onChange={(ev) => onChange({ description: ev.target.value })} />
+      </Field>
+      <Field label="Start" hint="Optional" error={e.start}>
+        <input type="date" value={l.start ?? ''} onChange={(ev) => onChange({ start: opt(ev.target.value) })} />
+      </Field>
+      <Field label="End" hint="Optional" error={e.end}>
+        <input type="date" value={l.end ?? ''} min={l.start || undefined} onChange={(ev) => onChange({ end: opt(ev.target.value) })} />
+      </Field>
+      <Field label="Net cost" error={e.netCost}>
+        <MoneyInput value={l.netCost} onChange={(netCost) => onChange({ netCost })} />
+      </Field>
+      <Field label="Pay DMC by" hint="Optional" error={e.dmcPayBy}>
+        <input type="date" value={l.dmcPayBy ?? ''} onChange={(ev) => onChange({ dmcPayBy: opt(ev.target.value) })} />
+      </Field>
+      <Field label="Confirmation no." hint="Optional">
+        <input value={l.confirmationNo ?? ''} onChange={(ev) => onChange({ confirmationNo: ev.target.value })} />
+      </Field>
+      <Field label="Voucher notes" hint="Optional" className="adm-span-all">
+        <input
+          value={l.voucherNotes ?? ''}
+          onChange={(ev) => onChange({ voucherNotes: ev.target.value })}
+          placeholder="Check-in 2 pm, driver meets at gate 3"
+        />
+      </Field>
+      {l.dmcCancellationCharge !== undefined ? (
+        <p className="adm-muted adm-span-all">DMC cancellation charge {formatINR(l.dmcCancellationCharge)} (set in the Cancel dialog).</p>
+      ) : null}
+    </div>
+  );
+}
+
+/**
+ * Service section: Category, Trip scope (Package), Division, then the lines — one inline for a single-service
+ * Booking (with "Add more service"), or the line cards for a Package.
+ */
+export function ServiceFields({
   form,
   set,
   errors,
+  lineErrors,
   dmcs,
   dmcPayments,
+  clientPayments,
 }: {
   form: BookingForm;
   set: SetForm;
-  errors: LineErrors;
+  errors: Errors;
+  lineErrors: LineErrors;
   dmcs: readonly Dmc[];
-  /** Saved DMC Payments (delete warning). */
+  /** Saved payments (delete warning). */
   dmcPayments: readonly DmcPayment[];
+  clientPayments: readonly ClientPayment[];
 }) {
   const [dmcFor, setDmcFor] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<ServiceLine | null>(null);
   const upd = (id: string, p: Partial<ServiceLine>) => set({ lines: form.lines.map((l) => (l.id === id ? { ...l, ...p } : l)) });
-  const opt = (v: string) => v || undefined;
   const dmcName = (id: string) => dmcs.find((d) => d.id === id)?.name ?? 'This DMC';
   const sortedDmcs = useMemo(() => [...dmcs].sort((a, b) => a.name.localeCompare(b.name)), [dmcs]);
-  const deletingHasPayments = deleting ? dmcPayments.some((p) => p.dmcId === deleting.dmcId) : false;
+  const taggedToDeleting = deleting ? [...clientPayments, ...dmcPayments].filter((p) => p.lineId === deleting.id).length : 0;
+  const deletingDmcHasPayments = deleting?.dmcId ? dmcPayments.some((p) => p.dmcId === deleting.dmcId) : false;
+
+  const category = form.category;
+  const single = !!category && isSingleService(category);
+  const package_ = category === 'Package';
+  const lineSummary = Object.keys(lineErrors).length === 0 ? errors.lines : undefined;
 
   return (
     <div className="adm-stack">
-      {form.lines.length === 0 ? (
+      <div className="adm-grid-3">
+        <Field label="Category" error={errors.category}>
+          <select value={category} onChange={(e) => set(setCategory(form, e.target.value as BookingCategory))}>
+            <option value="" disabled>
+              Choose category
+            </option>
+            {BOOKING_CATEGORIES.map((c) => (
+              <option key={c} disabled={!canSetCategory(form, c)}>
+                {c}
+              </option>
+            ))}
+          </select>
+        </Field>
+        {category ? (
+          <div className="adm-field">
+            <span className="adm-field__label">Division</span>
+            <span>{divisionOf(category)}</span>
+          </div>
+        ) : null}
+      </div>
+      {package_ ? (
+        <div className="adm-field">
+          <Segmented<TripScope>
+            label="Trip scope"
+            value={form.tripScope ?? ('' as TripScope)}
+            onChange={(tripScope) => set({ tripScope })}
+            options={TRIP_SCOPES.map((t) => ({ value: t, label: t }))}
+          />
+          {errors.tripScope ? <span className="adm-field__error">{errors.tripScope}</span> : null}
+        </div>
+      ) : null}
+      {category && !form.lines.length && package_ ? (
         <p className="adm-muted">Add one line per thing a DMC supplies. The lines' Net cost adds up to the booking's Net cost.</p>
-      ) : (
-        <ol className="adm-lines">
-          {form.lines.map((l, i) => {
-            const e = errors[l.id] ?? {};
-            return (
-              <li key={l.id} className="adm-line" aria-label={`Line ${i + 1}`}>
-                <div className="adm-line__head">
-                  <strong>Line {i + 1}</strong>
-                  <IconButton label={`Delete line ${i + 1}`} variant="ghost" onClick={() => setDeleting(l)}>
-                    <Trash2 aria-hidden />
-                  </IconButton>
-                </div>
-                <div className="adm-line__grid">
-                  <Field label="Type" error={e.type}>
-                    <select value={l.type} onChange={(ev) => upd(l.id, { type: ev.target.value as LineType })}>
-                      {LINE_TYPES.map((t) => (
-                        <option key={t}>{t}</option>
-                      ))}
-                    </select>
-                  </Field>
-                  <Field label="DMC" error={e.dmcId}>
-                    <select
-                      value={l.dmcId}
-                      onChange={(ev) => (ev.target.value === NEW_DMC ? setDmcFor(l.id) : upd(l.id, { dmcId: ev.target.value }))}
-                    >
-                      <option value="" disabled>
-                        Choose DMC
-                      </option>
-                      {sortedDmcs.map((d) => (
-                        <option key={d.id} value={d.id}>
-                          {d.name}
-                        </option>
-                      ))}
-                      <option value={NEW_DMC}>+ New DMC…</option>
-                    </select>
-                  </Field>
-                  <Field label="Description" hint="Printed on the Voucher" error={e.description} className="adm-span-2">
-                    <input value={l.description} onChange={(ev) => upd(l.id, { description: ev.target.value })} />
-                  </Field>
-                  <Field label="Start" hint="Optional" error={e.start}>
-                    <input type="date" value={l.start ?? ''} onChange={(ev) => upd(l.id, { start: opt(ev.target.value) })} />
-                  </Field>
-                  <Field label="End" hint="Optional" error={e.end}>
-                    <input type="date" value={l.end ?? ''} min={l.start || undefined} onChange={(ev) => upd(l.id, { end: opt(ev.target.value) })} />
-                  </Field>
-                  <Field label="Net cost" error={e.netCost}>
-                    <MoneyInput value={l.netCost} onChange={(netCost) => upd(l.id, { netCost })} />
-                  </Field>
-                  <Field label="Pay DMC by" hint="Optional" error={e.dmcPayBy}>
-                    <input type="date" value={l.dmcPayBy ?? ''} onChange={(ev) => upd(l.id, { dmcPayBy: opt(ev.target.value) })} />
-                  </Field>
-                  <Field label="Confirmation no." hint="Optional">
-                    <input value={l.confirmationNo ?? ''} onChange={(ev) => upd(l.id, { confirmationNo: ev.target.value })} />
-                  </Field>
-                  <Field label="Voucher notes" hint="Optional" className="adm-span-all">
-                    <input
-                      value={l.voucherNotes ?? ''}
-                      onChange={(ev) => upd(l.id, { voucherNotes: ev.target.value })}
-                      placeholder="Check-in 2 pm, driver meets at gate 3"
-                    />
-                  </Field>
-                  {l.dmcCancellationCharge !== undefined ? (
-                    <p className="adm-muted adm-span-all">DMC cancellation charge {formatINR(l.dmcCancellationCharge)} (set in the Cancel dialog).</p>
-                  ) : null}
-                </div>
-              </li>
-            );
-          })}
-        </ol>
-      )}
-      <Button icon={<Plus aria-hidden />} onClick={() => set({ lines: [...form.lines, blankLine()] })}>
-        Add service line
-      </Button>
+      ) : null}
+      {lineSummary ? <p className="adm-field__error">{lineSummary}</p> : null}
+
+      {single && form.lines[0] ? (
+        <>
+          <LineFields
+            line={form.lines[0]}
+            errors={lineErrors[form.lines[0].id] ?? {}}
+            dmcs={sortedDmcs}
+            showType={false}
+            onChange={(p) => upd(form.lines[0]!.id, p)}
+            onNewDmc={() => setDmcFor(form.lines[0]!.id)}
+          />
+          <div>
+            <Button icon={<Plus aria-hidden />} onClick={() => set(addService(form))}>
+              Add more service
+            </Button>
+          </div>
+        </>
+      ) : null}
+
+      {package_ ? (
+        <>
+          {form.lines.length ? (
+            <ol className="adm-lines">
+              {form.lines.map((l, i) => (
+                <li key={l.id} className="adm-line" aria-label={`Line ${i + 1}`}>
+                  <div className="adm-line__head">
+                    <strong>Line {i + 1}</strong>
+                    <IconButton label={`Delete line ${i + 1}`} variant="ghost" onClick={() => setDeleting(l)}>
+                      <Trash2 aria-hidden />
+                    </IconButton>
+                  </div>
+                  <LineFields
+                    line={l}
+                    errors={lineErrors[l.id] ?? {}}
+                    dmcs={sortedDmcs}
+                    showType
+                    onChange={(p) => upd(l.id, p)}
+                    onNewDmc={() => setDmcFor(l.id)}
+                  />
+                </li>
+              ))}
+            </ol>
+          ) : null}
+          <div>
+            <Button icon={<Plus aria-hidden />} onClick={() => set({ lines: [...form.lines, blankLine()] })}>
+              Add service line
+            </Button>
+          </div>
+        </>
+      ) : null}
 
       <DmcDialog
         open={dmcFor !== null}
@@ -355,9 +523,14 @@ export function LinesFields({
           setDeleting(null);
         }}
       >
-        {deleting && deletingHasPayments ? (
+        {deleting && (taggedToDeleting > 0 || deletingDmcHasPayments) ? (
           <Note tone="warn">
-            {dmcName(deleting.dmcId)} has payments on this booking. Its outstanding may show “Due back” once the line is gone.
+            {taggedToDeleting > 0
+              ? `${taggedToDeleting} payment${taggedToDeleting === 1 ? ' is' : 's are'} tagged to this line. They stay on the booking, untagged. `
+              : ''}
+            {deletingDmcHasPayments && deleting.dmcId
+              ? `${dmcName(deleting.dmcId)} has payments on this booking. Its outstanding may show “Due back” once the line is gone.`
+              : ''}
           </Note>
         ) : (
           <p className="adm-muted">The line is removed when you save the section.</p>

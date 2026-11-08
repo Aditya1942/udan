@@ -71,6 +71,7 @@ export function StatusControl({ booking, dmcsById }: { booking: Booking; dmcsByI
 function CancelDialog({ booking, dmcsById, onClose }: { booking: Booking; dmcsById: ReadonlyMap<string, Dmc>; onClose: () => void }) {
   const db = useAdminDb();
   const toast = useToast();
+  const dmcLabel = (dmcId?: string) => (dmcId ? (dmcsById.get(dmcId)?.name ?? 'Unknown DMC') : 'In-house');
   const [reason, setReason] = useState('');
   const [clientCharge, setClientCharge] = useState<INR>(0);
   const [lineCharges, setLineCharges] = useState<Record<string, INR>>({});
@@ -137,12 +138,12 @@ function CancelDialog({ booking, dmcsById, onClose }: { booking: Booking; dmcsBy
               className="adm-field--row"
               label={
                 <>
-                  {l.type}, {dmcsById.get(l.dmcId)?.name ?? 'Unknown DMC'} <span className="adm-muted">net {formatINR(l.netCost)}</span>
+                  {l.type}, {dmcLabel(l.dmcId)} <span className="adm-muted">net {formatINR(l.netCost)}</span>
                 </>
               }
             >
               <MoneyInput
-                aria-label={`DMC cancellation charge for ${l.type}, ${dmcsById.get(l.dmcId)?.name ?? 'Unknown DMC'}`}
+                aria-label={`DMC cancellation charge for ${l.type}, ${dmcLabel(l.dmcId)}`}
                 value={lineCharges[l.id] ?? 0}
                 onChange={(v) => setLineCharges((c) => ({ ...c, [l.id]: v }))}
               />

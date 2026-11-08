@@ -293,10 +293,10 @@ describe('Overview', () => {
     expect(files[0].name).toBe(`udan-bookings-${today}.csv`);
     const lines = (await text(files[0].blob)).split('\r\n');
     expect(lines[0]).toBe(
-      '﻿Booking ID,Customer,Mobile,Destination,Travel start,Travel end,Not marked Completed,Pax,Status,Selling price,Received,Customer outstanding,Commission,Net cost,DMC outstanding,DMCs,Invoice no.,Booked on',
+      '﻿Booking ID,Category,Customer,Mobile,Destination,Travel start,Travel end,Not marked Completed,Pax,Status,Selling price,Received,Customer outstanding,Commission,Net cost,DMC outstanding,DMCs,Invoice no.,Booked on',
     );
     expect(lines.slice(1, -1).map((l) => l.split(',')[0])).toEqual(['UDN-004', 'UDN-001']);
-    expect(lines[2]).toMatch(/^UDN-001,Asha Patel,'\+919811111111,Dubai,/);
+    expect(lines[2]).toMatch(/^UDN-001,Package,Asha Patel,'\+919811111111,Dubai,/);
   });
 
   it('Needs attention links open the table pre-filtered, All time', async () => {

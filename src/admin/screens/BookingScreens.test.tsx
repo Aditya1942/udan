@@ -75,6 +75,11 @@ async function typeMoney(user: UserEvent, input: HTMLElement, amount: string) {
   await user.type(input, amount);
 }
 const setDate = (input: HTMLElement, value: string) => fireEvent.change(input, { target: { value } });
+const pickCategory = (user: UserEvent, category: string) => user.selectOptions(within(section('Service')).getByLabelText('Category'), category);
+async function pickAsha(user: UserEvent) {
+  await user.type(within(section('Customer')).getByRole('combobox', { name: 'Customer' }), 'asha');
+  await user.click(await screen.findByRole('option', { name: /Asha Patel/ }));
+}
 
 beforeAll(async () => {
   if (!AUTH_HOST) throw new Error('Auth emulator not running. Use `npm test` or `npm run emulators`.');
@@ -125,6 +130,9 @@ describe('New booking', () => {
     await user.type(within(section('Customer')).getByRole('combobox', { name: 'Customer' }), 'asha');
     await user.click(await screen.findByRole('option', { name: /Asha Patel/ }));
 
+    await pickCategory(user, 'Package');
+    await user.click(within(section('Service')).getByRole('button', { name: 'Domestic' }));
+
     const travel = section('Travel');
     await user.type(within(travel).getByLabelText('Destination'), 'Bali');
     expect(within(travel).getByLabelText('Travel start')).toHaveValue('2026-12-10'); // ?start=
@@ -134,9 +142,8 @@ describe('New booking', () => {
     await typeMoney(user, within(section('Price')).getByLabelText('Selling price'), '120000');
     expect(money('Selling price')).toBe('₹1,20,000');
 
-    const lines = section('Service lines');
-    await user.click(within(lines).getByRole('button', { name: 'Add service line' }));
-    const line = within(lines).getByRole('listitem', { name: 'Line 1' });
+    const lines = section('Service');
+    const line = within(lines).getByRole('listitem', { name: 'Line 1' }); // a new Package starts with one blank card
     await user.selectOptions(within(line).getByLabelText('DMC'), 'Desert Tours');
     await user.type(within(line).getByLabelText('Description'), 'Villa 5N');
     await typeMoney(user, within(line).getByLabelText('Net cost'), '80000');
@@ -157,6 +164,9 @@ describe('New booking', () => {
       bookingSeq: 2,
       clientId: 'c1',
       status: 'Pending',
+      category: 'Package',
+      tripScope: 'Domestic',
+      hasTravel: true,
       destination: 'Bali',
       travelStart: '2026-12-10',
       travelEnd: '2026-12-15',
@@ -177,7 +187,10 @@ describe('New booking', () => {
     await user.type(within(client).getByLabelText('Name'), 'Ravi Mehta');
     // Mobile already used by Asha → error.
     await user.type(within(client).getByLabelText('Mobile'), '98111 11111');
+    await pickCategory(user, 'Hotel');
+    await user.type(within(section('Service')).getByLabelText('Description'), 'Beach resort 3N');
     const travel = section('Travel');
+    await user.click(within(travel).getByRole('button', { name: 'Add travel details' }));
     await user.type(within(travel).getByLabelText('Destination'), 'Goa');
     setDate(within(travel).getByLabelText('Travel start'), '2026-12-01');
     setDate(within(travel).getByLabelText('Travel end'), '2026-12-03');
@@ -245,9 +258,10 @@ describe('Booking detail sections', () => {
   it('Service lines: edit, delete and save the list; DMC created inline', async () => {
     const user = userEvent.setup();
     await renderAdmin('/admin/bookings/UDN-001');
-    const lines = await screen.findByRole('region', { name: 'Service lines' });
+    const lines = await screen.findByRole('region', { name: 'Service' });
     expect(within(lines).getAllByText('Missing')).toHaveLength(2);
-    await user.click(within(lines).getByRole('button', { name: 'Edit Service lines' }));
+    await user.click(within(lines).getByRole('button', { name: 'Edit Service' }));
+    await user.click(within(lines).getByRole('button', { name: 'Domestic' })); // legacy Package: Trip scope is required on save
 
     await user.click(within(lines).getByRole('button', { name: 'Delete line 2' }));
     await user.click(await screen.findByRole('button', { name: 'Delete line' }));
@@ -267,6 +281,146 @@ describe('Booking detail sections', () => {
     const oasis = (await readAll(env, 'dmcs')).find((d) => d.name === 'Oasis DMC')!;
     const stored = await readDoc('bookings/b1');
     expect(stored?.lines).toEqual([{ id: 'l1', type: 'Hotel', dmcId: oasis.id, description: 'Atlantis 4N', netCost: 90_000, confirmationNo: 'ATL-77' }]);
+    expect(stored).toMatchObject({ category: 'Package', tripScope: 'Domestic' });
+  });
+
+  it('a legacy Booking shows as Package with Travel and asks for Trip scope on Service save', async () => {
+    const user = userEvent.setup();
+    await renderAdmin('/admin/bookings/UDN-001');
+    const service = await screen.findByRole('region', { name: 'Service' });
+    expect(within(service).getByText('Category', { selector: 'dt' }).nextElementSibling).toHaveTextContent('Package');
+    expect(within(service).getByText('Division', { selector: 'dt' }).nextElementSibling).toHaveTextContent('Travel');
+    expect(within(section('Travel')).getByText('Dubai')).toBeInTheDocument();
+    expect(within(section('Travel')).queryByText('No travel details.')).not.toBeInTheDocument();
+
+    await user.click(within(service).getByRole('button', { name: 'Edit Service' }));
+    await user.click(within(service).getByRole('button', { name: 'Save' }));
+    expect(within(service).getByText('Choose Domestic or International.')).toBeInTheDocument();
+    expect(await readDoc('bookings/b1')).not.toHaveProperty('tripScope');
+
+    await user.click(within(service).getByRole('button', { name: 'International' }));
+    await user.click(within(service).getByRole('button', { name: 'Save' }));
+    await waitFor(async () => expect(await readDoc('bookings/b1')).toMatchObject({ tripScope: 'International' }));
+    expect(within(service).getByText('Trip scope', { selector: 'dt' }).nextElementSibling).toHaveTextContent('International');
+  });
+
+  it('warns before saving the Service section when DMC payments lose their service tag', async () => {
+    await seed(env, {
+      'bookings/b1': { ...BOOKING, dmcPayments: [{ id: 'q1', kind: 'Payment', date: '2026-10-02', amount: 5_000, mode: 'UPI', dmcId: 'd1', lineId: 'l1' }] },
+    });
+    const user = userEvent.setup();
+    await renderAdmin('/admin/bookings/UDN-001');
+    const service = await screen.findByRole('region', { name: 'Service' });
+    await user.click(within(service).getByRole('button', { name: 'Edit Service' }));
+    expect(within(service).queryByText(/tagged to a changed service/)).not.toBeInTheDocument();
+    await user.selectOptions(within(within(service).getByRole('listitem', { name: 'Line 1' })).getByLabelText('DMC'), 'Gulf Transfers');
+    expect(within(service).getByText('1 DMC payment tagged to a changed service will stay with the old DMC, untagged.')).toBeInTheDocument();
+  });
+
+  it('shows In-house and per-line Received and Paid / owed in the Service table', async () => {
+    await seed(env, {
+      'bookings/b1': {
+        ...BOOKING,
+        lines: [{ id: 'l1', type: 'Hotel', dmcId: 'd1', description: 'Atlantis 4N', netCost: 90_000 }, { id: 'l2', type: 'Other', description: 'Own pickup', netCost: 0 }],
+        clientPayments: [{ id: 'p1', kind: 'Payment', date: '2026-10-01', amount: 30_000, mode: 'UPI', lineId: 'l1' }],
+        dmcPayments: [{ id: 'q1', kind: 'Payment', date: '2026-10-02', amount: 20_000, mode: 'UPI', dmcId: 'd1', lineId: 'l1' }],
+      },
+    });
+    await renderAdmin('/admin/bookings/UDN-001');
+    const service = await screen.findByRole('region', { name: 'Service' });
+    expect(within(service).getByRole('columnheader', { name: 'Received' })).toBeInTheDocument();
+    expect(within(service).getByRole('columnheader', { name: 'Paid / owed' })).toBeInTheDocument();
+    const rows = within(service).getAllByRole('row');
+    expect(rows[1]).toHaveTextContent('₹30,000');
+    expect(rows[1]).toHaveTextContent('₹20,000 / ₹70,000');
+    expect(rows[2]).toHaveTextContent('In-house');
+    expect(within(rows[2]).getByText('—')).toBeInTheDocument();
+  });
+});
+
+describe('Category flows', () => {
+  it('creates a Visa booking without Travel, then converts it to a Package', async () => {
+    const user = userEvent.setup();
+    await renderAdmin('/admin/bookings/new');
+    await screen.findByRole('region', { name: 'Customer' });
+    await pickAsha(user);
+
+    // Empty Category blocks Create.
+    await user.click(screen.getByRole('button', { name: 'Create booking' }));
+    expect(within(section('Service')).getByText('Choose a category.')).toBeInTheDocument();
+
+    expect(screen.queryByRole('region', { name: 'Travellers' })).not.toBeInTheDocument();
+    await pickCategory(user, 'Visa');
+    const service = section('Service');
+    expect(within(service).getByText('Immigration')).toBeInTheDocument();
+    expect(within(service).queryByLabelText('Type')).not.toBeInTheDocument();
+    await user.selectOptions(within(service).getByLabelText('Visa type'), 'Visitor');
+    await user.type(within(service).getByLabelText('Country'), 'UAE');
+    await user.type(within(service).getByLabelText('Description'), 'UAE visitor visa');
+    await typeMoney(user, within(service).getByLabelText('Net cost'), '5000');
+    expect(within(service).getByLabelText('DMC')).toHaveDisplayValue('In-house');
+    await user.type(within(section('Travellers')).getByLabelText('Traveller names'), 'Asha Patel{Enter}');
+    expect(within(section('Travel')).getByText('No travel details.')).toBeInTheDocument();
+    expect(within(section('Travel')).queryByLabelText('Traveller names')).not.toBeInTheDocument();
+    await typeMoney(user, within(section('Price')).getByLabelText('Selling price'), '8000');
+    await user.click(screen.getByRole('button', { name: 'Create booking' }));
+
+    expect(await screen.findByRole('heading', { level: 1, name: /UDN-002/ })).toBeInTheDocument();
+    await screen.findByRole('combobox', { name: 'Status' });
+    const detail = section('Service');
+    expect(within(detail).getByText('Category', { selector: 'dt' }).nextElementSibling).toHaveTextContent('Visa');
+    expect(within(detail).getByText('Division', { selector: 'dt' }).nextElementSibling).toHaveTextContent('Immigration');
+    expect(within(detail).getByText('In-house')).toBeInTheDocument();
+    const created = (await readAll(env, 'bookings')).find((b) => b.bookingNo === 'UDN-002')!;
+    expect(created).toMatchObject({
+      category: 'Visa',
+      hasTravel: false,
+      travellerNames: ['Asha Patel'],
+      lines: [expect.objectContaining({ type: 'Visa', visaType: 'Visitor', visaCountry: 'UAE', netCost: 5000 })],
+    });
+    expect(created).not.toHaveProperty('tripScope');
+    expect(created).not.toHaveProperty('travelStart');
+
+    // Add more service → Package.
+    await user.click(within(detail).getByRole('button', { name: 'Edit Service' }));
+    await user.click(within(detail).getByRole('button', { name: 'Add more service' }));
+    await user.click(within(detail).getByRole('button', { name: 'Domestic' }));
+    await user.type(within(within(detail).getByRole('listitem', { name: 'Line 2' })).getByLabelText('Description'), 'Hotel in Dubai');
+    await user.click(within(detail).getByRole('button', { name: 'Save' }));
+    await waitFor(async () => {
+      const stored = (await readAll(env, 'bookings')).find((b) => b.bookingNo === 'UDN-002')!;
+      expect(stored).toMatchObject({ category: 'Package', tripScope: 'Domestic' });
+      expect(stored.lines).toHaveLength(2);
+      expect((stored.lines as { type: string }[])[0].type).toBe('Visa');
+    });
+    // Package → Travellers is no longer its own section.
+    expect(screen.queryByRole('region', { name: 'Travellers' })).not.toBeInTheDocument();
+  });
+
+  it('Travel is hidden until Add travel details', async () => {
+    const user = userEvent.setup();
+    await renderAdmin('/admin/bookings/new');
+    await screen.findByRole('region', { name: 'Customer' });
+    await pickAsha(user);
+    await pickCategory(user, 'Hotel');
+    await user.type(within(section('Service')).getByLabelText('Description'), 'Beach resort 3N');
+
+    const travel = section('Travel');
+    expect(within(travel).getByText('No travel details.')).toBeInTheDocument();
+    expect(within(travel).queryByLabelText('Destination')).not.toBeInTheDocument();
+    await user.click(within(travel).getByRole('button', { name: 'Add travel details' }));
+    expect(within(travel).getByLabelText('Destination')).toBeInTheDocument();
+    await user.click(within(travel).getByRole('button', { name: 'Remove travel details' }));
+    expect(within(travel).queryByLabelText('Destination')).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Create booking' }));
+    expect(await screen.findByRole('heading', { level: 1, name: /UDN-002/ })).toBeInTheDocument();
+    await screen.findByRole('combobox', { name: 'Status' });
+    const stored = (await readAll(env, 'bookings')).find((b) => b.bookingNo === 'UDN-002')!;
+    expect(stored).toMatchObject({ category: 'Hotel', hasTravel: false });
+    expect(stored).not.toHaveProperty('travelStart');
+    expect(stored).not.toHaveProperty('travelEnd');
+    expect(within(section('Travel')).getByRole('button', { name: 'Add travel details' })).toBeInTheDocument();
   });
 });
 
@@ -401,6 +555,15 @@ describe('Status and cancellation', () => {
 });
 
 describe('Enquiry Convert', () => {
+  /** The Visa Category is preset from the Enquiry; fill the line and a traveller. */
+  async function fillVisa(user: UserEvent) {
+    const service = section('Service');
+    await user.selectOptions(within(service).getByLabelText('Visa type'), 'Visitor');
+    await user.type(within(service).getByLabelText('Country'), 'UAE');
+    await user.type(within(service).getByLabelText('Description'), 'Dubai visitor visa');
+    await user.type(within(section('Travellers')).getByLabelText('Traveller names'), 'Asha Patel{Enter}');
+  }
+
   const enquiry = (o: Record<string, unknown> = {}) => ({
     name: 'Asha P',
     phone: '+919811111111',
@@ -422,9 +585,12 @@ describe('Enquiry Convert', () => {
     expect(within(client).getByText('Matched existing Customer Asha Patel by mobile +919811111111. Confirm or pick another.')).toBeInTheDocument();
     expect(within(client).getByRole('button', { name: 'Existing customer' })).toHaveAttribute('aria-pressed', 'true');
     expect(within(client).getByRole('combobox', { name: 'Customer' })).toHaveValue('Asha Patel, +919811111111');
+    expect(within(section('Service')).getByLabelText('Category')).toHaveValue('Visa'); // from the Enquiry's service
+    await user.click(within(section('Travel')).getByRole('button', { name: 'Add travel details' }));
     expect(within(section('Travel')).getByLabelText('Destination')).toHaveValue('Dubai');
     expect(within(section('Notes')).getByLabelText('Internal notes')).toHaveValue('From enquiry 20 Oct 2026: Visa Services — Dubai visa for two');
 
+    await fillVisa(user);
     setDate(within(section('Travel')).getByLabelText('Travel start'), '2026-12-01');
     setDate(within(section('Travel')).getByLabelText('Travel end'), '2026-12-04');
     await user.click(screen.getByRole('button', { name: 'Create booking' }));
@@ -451,8 +617,7 @@ describe('Enquiry Convert', () => {
     expect(within(client).getByLabelText('Name')).toHaveValue('Neha Shah');
     expect(within(client).getByLabelText('Mobile')).toHaveValue('+919833333333');
 
-    setDate(within(section('Travel')).getByLabelText('Travel start'), '2026-12-01');
-    setDate(within(section('Travel')).getByLabelText('Travel end'), '2026-12-04');
+    await fillVisa(user);
     await user.click(screen.getByRole('button', { name: 'Create booking' }));
     expect(await screen.findByRole('heading', { level: 1, name: /UDN-002/ })).toBeInTheDocument();
     await screen.findByRole('combobox', { name: 'Status' }); // detail loaded

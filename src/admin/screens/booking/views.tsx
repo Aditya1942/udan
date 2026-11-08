@@ -1,8 +1,8 @@
-/** Read states of the Booking sections (Client, Travel, Price, Service lines, Notes). */
-import { ExternalLink, MessageCircle, Phone } from 'lucide-react';
+/** Read states of the Booking sections (Customer, Service, Travel, Travellers, Price, Notes). */
+import { ExternalLink, MessageCircle, Phone, Plus } from 'lucide-react';
 import { Link } from 'react-router';
-import { clientWhatsapp, formatDate, formatINR, telUrl, whatsappUrl, type Booking, type Client, type Dmc, type Pax } from '../../model';
-import { EmptyState, KeyValues } from '../../ui';
+import { clientWhatsapp, divisionOf, formatDate, formatINR, lineMoney, telUrl, whatsappUrl, type Booking, type Client, type Dmc, type Pax } from '../../model';
+import { Button, EmptyState, KeyValues } from '../../ui';
 
 export function paxText(p: Pax): string {
   const part = (n: number, one: string, many: string) => (n ? `${n} ${n === 1 ? one : many}` : '');
@@ -37,22 +37,56 @@ export function ClientView({ client }: { client?: Client }) {
   );
 }
 
-export function TravelView({ booking }: { booking: Booking }) {
+const travellersItem = (booking: Booking) => ({
+  label: 'Travellers',
+  value: (
+    <>
+      {paxText(booking.pax)}
+      <span className="adm-sub">{booking.travellerNames.join(', ') || 'Names not added'}</span>
+    </>
+  ),
+});
+
+/** `onAdd` turns Travel on (shown while the Booking has no travel details). */
+export function TravelView({ booking, onAdd }: { booking: Booking; onAdd: () => void }) {
+  if (!booking.hasTravel) {
+    return (
+      <div className="adm-stack">
+        <p className="adm-muted">No travel details.</p>
+        <div>
+          <Button icon={<Plus aria-hidden />} onClick={onAdd}>
+            Add travel details
+          </Button>
+        </div>
+      </div>
+    );
+  }
   return (
     <KeyValues
       items={[
         { label: 'Destination', value: booking.destination },
         { label: 'Travel', value: dateRange(booking.travelStart, booking.travelEnd) },
-        {
-          label: 'Travellers',
-          value: (
-            <>
-              {paxText(booking.pax)}
-              <span className="adm-sub">{booking.travellerNames.join(', ') || 'Names not added'}</span>
-            </>
-          ),
-        },
+        ...(divisionOf(booking.category) === 'Immigration' ? [] : [travellersItem(booking)]),
         ...(booking.clientBalanceDueBy ? [{ label: 'Customer balance due by', value: formatDate(booking.clientBalanceDueBy) }] : []),
+      ]}
+    />
+  );
+}
+
+/** Immigration only. */
+export function TravellersView({ booking }: { booking: Booking }) {
+  return <KeyValues items={[travellersItem(booking)]} />;
+}
+
+export function ServiceSummary({ booking }: { booking: Booking }) {
+  return (
+    <KeyValues
+      items={[
+        { label: 'Category', value: booking.category },
+        ...(booking.category === 'Package'
+          ? [{ label: 'Trip scope', value: booking.tripScope ?? <span className="adm-muted">Not set</span> }]
+          : []),
+        { label: 'Division', value: divisionOf(booking.category) },
       ]}
     />
   );
@@ -80,6 +114,7 @@ export function LinesTable({ booking, dmcsById }: { booking: Booking; dmcsById: 
       </div>
     );
   }
+  const money = lineMoney(booking);
   const total = booking.lines.reduce((s, l) => s + l.netCost, 0);
   const totalCharge = booking.lines.reduce((s, l) => s + (l.dmcCancellationCharge ?? 0), 0);
   return (
@@ -101,17 +136,23 @@ export function LinesTable({ booking, dmcsById }: { booking: Booking; dmcsById: 
                 DMC charge
               </th>
             ) : null}
+            <th scope="col" className="num">
+              Received
+            </th>
+            <th scope="col" className="num">
+              Paid / owed
+            </th>
           </tr>
         </thead>
         <tbody>
-          {booking.lines.map((l) => (
+          {booking.lines.map((l, i) => (
             <tr key={l.id}>
               <th scope="row" data-label="Service">
                 {l.type}
                 <span className="adm-sub">{l.description}</span>
               </th>
               <td data-label="DMC">
-                <Link to={`/admin/dmcs/${l.dmcId}`}>{dmcsById.get(l.dmcId)?.name ?? 'Unknown DMC'}</Link>
+                {l.dmcId ? <Link to={`/admin/dmcs/${l.dmcId}`}>{dmcsById.get(l.dmcId)?.name ?? 'Unknown DMC'}</Link> : 'In-house'}
               </td>
               <td data-label="Dates">{l.start ? dateRange(l.start, l.end) : <span className="adm-muted">Whole trip</span>}</td>
               <td data-label="Confirmation no.">{l.confirmationNo || <span className="adm-missing">Missing</span>}</td>
@@ -124,6 +165,16 @@ export function LinesTable({ booking, dmcsById }: { booking: Booking; dmcsById: 
                   {formatINR(l.dmcCancellationCharge ?? 0)}
                 </td>
               ) : null}
+              <td data-label="Received" className="num">
+                {formatINR(money[i].clientReceived)}
+              </td>
+              <td data-label="Paid / owed" className="num">
+                {money[i].dmcOwed === undefined ? (
+                  <span className="adm-muted">—</span>
+                ) : (
+                  `${formatINR(money[i].dmcPaid)} / ${money[i].dmcOwed < 0 ? `Due back ${formatINR(-money[i].dmcOwed)}` : formatINR(money[i].dmcOwed)}`
+                )}
+              </td>
             </tr>
           ))}
         </tbody>
@@ -134,6 +185,7 @@ export function LinesTable({ booking, dmcsById }: { booking: Booking; dmcsById: 
             </th>
             <td className={cancelled ? 'num is-struck' : 'num'}>{formatINR(total)}</td>
             {cancelled ? <td className="num">{formatINR(totalCharge)}</td> : null}
+            <td colSpan={2} />
           </tr>
         </tfoot>
       </table>

@@ -1,17 +1,27 @@
 /**
  * Booking detail = editor (Variant B, edit in place) and New booking (same page, every section open).
- * Main column: Client, Travel, Price, Service lines, [Client payments, DMC payments], Notes — each with its own
- * Edit / Save / Cancel. Rail: Money (live from unsaved values) + Documents card, or Create booking on New.
+ * Main column: Customer, Service, Travel (behind "Add travel details"), Travellers (Immigration), Price,
+ * [Customer payments, DMC payments], Notes — each with its own Edit / Save / Cancel. Rail: Money (live from unsaved values) + Documents card, or Create booking on New.
  * Under 60rem the rail moves above the sections and stops sticking (CSS).
  */
 import { Pencil } from 'lucide-react';
-import { useMemo, useState, type ReactNode } from 'react';
+import { Fragment, useMemo, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router';
-import { createBooking, saveBookingSection, useAdminData } from '../../data';
-import { formatBookingNo, formatDate, todayIST, travelEndedNotCompleted, type Booking, type Client } from '../../model';
+import { createBooking, saveBookingSection, saveServiceSection, useAdminData } from '../../data';
+import {
+  bookingDate,
+  bookingEndDate,
+  formatBookingNo,
+  formatDate,
+  todayIST,
+  travelEndedNotCompleted,
+  type Booking,
+  type BookingCategory,
+  type Client,
+} from '../../model';
 import { Button, errorMessage, Note, PageHeader, Panel, StatusBadge, useToast } from '../../ui';
 import { DocumentsCard } from './DocumentsCard';
-import { ClientFields, LinesFields, NotesFields, PriceFields, TravelFields } from './fields';
+import { ClientFields, NotesFields, PriceFields, ServiceFields, TravelFields, TravellersFields } from './fields';
 import {
   formFromBooking,
   isValid,
@@ -22,7 +32,10 @@ import {
   sectionErrors,
   sectionPatch,
   newClientFields,
+  setTravel,
   toCreateArgs,
+  untagWarning,
+  visibleSections,
   type BookingForm,
   type SectionErrors,
   type SectionKey,
@@ -30,7 +43,7 @@ import {
 import { MoneyPanel } from './MoneyRail';
 import { PaymentsSection } from './PaymentsSection';
 import { StatusControl } from './StatusControl';
-import { ClientView, dateRange, LinesTable, NotesView, PriceView, TravelView } from './views';
+import { ClientView, dateRange, LinesTable, NotesView, PriceView, ServiceSummary, TravellersView, TravelView } from './views';
 
 export const BOOKINGS_BACK = { to: '/admin?view=table&scope=all', label: 'Bookings' };
 
@@ -70,28 +83,49 @@ function SectionFields({
   switch (section) {
     case 'client':
       return <ClientFields form={form} set={set} errors={errors.fields} clients={clients.data} conversion={conversion} />;
+    case 'service':
+      return (
+        <ServiceFields
+          form={form}
+          set={set}
+          errors={errors.fields}
+          lineErrors={errors.lines}
+          dmcs={dmcs.data}
+          dmcPayments={booking?.dmcPayments ?? []}
+          clientPayments={booking?.clientPayments ?? []}
+        />
+      );
     case 'travel':
       return <TravelFields form={form} set={set} errors={errors.fields} />;
+    case 'travellers':
+      return <TravellersFields form={form} set={set} errors={errors.fields} />;
     case 'price':
       return <PriceFields form={form} set={set} errors={errors.fields} />;
-    case 'lines':
-      return <LinesFields form={form} set={set} errors={errors.lines} dmcs={dmcs.data} dmcPayments={booking?.dmcPayments ?? []} />;
     case 'notes':
       return <NotesFields form={form} set={set} />;
   }
 }
 
-function SectionView({ section, booking }: { section: SectionKey; booking: Booking }) {
+function SectionView({ section, booking, onAddTravel }: { section: SectionKey; booking: Booking; onAddTravel: () => void }) {
   const { clientsById, dmcsById } = useAdminData();
   switch (section) {
     case 'client':
       return <ClientView client={clientsById.get(booking.clientId)} />;
+    case 'service':
+      return (
+        <>
+          <div className="adm-panel__body">
+            <ServiceSummary booking={booking} />
+          </div>
+          <LinesTable booking={booking} dmcsById={dmcsById} />
+        </>
+      );
     case 'travel':
-      return <TravelView booking={booking} />;
+      return <TravelView booking={booking} onAdd={onAddTravel} />;
+    case 'travellers':
+      return <TravellersView booking={booking} />;
     case 'price':
       return <PriceView booking={booking} />;
-    case 'lines':
-      return <LinesTable booking={booking} dmcsById={dmcsById} />;
     case 'notes':
       return <NotesView booking={booking} />;
   }
@@ -146,7 +180,12 @@ export function BookingDetail({ booking }: { booking: Booking }) {
     setSaving(section);
     try {
       const newClient = section === 'client' && editor.form.clientMode === 'new' ? newClientFields(editor.form.newClient) : undefined;
-      await saveBookingSection(db, booking.id, newClient ? {} : sectionPatch(section, editor.form), { newClient });
+      if (section === 'service') {
+        const patch = sectionPatch('service', editor.form);
+        await saveServiceSection(db, booking.id, { category: editor.form.category as BookingCategory, tripScope: patch.tripScope, lines: patch.lines ?? [] });
+      } else {
+        await saveBookingSection(db, booking.id, newClient ? {} : sectionPatch(section, editor.form), { newClient });
+      }
       toggle(section, false);
       toast(`${SECTION_TITLES[section]} saved`);
     } catch (err) {
@@ -156,16 +195,23 @@ export function BookingDetail({ booking }: { booking: Booking }) {
     }
   };
 
+  const addTravel = () => {
+    edit('travel');
+    editor.setForm((f) => setTravel(f, true));
+  };
+
   const section = (key: SectionKey) => {
     const editing = open.has(key);
     const title = SECTION_TITLES[key];
+    const warning = key === 'service' ? untagWarning(booking, editor.form) : null;
+    const noTravel = key === 'travel' && !booking.hasTravel && !editing; // the view's own Add button takes the Edit slot
     return (
       <Panel
         key={key}
         title={title}
         padded={false}
         actions={
-          editing ? null : (
+          editing || noTravel ? null : (
             <Button size="sm" icon={<Pencil aria-hidden />} onClick={() => edit(key)} aria-label={`Edit ${title}`}>
               Edit
             </Button>
@@ -175,6 +221,7 @@ export function BookingDetail({ booking }: { booking: Booking }) {
         {editing ? (
           <div className="adm-panel__body">
             <SectionFields section={key} editor={editor} booking={booking} />
+            {warning ? <Note tone="warn">{warning}</Note> : null}
             <div className="adm-section-foot">
               <Button variant="primary" busy={saving === key} onClick={() => void save(key)}>
                 Save
@@ -184,18 +231,19 @@ export function BookingDetail({ booking }: { booking: Booking }) {
               </Button>
             </div>
           </div>
-        ) : key === 'lines' ? (
-          <SectionView section={key} booking={booking} />
+        ) : key === 'service' ? (
+          <SectionView section={key} booking={booking} onAddTravel={addTravel} />
         ) : (
           <div className="adm-panel__body">
-            <SectionView section={key} booking={booking} />
+            <SectionView section={key} booking={booking} onAddTravel={addTravel} />
           </div>
         )}
       </Panel>
     );
   };
 
-  const subtitle = [client?.name, booking.destination, dateRange(booking.travelStart, booking.travelEnd)].filter(Boolean).join(', ');
+  const endDate = bookingEndDate(booking);
+  const subtitle = [client?.name, booking.destination, dateRange(bookingDate(booking), endDate)].filter(Boolean).join(', ');
 
   return (
     <>
@@ -211,20 +259,24 @@ export function BookingDetail({ booking }: { booking: Booking }) {
             Cancelled{booking.cancelledAt ? ` ${formatDate(booking.cancelledAt)}` : ''}: {booking.cancelReason}
           </Note>
         ) : null}
-        {travelEndedNotCompleted(booking, today) ? (
-          <Note tone="warn">Travel ended {formatDate(booking.travelEnd)}. Mark Completed?</Note>
+        {endDate && travelEndedNotCompleted(booking, today) ? (
+          <Note tone="warn">Travel ended {formatDate(endDate)}. Mark Completed?</Note>
         ) : null}
       </PageHeader>
       <Layout
         main={
           <>
-            {section('client')}
-            {section('travel')}
-            {section('price')}
-            {section('lines')}
-            <PaymentsSection booking={booking} side="client" dmcsById={dmcsById} />
-            <PaymentsSection booking={booking} side="dmc" dmcsById={dmcsById} />
-            {section('notes')}
+            {visibleSections(editor.form).map((key) =>
+              key === 'notes' ? (
+                <Fragment key={key}>
+                  <PaymentsSection booking={booking} side="client" dmcsById={dmcsById} />
+                  <PaymentsSection booking={booking} side="dmc" dmcsById={dmcsById} />
+                  {section(key)}
+                </Fragment>
+              ) : (
+                section(key)
+              ),
+            )}
           </>
         }
         rail={
@@ -248,14 +300,15 @@ export function NewBooking({ initial, conversion }: { initial: BookingForm; conv
   const [busy, setBusy] = useState(false);
   const [failure, setFailure] = useState('');
   const all = useMemo(() => new Set(SECTION_KEYS), []);
+  const visible = visibleSections(editor.form);
   const nextNo = formatBookingNo(bookings.data.reduce((m, b) => Math.max(m, b.bookingSeq), 0) + 1);
 
-  const invalid = editor.tried.size > 0 && SECTION_KEYS.some((k) => !isValid(sectionErrors(k, editor.form, clients.data)));
+  const invalid = editor.tried.size > 0 && visible.some((k) => !isValid(sectionErrors(k, editor.form, clients.data)));
 
   const create = async () => {
     editor.setTried(all);
     setFailure('');
-    if (SECTION_KEYS.some((k) => !isValid(sectionErrors(k, editor.form, clients.data)))) return;
+    if (visible.some((k) => !isValid(sectionErrors(k, editor.form, clients.data)))) return;
     setBusy(true);
     try {
       const { draft, newClient } = toCreateArgs(editor.form);
@@ -274,7 +327,7 @@ export function NewBooking({ initial, conversion }: { initial: BookingForm; conv
       <Layout
         main={
           <>
-            {SECTION_KEYS.map((key) => (
+            {visible.map((key) => (
               <Panel key={key} title={SECTION_TITLES[key]}>
                 <SectionFields section={key} editor={editor} conversion={key === 'client' ? conversion : undefined} />
               </Panel>
