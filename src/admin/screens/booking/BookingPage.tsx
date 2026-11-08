@@ -243,7 +243,11 @@ export function BookingDetail({ booking }: { booking: Booking }) {
   };
 
   const endDate = bookingEndDate(booking);
-  const subtitle = [client?.name, booking.destination, dateRange(bookingDate(booking), endDate)].filter(Boolean).join(', ');
+  // Only real service dates in the subtitle, never the createdAt fallback of bookingDate.
+  const hasServiceDates = !!booking.travelStart || booking.lines.some((l) => l.start);
+  const subtitle = [client?.name, booking.destination, hasServiceDates ? dateRange(bookingDate(booking), endDate) : '']
+    .filter(Boolean)
+    .join(', ');
 
   return (
     <>
