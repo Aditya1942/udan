@@ -3,7 +3,17 @@ import { booking, clients, dmcPay, dmcs, enquiry, line, pay } from '../testFixtu
 import { allocate, dmcPayables, enquiryFunnel, insights, insightsPeriod, previousPeriod } from './insights';
 import { monthStats, needsAttention } from './overview';
 import { buildBookingRows } from './rows';
-import { applyTableQuery, defaultTableQuery, parseTableQuery, tableFooter, tableQueryToParams, type TableQuery } from './table';
+import {
+  activeFilterCount,
+  applyTableQuery,
+  clearFilters,
+  defaultTableQuery,
+  filterBookingRows,
+  parseTableQuery,
+  tableFooter,
+  tableQueryToParams,
+  type TableQuery,
+} from './table';
 import { clientSummary, dmcSummary } from './directory';
 
 const today = '2026-11-10';
@@ -119,6 +129,47 @@ describe('table: scope, search, filters, sort', () => {
       sort: 'travelStart',
       month: '2026-11',
     });
+  });
+
+  it('month scope and sort use the Booking date fallback; undated Bookings land in the createdAt month', () => {
+    const undated = booking({ travelStart: '', travelEnd: '', lines: [line()], createdAt: new Date('2026-11-03T06:00:00Z') });
+    const lineDated = booking({ travelStart: '', travelEnd: '', lines: [line({ start: '2026-11-01' })] });
+    const rs = buildBookingRows([undated, lineDated], clients, dmcs, '2026-11-08');
+    const dq = { ...defaultTableQuery('2026-11-08') };
+    expect(applyTableQuery(rs, dq).map((r) => r.booking.id)).toEqual([lineDated.id, undated.id]);
+  });
+
+  it('date-range filters use the Booking date and end date', () => {
+    const lineDated = booking({ travelStart: '', travelEnd: '', lines: [line({ start: '2026-11-01', end: '2026-11-04' })] });
+    const rs = buildBookingRows([lineDated], clients, dmcs, '2026-11-08');
+    const dq = { ...defaultTableQuery('2026-11-08'), scope: 'all' as const };
+    expect(filterBookingRows(rs, { ...dq, from: '2026-11-01', to: '2026-11-01' })).toHaveLength(1);
+    expect(filterBookingRows(rs, { ...dq, dateField: 'travelEnd', from: '2026-11-04', to: '2026-11-04' })).toHaveLength(1);
+    expect(filterBookingRows(rs, { ...dq, dateField: 'travelEnd', from: '2026-11-05' })).toHaveLength(0);
+  });
+
+  it('filters by Category and Division and round-trips the URL', () => {
+    const rs = buildBookingRows([booking({ category: 'Visa' }), booking({ category: 'Hotel' })], clients, dmcs, '2026-11-08');
+    const dq = { ...defaultTableQuery('2026-11-08'), scope: 'all' as const, division: 'Immigration' as const };
+    expect(filterBookingRows(rs, dq).map((r) => r.booking.category)).toEqual(['Visa']);
+    expect(filterBookingRows(rs, { ...dq, division: undefined, categories: ['Hotel'] }).map((r) => r.booking.category)).toEqual(['Hotel']);
+    const p = tableQueryToParams({ ...dq, categories: ['Hotel', 'Bus'] }, '2026-11-08');
+    expect(p.get('cat')).toBe('Hotel,Bus');
+    expect(p.get('div')).toBe('immigration');
+    expect(parseTableQuery(p, '2026-11-08')).toMatchObject({ categories: ['Hotel', 'Bus'], division: 'Immigration' });
+    expect(parseTableQuery(new URLSearchParams('cat=Nope,Visa&div=x'), '2026-11-08')).toMatchObject({ categories: ['Visa'], division: undefined });
+  });
+
+  it('counts Category and Division as filters and clears them', () => {
+    const dq = q({ categories: ['Visa'], division: 'Travel' });
+    expect(activeFilterCount(dq)).toBe(2);
+    expect(clearFilters(dq)).toMatchObject({ categories: [], division: undefined });
+    expect(activeFilterCount(clearFilters(dq))).toBe(0);
+  });
+
+  it('skips in-house lines in BookingRow.dmcs', () => {
+    const rs = buildBookingRows([booking({ lines: [line({ dmcId: undefined }), line({ dmcId: 'd1' })] })], clients, dmcs, '2026-11-08');
+    expect(rs[0].dmcs.map((d) => d.id)).toEqual(['d1']);
   });
 
   it('totals the footer under the counting rules', () => {
@@ -260,5 +311,10 @@ describe('directory summaries', () => {
       ['UDN-001', 80_000, 0, 80_000],
       ['UDN-004', 2_000, 6_000, -4_000],
     ]);
+  });
+
+  it('adds nothing to any DMC summary for a Booking whose only line is in-house', () => {
+    const inHouse = buildBookingRows([booking({ sellingPrice: 10_000, lines: [line({ dmcId: undefined, netCost: 4_000 })] })], clients, dmcs, today);
+    for (const id of ['d1', 'd2']) expect(dmcSummary(inHouse, id)).toMatchObject({ usedIn: 0, bookings: 0, netCost: 0, outstanding: 0, rows: [] });
   });
 });

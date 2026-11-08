@@ -8,7 +8,7 @@ export type BookingRow = {
   booking: Booking;
   /** Undefined if the Client record is missing. */
   client?: Client;
-  /** Unique DMCs on the lines (missing records skipped), in line order. */
+  /** Unique DMCs on the lines (in-house lines and missing records skipped), in line order. */
   dmcs: Dmc[];
   money: BookingMoney;
   flags: BookingFlags;
@@ -27,7 +27,7 @@ export function buildBookingRows(
   return bookings.map((booking) => {
     const money = bookingMoney(booking);
     const lineDmcs = [...new Set(booking.lines.map((l) => l.dmcId))]
-      .map((id) => dmcById.get(id))
+      .map((id) => (id ? dmcById.get(id) : undefined))
       .filter((d): d is Dmc => !!d);
     return {
       booking,

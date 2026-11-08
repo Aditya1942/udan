@@ -1,4 +1,5 @@
 /** Overview: month stat row and Needs attention. */
+import { bookingDate } from '../category';
 import { totals } from '../counting';
 import { daysBetween, formatDate, monthOf } from '../dates';
 import { formatINR } from '../money';
@@ -15,11 +16,15 @@ export type MonthStats = {
   clientOutstanding: number;
 };
 
-/** Stat row for Bookings whose travelStart falls in `month`. */
+/** True when the Booking date (undefined = no month) falls in `month`. */
+function inMonth(r: BookingRow, month: ISOMonth): boolean {
+  const date = bookingDate(r.booking);
+  return !!date && monthOf(date) === month;
+}
+
+/** Stat row for Bookings whose Booking date falls in `month`. */
 export function monthStats(rows: readonly BookingRow[], month: ISOMonth): MonthStats {
-  const t = totals(
-    rows.filter((r) => monthOf(r.booking.travelStart) === month).map((r) => ({ ...r.booking, money: r.money })),
-  );
+  const t = totals(rows.filter((r) => inMonth(r, month)).map((r) => ({ ...r.booking, money: r.money })));
   return { bookings: t.bookings, sellingPrice: t.sellingPrice, commission: t.commission, clientOutstanding: t.clientOutstanding };
 }
 

@@ -1,6 +1,6 @@
 /**
  * Insights tab: period presets, KPIs (with previous-period comparison) and chart/table series.
- * Month basis everywhere is the IST month of `travelStart`; counting rules apply.
+ * Month basis everywhere is the IST month of the Booking date; counting rules apply.
  */
 import { addToTotals, emptyTotals, inBookingCounts, inMoneyTotals, type Totals } from '../counting';
 import {
@@ -17,6 +17,7 @@ import {
   monthsBetween,
   toISTDate,
 } from '../dates';
+import { bookingDate } from '../category';
 import { lineCost } from '../money';
 import { BOOKING_STATUSES, LINE_TYPES, type BookingStatus, type Enquiry, type ISODate, type ISOMonth, type LineType } from '../types';
 import type { BookingRow } from './rows';
@@ -73,7 +74,10 @@ export type Kpis = {
 };
 
 export function rowsInPeriod(rows: readonly BookingRow[], p: Period): BookingRow[] {
-  return rows.filter((r) => inRange(r.booking.travelStart, p.from, p.to));
+  return rows.filter((r) => {
+    const date = bookingDate(r.booking);
+    return !!date && inRange(date, p.from, p.to);
+  });
 }
 
 function totalsOf(rows: readonly BookingRow[]): Totals {
@@ -279,7 +283,8 @@ export function insights({ rows, enquiries, period, today }: InsightsInput): Ins
     if (!inMoneyTotals(b.status)) continue;
     const counted = inBookingCounts(b.status) ? 1 : 0;
 
-    const mp = byMonth.get(monthOf(b.travelStart));
+    const date = bookingDate(b);
+    const mp = date ? byMonth.get(monthOf(date)) : undefined;
     if (mp) {
       mp.sellingPrice += m.sellingPrice;
       mp.commission += m.commission;

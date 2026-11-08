@@ -2,9 +2,21 @@
  * Bookings table: search, filters, sort, footer totals and URL (de)serialisation.
  * The table is the Booking list; all state lives in URL query params.
  */
+import { bookingDate, bookingEndDate, divisionOf } from '../category';
 import { isISODate, isISOMonth, monthOf } from '../dates';
 import { totals, type Totals } from '../counting';
-import { BOOKING_STATUSES, LINE_TYPES, type BookingStatus, type ISODate, type ISOMonth, type LineType } from '../types';
+import {
+  BOOKING_CATEGORIES,
+  BOOKING_STATUSES,
+  DIVISIONS,
+  LINE_TYPES,
+  type BookingCategory,
+  type BookingStatus,
+  type Division,
+  type ISODate,
+  type ISOMonth,
+  type LineType,
+} from '../types';
 import type { BookingRow } from './rows';
 
 export const CLIENT_PAYMENT_FILTERS = ['paid', 'outstanding', 'overdue', 'refund'] as const;
@@ -33,11 +45,13 @@ export type SortKey = (typeof SORT_KEYS)[number];
 export type SortDir = 'asc' | 'desc';
 
 export type TableQuery = {
-  /** `month` = Bookings whose travelStart falls in `month`; overridden by a date range. */
+  /** `month` = Bookings whose Booking date falls in `month`; overridden by a date range. */
   scope: 'month' | 'all';
   month: ISOMonth;
   q: string;
   status: BookingStatus[];
+  categories: BookingCategory[];
+  division?: Division;
   dateField: DateField;
   from?: ISODate;
   to?: ISODate;
@@ -59,6 +73,7 @@ export function defaultTableQuery(today: ISODate): TableQuery {
     month: monthOf(today),
     q: '',
     status: [],
+    categories: [],
     dateField: 'travelStart',
     dmcIds: [],
     lineTypes: [],
@@ -77,6 +92,8 @@ export function hasDateRange(q: Pick<TableQuery, 'from' | 'to'>): boolean {
 export function activeFilterCount(q: TableQuery): number {
   return (
     (q.status.length ? 1 : 0) +
+    (q.categories.length ? 1 : 0) +
+    (q.division ? 1 : 0) +
     (hasDateRange(q) ? 1 : 0) +
     (q.clientId ? 1 : 0) +
     (q.dmcIds.length ? 1 : 0) +
@@ -93,6 +110,8 @@ export function clearFilters(q: TableQuery): TableQuery {
   return {
     ...q,
     status: [],
+    categories: [],
+    division: undefined,
     from: undefined,
     to: undefined,
     clientId: undefined,
@@ -111,7 +130,7 @@ const list = (v: string | null) => (v ? v.split(',').filter(Boolean) : []);
 const oneOf = <T extends string>(v: string | null, allowed: readonly T[]): T | undefined =>
   v && (allowed as readonly string[]).includes(v) ? (v as T) : undefined;
 
-/** Parses `?month=&scope=&q=&status=&date=&from=&to=&client=&dmc=&type=&cpay=&dpay=&inv=&flag=&sort=&dir=`. */
+/** Parses `?month=&scope=&q=&status=&cat=&div=&date=&from=&to=&client=&dmc=&type=&cpay=&dpay=&inv=&flag=&sort=&dir=`. */
 export function parseTableQuery(params: URLSearchParams, today: ISODate): TableQuery {
   const d = defaultTableQuery(today);
   const month = params.get('month');
@@ -122,6 +141,8 @@ export function parseTableQuery(params: URLSearchParams, today: ISODate): TableQ
     month: isISOMonth(month) ? month : d.month,
     q: params.get('q') ?? '',
     status: list(params.get('status')).filter((s): s is BookingStatus => (BOOKING_STATUSES as readonly string[]).includes(s)),
+    categories: list(params.get('cat')).filter((c): c is BookingCategory => (BOOKING_CATEGORIES as readonly string[]).includes(c)),
+    division: DIVISIONS.find((d) => d.toLowerCase() === params.get('div')),
     dateField: oneOf(params.get('date'), DATE_FIELDS) ?? d.dateField,
     from: isISODate(from) ? from : undefined,
     to: isISODate(to) ? to : undefined,
@@ -145,6 +166,8 @@ export function tableQueryToParams(q: TableQuery, today: ISODate): URLSearchPara
   if (q.scope === 'all') p.set('scope', 'all');
   if (q.q) p.set('q', q.q);
   if (q.status.length) p.set('status', q.status.join(','));
+  if (q.categories.length) p.set('cat', q.categories.join(','));
+  if (q.division) p.set('div', q.division.toLowerCase());
   if (q.dateField !== d.dateField) p.set('date', q.dateField);
   if (q.from) p.set('from', q.from);
   if (q.to) p.set('to', q.to);
@@ -182,7 +205,8 @@ export function matchesSearch(row: BookingRow, text: string): boolean {
 }
 
 function dateOf(row: BookingRow, field: DateField): ISODate | undefined {
-  return field === 'bookedOn' ? row.bookedOn : row.booking[field];
+  if (field === 'bookedOn') return row.bookedOn;
+  return field === 'travelStart' ? bookingDate(row.booking) : bookingEndDate(row.booking);
 }
 
 function matchesClientPayment(row: BookingRow, f: ClientPaymentFilter): boolean {
@@ -220,10 +244,15 @@ export function filterBookingRows(rows: readonly BookingRow[], q: TableQuery): B
     if (ranged) {
       const date = dateOf(row, q.dateField);
       if (!date || (q.from && date < q.from) || (q.to && date > q.to)) return false;
-    } else if (q.scope === 'month' && monthOf(b.travelStart) !== q.month) return false;
+    } else if (q.scope === 'month') {
+      const date = bookingDate(b);
+      if (!date || monthOf(date) !== q.month) return false;
+    }
     if (q.status.length && !q.status.includes(b.status)) return false;
+    if (q.categories.length && !q.categories.includes(b.category)) return false;
+    if (q.division && divisionOf(b.category) !== q.division) return false;
     if (q.clientId && b.clientId !== q.clientId) return false;
-    if (q.dmcIds.length && !b.lines.some((l) => q.dmcIds.includes(l.dmcId))) return false;
+    if (q.dmcIds.length && !b.lines.some((l) => l.dmcId && q.dmcIds.includes(l.dmcId))) return false;
     if (q.lineTypes.length && !b.lines.some((l) => q.lineTypes.includes(l.type))) return false;
     if (q.clientPayment && !matchesClientPayment(row, q.clientPayment)) return false;
     if (q.dmcPayment && !matchesDmcPayment(row, q.dmcPayment)) return false;
@@ -245,7 +274,7 @@ function compare(a: BookingRow, b: BookingRow, key: SortKey): number {
     case 'destination':
       return collator.compare(a.booking.destination, b.booking.destination);
     case 'travelStart':
-      return a.booking.travelStart.localeCompare(b.booking.travelStart);
+      return (bookingDate(a.booking) ?? '9999-99-99').localeCompare(bookingDate(b.booking) ?? '9999-99-99');
     case 'status':
       return BOOKING_STATUSES.indexOf(a.booking.status) - BOOKING_STATUSES.indexOf(b.booking.status);
     case 'sellingPrice':

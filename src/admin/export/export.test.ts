@@ -157,8 +157,8 @@ describe('Customers / DMCs / Bookings CSV', () => {
 
   it('Bookings table rows keep the given order and the table columns', () => {
     const [header, first] = lines(bookingsCsv(rows));
-    expect(header.split(',').slice(0, 4)).toEqual(['Booking ID', 'Customer', 'Mobile', 'Destination']);
-    expect(first.startsWith("UDN-001,Asha Patel,'+919876543210,Dubai,2026-11-10,2026-11-15,,2,Confirmed,100000,0,100000,20000")).toBe(true);
+    expect(header.split(',').slice(0, 5)).toEqual(['Booking ID', 'Category', 'Customer', 'Mobile', 'Destination']);
+    expect(first.startsWith("UDN-001,Package,Asha Patel,'+919876543210,Dubai,2026-11-10,2026-11-15,,2,Confirmed,100000,0,100000,20000")).toBe(true);
   });
 });
 

@@ -9,6 +9,7 @@ const paxCount = (r: BookingRow) => r.booking.pax.adults + r.booking.pax.childre
 
 export const BOOKING_COLUMNS: CsvColumn<BookingRow>[] = [
   { header: 'Booking ID', value: (r) => r.booking.bookingNo },
+  { header: 'Category', value: (r) => r.booking.category },
   { header: 'Customer', value: (r) => r.client?.name },
   { header: 'Mobile', value: (r) => r.client?.mobile },
   { header: 'Destination', value: (r) => r.booking.destination },
