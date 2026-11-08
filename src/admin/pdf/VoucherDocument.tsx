@@ -7,9 +7,9 @@ import { base, colour } from './theme';
 import type { VoucherItem, VoucherView } from './view';
 
 const s = StyleSheet.create({
-  dot: { width: 7, height: 7, borderRadius: 4, backgroundColor: colour.teal, marginTop: 3, marginLeft: -16 },
+  dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: colour.teal, marginTop: 3.5, marginLeft: -15 },
   type: { color: colour.teal, fontWeight: 600 },
-  section: { marginTop: 20 },
+  section: { marginTop: 16 },
 });
 
 function Confirmation({ item }: { item: VoucherItem }) {
@@ -20,35 +20,49 @@ function Confirmation({ item }: { item: VoucherItem }) {
   );
 }
 
-function Timeline({ v }: { v: VoucherView }) {
+function DayRow({ day }: { day: VoucherView['days'][number] }) {
   return (
-    <View>
-      {v.days.map((day) => (
-        <View key={day.date} style={[base.row, { marginBottom: 6 }]} wrap={false}>
-          <View style={{ width: 62 }}>
-            <Text style={base.semi}>{day.label}</Text>
+    <View style={[base.row, { marginBottom: 6 }]} wrap={false}>
+      <View style={{ width: 62 }}>
+        <Text style={base.semi}>{day.label}</Text>
+      </View>
+      <View style={{ flex: 1, borderLeftWidth: 1, borderLeftColor: colour.tealSoft, paddingLeft: 12 }}>
+        {day.items.map((item, i) => (
+          <View key={i} style={[base.row, { gap: 8, marginBottom: 6 }]}>
+            <View style={s.dot} />
+            <View style={{ flex: 1 }}>
+              <Text>
+                <Text style={s.type}>{item.type}</Text> · {item.description}
+              </Text>
+              {item.until ? <Text style={base.muted}>{item.until}</Text> : null}
+              {item.notes ? <Text style={[base.muted, { fontSize: 7.5 }]}>{item.notes}</Text> : null}
+            </View>
+            <View style={{ width: 90, alignItems: 'flex-end' }}>
+              <Confirmation item={item} />
+            </View>
           </View>
-          <View style={{ flex: 1, borderLeftWidth: 1, borderLeftColor: colour.tealSoft, paddingLeft: 12 }}>
-            {day.items.map((item, i) => (
-              <View key={i} style={[base.row, { gap: 8, marginBottom: 6 }]}>
-                <View style={s.dot} />
-                <View style={{ flex: 1 }}>
-                  <Text>
-                    <Text style={s.type}>{item.type}</Text> · {item.description}
-                  </Text>
-                  {item.until ? <Text style={base.muted}>{item.until}</Text> : null}
-                  {item.notes ? <Text style={[base.muted, { fontSize: 8 }]}>{item.notes}</Text> : null}
-                </View>
-                <View style={{ width: 90, alignItems: 'flex-end' }}>
-                  <Confirmation item={item} />
-                </View>
-              </View>
-            ))}
-          </View>
-        </View>
+        ))}
+      </View>
+    </View>
+  );
+}
+
+function BookingsSection({ v }: { v: VoucherView }) {
+  const empty = v.days.length === 0 && v.throughout.length === 0;
+  const [firstDay, ...remainingDays] = v.days;
+  return (
+    <View style={s.section}>
+      {/* Heading travels with the first day (or the empty note) so it never sits alone at a page foot. */}
+      <View wrap={false}>
+        <Text style={[base.h, { fontSize: 11, marginBottom: 8 }]}>Your bookings</Text>
+        {empty ? <Text style={base.muted}>Services will be added here once booked.</Text> : null}
+        {firstDay ? <DayRow day={firstDay} /> : null}
+      </View>
+      {remainingDays.map((day) => (
+        <DayRow key={day.date} day={day} />
       ))}
       {v.throughout.length > 0 && (
-        <View style={{ marginTop: 6, backgroundColor: colour.surface, borderRadius: 6, padding: 10 }} wrap={false}>
+        <View style={{ marginTop: 6, backgroundColor: colour.surface, borderRadius: 4, padding: 8 }} wrap={false}>
           <Text style={[base.label, { marginBottom: 4 }]}>Throughout your trip</Text>
           {v.throughout.map((item, i) => (
             <View key={i} style={[base.row, { gap: 8, marginBottom: 3 }]}>
@@ -56,7 +70,7 @@ function Timeline({ v }: { v: VoucherView }) {
                 <Text>
                   <Text style={s.type}>{item.type}</Text> · {item.description}
                 </Text>
-                {item.notes ? <Text style={[base.muted, { fontSize: 8 }]}>{item.notes}</Text> : null}
+                {item.notes ? <Text style={[base.muted, { fontSize: 7.5 }]}>{item.notes}</Text> : null}
               </View>
               <View style={{ width: 90, alignItems: 'flex-end' }}>
                 <Confirmation item={item} />
@@ -70,7 +84,6 @@ function Timeline({ v }: { v: VoucherView }) {
 }
 
 export function VoucherDocument({ view: v, wordmark }: { view: VoucherView; wordmark: string }) {
-  const empty = v.days.length === 0 && v.throughout.length === 0;
   return (
     <Document title={v.filenameTitle}>
       <Page size="A4" style={base.page}>
@@ -82,7 +95,7 @@ export function VoucherDocument({ view: v, wordmark }: { view: VoucherView; word
             <Text style={base.muted}>{v.issuedLine}</Text>
           </View>
         </View>
-        <View style={base.rule} />
+        <View style={[base.rule, { marginVertical: 16 }]} />
 
         <View style={[base.row, { gap: 24 }]}>
           <View style={{ flex: 1 }}>
@@ -111,13 +124,15 @@ export function VoucherDocument({ view: v, wordmark }: { view: VoucherView; word
           ) : null}
         </View>
 
-        <Text style={[base.h, { fontSize: 11, marginTop: 22, marginBottom: 8 }]}>Your bookings</Text>
-        {empty ? <Text style={base.muted}>Services will be added here once booked.</Text> : <Timeline v={v} />}
+        <BookingsSection v={v} />
 
         {v.itinerary.length > 0 && (
           <View style={s.section}>
-            <Text style={[base.label, { marginBottom: 4 }]}>Itinerary</Text>
-            {v.itinerary.map((l, i) => (
+            <View wrap={false}>
+              <Text style={[base.label, { marginBottom: 4 }]}>Itinerary</Text>
+              <Text style={{ marginBottom: 2 }}>{v.itinerary[0] || ' '}</Text>
+            </View>
+            {v.itinerary.slice(1).map((l, i) => (
               <Text key={i} style={{ marginBottom: 2 }}>
                 {l || ' '}
               </Text>
@@ -129,9 +144,10 @@ export function VoucherDocument({ view: v, wordmark }: { view: VoucherView; word
           <View wrap={false} style={s.section}>
             <Text style={[base.label, { marginBottom: 3 }]}>Good to know</Text>
             {v.goodToKnow.map((l, i) => (
-              <Text key={i} style={[base.muted, { fontSize: 8 }]}>
-                • {l}
-              </Text>
+              <View key={i} style={[base.row, { gap: 6, marginBottom: 2.5 }]}>
+                <Text style={[base.muted, { fontSize: 7.5 }]}>•</Text>
+                <Text style={[base.muted, { flex: 1, fontSize: 7.5, lineHeight: 1.4 }]}>{l}</Text>
+              </View>
             ))}
           </View>
         )}

@@ -180,6 +180,8 @@ and if the admin routes chunk (the one holding `src/admin/routes.tsx`) staticall
 
 ## `pdf/` + Documents card — Invoice and Voucher PDFs (phase E)
 
+> Template variants, the Admin invoice and the open `/templates` gallery: see **`src/admin/pdf/TEMPLATES.md`**.
+
 - `view.ts` (pure, no react-pdf): `invoiceView({ booking, client, profile }) → InvoiceView` and `voucherView({ booking, client, profile, today }) → VoucherView`
   decide every printed line, label, total and visibility (profile fields only if filled; `normaliseBusinessProfile`). Invoice: header lines, Billed to /
   From, one priced row ("Holiday package — …" / "Cancellation charge — …"), Included services (type, description, dates or "—"; never price/DMC),

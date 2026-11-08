@@ -31,6 +31,8 @@ export const appRoutes: RouteObject[] = [
   },
   // Admin: a sibling of SiteLayout (no site header/footer), loaded only when visited. Nothing else imports src/admin.
   { path: '/admin/*', HydrateFallback: AdminChunkLoading, lazy: () => import('./admin/routes') },
+  // Open template gallery (sample data only): Invoice / Admin invoice / Voucher designs. Lazy: pulls the PDF stack.
+  { path: '/templates', HydrateFallback: AdminChunkLoading, lazy: () => import('./admin/pdf/gallery/route') },
 ];
 
 const router = createBrowserRouter(appRoutes);
