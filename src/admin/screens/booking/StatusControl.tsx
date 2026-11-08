@@ -131,7 +131,7 @@ function CancelDialog({ booking, dmcsById, onClose }: { booking: Booking; dmcsBy
       </Field>
       {booking.lines.length ? (
         <fieldset className="adm-fieldset">
-          <legend>DMC cancellation charge per Service Line</legend>
+          <legend>Cancellation charge per Service Line (what the DMC keeps, or UDAN still bears)</legend>
           {booking.lines.map((l) => (
             <Field
               key={l.id}
