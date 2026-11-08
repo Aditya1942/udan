@@ -38,7 +38,7 @@ export function NewBookingScreen() {
     return (
       <>
         {header}
-        <LoadingState lines={8} label="Loading" />
+        <LoadingState lines={8} label="Loading booking form" />
       </>
     );
   }

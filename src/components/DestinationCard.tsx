@@ -40,7 +40,7 @@ export function DestinationCard({
           to={getEnquireHref({ service: 'international-domestic-tours', destination: name })}
           className="link-arrow destination-card__link"
         >
-          Enquire Now<span className="visually-hidden"> about {name}</span>
+          Enquire now<span className="visually-hidden"> about {name}</span>
           <ArrowRight aria-hidden="true" />
         </Link>
       </div>

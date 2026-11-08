@@ -105,7 +105,7 @@ export function ClientFormFields({
         <input value={value.name} onChange={set('name')} autoComplete="off" />
       </Field>
       <Field label="Mobile" hint="Used to match website Enquiries. Must be unique." error={errors.mobile}>
-        <input type="tel" value={value.mobile} onChange={set('mobile')} placeholder="+91" autoComplete="off" />
+        <input type="tel" value={value.mobile} onChange={set('mobile')} placeholder="+91 98765 43210" autoComplete="off" />
       </Field>
       <Field label="Email" hint="Optional" error={errors.email}>
         <input type="email" value={value.email} onChange={set('email')} autoComplete="off" />
@@ -151,7 +151,7 @@ export function DmcFormFields({ value, onChange, errors }: { value: DmcInput; on
         <input value={value.contactPerson} onChange={set('contactPerson')} autoComplete="off" />
       </Field>
       <Field label="Phone" hint="Optional">
-        <input type="tel" value={value.phone} onChange={set('phone')} placeholder="+91" />
+        <input type="tel" value={value.phone} onChange={set('phone')} placeholder="+91 98765 43210" />
       </Field>
       <Field label="Email" hint="Optional" error={errors.email}>
         <input type="email" value={value.email} onChange={set('email')} />

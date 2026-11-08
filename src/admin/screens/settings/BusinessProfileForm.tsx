@@ -66,7 +66,7 @@ function ProfileForm({ saved, onSaved }: { saved: Values; onSaved: (v: Values) =
       const signature = await signatureFromFile(file);
       setV((cur) => ({ ...cur, signature }));
     } catch (err) {
-      setSigError(err instanceof SignatureError ? err.message : "That image couldn't be used.");
+      setSigError(err instanceof SignatureError ? err.message : "That image couldn't be used. Choose another PNG.");
     } finally {
       setSigBusy(false);
     }
@@ -80,9 +80,9 @@ function ProfileForm({ saved, onSaved }: { saved: Values; onSaved: (v: Values) =
       const next = Object.fromEntries(BUSINESS_PROFILE_FIELDS.map((k) => [k, v[k].trim()])) as Values;
       setV(next);
       onSaved(next);
-      toast('Business profile saved.');
+      toast('Business profile saved');
     } catch (err) {
-      setFailure(errorMessage(err as Error));
+      setFailure(`Couldn't save the Business profile. ${errorMessage(err as Error)}`);
     } finally {
       setBusy(false);
     }

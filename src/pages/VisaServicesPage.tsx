@@ -13,7 +13,7 @@ const VISA_SERVICE_IDS = ['visa-services', 'visitor-business-visa', 'passport-se
 
 function VisaDisclaimer({ className }: { className?: string }) {
   return (
-    <aside className={['visa-disclaimer', className].filter(Boolean).join(' ')} aria-label="Important note about visa decisions">
+    <aside className={['visa-disclaimer', className].filter(Boolean).join(' ')} aria-label="Visa application decision notice">
       <Info className="visa-disclaimer__icon" aria-hidden="true" />
       <p>
         <strong>Please note:</strong> {business.shortName} provides guidance and assistance with applications.{' '}
@@ -125,7 +125,7 @@ export default function VisaServicesPage() {
             </p>
           </div>
           <Link to={routes.tours} className="link-arrow visa-tours__link">
-            Explore Tours &amp; Packages
+            View tours and packages
             <ArrowRight aria-hidden="true" />
           </Link>
         </div>

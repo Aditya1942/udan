@@ -102,7 +102,7 @@ describe('EnquiryForm', () => {
     expect(f.service).toHaveAccessibleDescription('Please choose a service.');
     expect(f.name).toHaveAttribute('aria-invalid', 'true');
     expect(f.name).toHaveFocus();
-    expect(screen.getByRole('status')).toHaveTextContent('Please fix the 3 highlighted fields.');
+    expect(screen.getByRole('status')).toHaveTextContent('Fix the 3 highlighted fields.');
     expect(await inquiries()).toHaveLength(0);
   });
 

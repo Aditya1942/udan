@@ -86,7 +86,7 @@ export default function ToursPage() {
           <ArrowRight aria-hidden="true" />
         </Link>
         <a href="#international" className="btn btn--light">
-          Browse destinations
+          View international destinations
         </a>
       </PageHero>
 
@@ -185,7 +185,7 @@ export default function ToursPage() {
                 <ArrowRight aria-hidden="true" />
               </Link>
               <Link to={routes.otherServices} className="btn btn--ghost">
-                See all travel services
+                View all travel services
               </Link>
             </div>
           </div>
@@ -203,7 +203,7 @@ export default function ToursPage() {
             </p>
           </div>
           <Link to={routes.visa} className="btn btn--outline">
-            Explore Visa Services
+            View visa services
             <ArrowRight aria-hidden="true" />
           </Link>
         </div>

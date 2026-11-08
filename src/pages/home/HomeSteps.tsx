@@ -43,7 +43,7 @@ export function HomeSteps() {
       </ol>
       <div className="home-section-cta home-section-cta--center">
         <a href="#contact" className="btn btn--primary">
-          Get in Touch
+          Get in touch
           <ArrowDown aria-hidden="true" />
         </a>
       </div>

@@ -58,7 +58,7 @@ export function errorMessage(error: AdminDataError | Error | null | undefined): 
     case 'conflict':
       return 'The data changed while this was saving. Try again.';
     default:
-      return 'Something went wrong. Try again.';
+      return "Couldn't complete that. Try again.";
   }
 }
 

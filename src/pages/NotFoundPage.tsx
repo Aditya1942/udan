@@ -22,14 +22,14 @@ export default function NotFoundPage() {
         <p className="notfound__code">Error 404</p>
         <h1 className="notfound__title">Page not found</h1>
         <p className="notfound__text">
-          Looks like this page has taken a detour. It may have moved, or the link may be mistyped.
+          This page may have moved, or the web address may be incorrect.
         </p>
         <div className="btn-group notfound__actions">
           <Link to={routes.home} className="btn btn--primary">
-            Back to home
+            Go to the home page
           </Link>
           <Link to={routes.contact} className="btn btn--outline">
-            Contact us
+            Contact UDAN
           </Link>
         </div>
         <nav className="notfound__links" aria-labelledby="notfound-links-heading">

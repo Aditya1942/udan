@@ -22,9 +22,9 @@ export const ADMIN_NAV: NavItem[] = [
     icon: LayoutDashboard,
     match: (p) => p === '/admin' || p === '/admin/' || under('/admin/insights')(p) || under('/admin/bookings')(p),
   },
-  { label: 'Enquiries', to: '/admin/enquiries', icon: MessageSquareText, match: under('/admin/enquiries') },
   { label: 'Clients', to: '/admin/clients', icon: Users, match: under('/admin/clients') },
   { label: 'DMCs', to: '/admin/dmcs', icon: Truck, match: under('/admin/dmcs') },
+  { label: 'Enquiries', to: '/admin/enquiries', icon: MessageSquareText, match: under('/admin/enquiries') },
   { label: 'Settings', to: '/admin/settings', icon: Settings, match: under('/admin/settings') },
 ];
 

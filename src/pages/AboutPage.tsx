@@ -112,11 +112,11 @@ export default function AboutPage() {
             </ul>
             <div className="about-area__links">
               <Link to={routes.tours} className="link-arrow">
-                Tours &amp; Packages
+                View tours and packages
                 <ArrowRight aria-hidden="true" />
               </Link>
               <Link to={routes.otherServices} className="link-arrow">
-                Other Services
+                View other services
                 <ArrowRight aria-hidden="true" />
               </Link>
             </div>
@@ -136,7 +136,7 @@ export default function AboutPage() {
             <p className="about-area__note">{profile.visaDisclaimer}</p>
             <div className="about-area__links">
               <Link to={routes.visa} className="link-arrow">
-                Visa Services
+                View visa services
                 <ArrowRight aria-hidden="true" />
               </Link>
             </div>

@@ -149,7 +149,7 @@ export function ClientFields({
             <input value={nc.name} onChange={setNc('name')} autoComplete="off" />
           </Field>
           <Field label="Mobile" error={errors.mobile}>
-            <input type="tel" value={nc.mobile} onChange={setNc('mobile')} placeholder="+91" autoComplete="off" />
+            <input type="tel" value={nc.mobile} onChange={setNc('mobile')} placeholder="+91 98765 43210" autoComplete="off" />
           </Field>
           <Field label="Email" hint="Optional" error={errors.email}>
             <input type="email" value={nc.email} onChange={setNc('email')} autoComplete="off" />

@@ -41,9 +41,9 @@ const GROUPS: { group: ServiceGroup; label: string }[] = [
 const FIELD_ORDER: EnquiryField[] = ['name', 'phone', 'service', 'message'];
 
 const ERROR_TEXT: Record<ErrorKind, string> = {
-  network: "We couldn't send your enquiry. Please check your connection and try again, or call or WhatsApp us.",
-  rejected: "We couldn't send your enquiry. Please try again, or call or WhatsApp us instead.",
-  unavailable: "Online enquiries aren't available right now. Please call or WhatsApp us instead.",
+  network: "We couldn't send your enquiry. Check your connection and try again, or call or WhatsApp us.",
+  rejected: "We couldn't send your enquiry. Try again, or call or WhatsApp us instead.",
+  unavailable: "Online enquiries aren't available right now. Call or WhatsApp us instead.",
 };
 
 /**
@@ -123,7 +123,7 @@ export function EnquiryForm({
     if (!checked.ok) {
       setErrors(checked.fieldErrors);
       const count = Object.keys(checked.fieldErrors).length;
-      setAnnouncement(`Please fix ${count === 1 ? 'the highlighted field' : `the ${count} highlighted fields`}.`);
+      setAnnouncement(`Fix ${count === 1 ? 'the highlighted field' : `the ${count} highlighted fields`}.`);
       const first = FIELD_ORDER.find((f) => checked.fieldErrors[f]);
       if (first) focusField(first);
       return;
@@ -146,7 +146,7 @@ export function EnquiryForm({
       if (result.reason === 'validation') {
         setStatus('idle');
         setErrors(result.fieldErrors ?? {});
-        setAnnouncement('Please fix the highlighted fields.');
+        setAnnouncement('Fix the highlighted fields.');
         return;
       }
       fail(result.reason);

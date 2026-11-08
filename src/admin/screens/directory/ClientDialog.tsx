@@ -34,7 +34,7 @@ export function ClientDialog({ open, onClose, onCreated }: { open: boolean; onCl
       reset();
       onCreated(id);
     } catch (err) {
-      setFailure(errorMessage(err as Error));
+      setFailure(`Couldn't create the Client. ${errorMessage(err as Error)}`);
     } finally {
       setBusy(false);
     }

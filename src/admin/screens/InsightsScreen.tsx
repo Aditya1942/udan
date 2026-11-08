@@ -246,8 +246,8 @@ export default function InsightsScreen() {
             retryRows();
             if (enquiries.status === 'error') retry('enquiries');
           }}
-          errorTitle="Couldn't load Insights"
-          loading={<LoadingState lines={6} label="Loading Insights" />}
+          errorTitle="Couldn't load insights"
+          loading={<LoadingState lines={6} label="Loading insights" />}
           isEmpty={rowsState.rows.length === 0}
           empty={
             <EmptyState

@@ -37,7 +37,7 @@ export function DmcDialog({ open, onClose, onCreated }: { open: boolean; onClose
       setTried(false);
       onCreated(id);
     } catch (err) {
-      setFailure(errorMessage(err as Error));
+      setFailure(`Couldn't create the DMC. ${errorMessage(err as Error)}`);
     } finally {
       setBusy(false);
     }
@@ -68,7 +68,7 @@ export function DmcDialog({ open, onClose, onCreated }: { open: boolean; onClose
           <input value={v.contactPerson} onChange={set('contactPerson')} autoComplete="off" />
         </Field>
         <Field label="Phone" hint="Optional">
-          <input type="tel" value={v.phone} onChange={set('phone')} placeholder="+91" />
+          <input type="tel" value={v.phone} onChange={set('phone')} placeholder="+91 98765 43210" />
         </Field>
         <Field label="Email" hint="Optional" error={show('email')}>
           <input type="email" value={v.email} onChange={set('email')} />

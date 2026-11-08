@@ -139,7 +139,7 @@ describe('Documents card', () => {
     const user = userEvent.setup();
     await renderBooking();
 
-    expect(within(row('Invoice')).getByText('Number allocated on first Prepare')).toBeInTheDocument();
+    expect(within(row('Invoice')).getByText('Number assigned when first prepared')).toBeInTheDocument();
     await user.click(within(row('Invoice')).getByRole('button', { name: 'Prepare Invoice' }));
 
     // The PDF is built from the Booking with its new invoice number and the seeded Business profile.
@@ -192,10 +192,10 @@ describe('Documents card', () => {
       title: 'UDAN-Voucher-UDN-001.pdf',
       text: `Hi Asha, please find your travel voucher for booking UDN-001 attached. — ${TRADING_NAME}`,
     });
-    expect(screen.queryByText('Sharing failed — use Download')).not.toBeInTheDocument();
+    expect(screen.queryByText("Couldn't share the file. Use Download instead.")).not.toBeInTheDocument();
 
     await user.click(shareButton);
-    expect(await screen.findByText('Sharing failed — use Download')).toBeInTheDocument();
+    expect(await screen.findByText("Couldn't share the file. Use Download instead.")).toBeInTheDocument();
   });
 
   it('Voucher: notes missing confirmations and prepares without touching the invoice number', async () => {

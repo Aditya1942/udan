@@ -126,11 +126,11 @@ function HorizontalBars({
   );
 }
 
-/** 2. Bookings by Status. */
+/** 2. Bookings by status. */
 export function StatusChart({ data }: { data: StatusPoint[] }) {
   return (
     <HorizontalBars
-      title="Bookings by Status"
+      title="Bookings by status"
       note="All Bookings travelling in the period, Pending and Cancelled included."
       data={data.map((d) => ({ label: d.status, value: d.count }))}
       name="Bookings"

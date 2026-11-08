@@ -141,7 +141,7 @@ export function filterChips(q: TableQuery, clients: readonly Client[], dmcs: rea
       label: `DMC: ${q.dmcIds.map((id) => dmcs.find((d) => d.id === id)?.name ?? 'Unknown DMC').join(', ')}`,
       remove: { dmcIds: [] },
     });
-  if (q.lineTypes.length) chips.push({ key: 'type', label: `Line type: ${q.lineTypes.join(', ')}`, remove: { lineTypes: [] } });
+  if (q.lineTypes.length) chips.push({ key: 'type', label: `Service Line type: ${q.lineTypes.join(', ')}`, remove: { lineTypes: [] } });
   if (q.clientPayment) chips.push({ key: 'cpay', label: `Client payment: ${CLIENT_PAYMENT_LABELS[q.clientPayment]}`, remove: { clientPayment: undefined } });
   if (q.dmcPayment) chips.push({ key: 'dpay', label: `DMC payment: ${DMC_PAYMENT_LABELS[q.dmcPayment]}`, remove: { dmcPayment: undefined } });
   if (q.invoice) chips.push({ key: 'inv', label: `Invoice: ${INVOICE_LABELS[q.invoice]}`, remove: { invoice: undefined } });

@@ -60,7 +60,7 @@ export function HomeDestinations() {
 
       <div className="home-section-cta">
         <Link to={routes.tours} className="btn btn--primary">
-          See Tours &amp; Packages
+          View tours and packages
           <ArrowRight aria-hidden="true" />
         </Link>
       </div>

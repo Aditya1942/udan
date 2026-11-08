@@ -226,7 +226,7 @@ export function BookingsTable({
               <Button onClick={() => update((q) => ({ ...clearFilters(q), q: '' }))}>Clear search and filters</Button>
             }
           >
-            Nothing matches this search and these filters{paged ? '' : ` in ${monthLabel}`}.
+            Try a different search or clear the filters{paged ? '' : ` for ${monthLabel}`}.
           </EmptyState>
         ) : (
           <EmptyState
@@ -237,7 +237,7 @@ export function BookingsTable({
               </ButtonLink>
             }
           >
-            The month is by Travel start.{' '}
+            Bookings are grouped by travel start date.{' '}
             <button type="button" className="adm-link-btn" onClick={() => update({ scope: 'all' })}>
               Show all time
             </button>

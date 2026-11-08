@@ -276,7 +276,7 @@ describe('Payments', () => {
     await renderAdmin('/admin/bookings/UDN-001');
     const payments = await screen.findByRole('region', { name: 'Client payments' });
     expect(money('Client outstanding')).toBe('₹1,50,000');
-    expect(within(payments).getByText('No entries yet.')).toBeInTheDocument();
+    expect(within(payments).getByText('No entries yet. Use Add entry to record a payment.')).toBeInTheDocument();
 
     // Add.
     await user.click(within(payments).getByRole('button', { name: 'Add entry' }));

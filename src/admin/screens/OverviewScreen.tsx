@@ -68,7 +68,7 @@ export function OverviewScreen() {
             if (enquiries.status === 'error') retry('enquiries');
           }}
           errorTitle="Couldn't check what needs attention"
-          loading={<LoadingState lines={2} label="Loading Needs attention" />}
+          loading={<LoadingState lines={2} label="Loading needs attention" />}
         >
           <NeedsAttention categories={attention} today={today} />
         </DataRegion>

@@ -31,7 +31,7 @@ function loadImage(file: File): Promise<HTMLImageElement> {
     };
     img.onerror = () => {
       URL.revokeObjectURL(url);
-      reject(new SignatureError("That file couldn't be read as an image."));
+      reject(new SignatureError("That file couldn't be read as an image. Choose a PNG."));
     };
     img.src = url;
   });
@@ -40,7 +40,7 @@ function loadImage(file: File): Promise<HTMLImageElement> {
 export async function signatureFromFile(file: File): Promise<string> {
   if (file.type !== 'image/png') throw new SignatureError('Choose a PNG image.');
   const img = await loadImage(file);
-  if (!img.naturalWidth || !img.naturalHeight) throw new SignatureError("That file couldn't be read as an image.");
+  if (!img.naturalWidth || !img.naturalHeight) throw new SignatureError("That file couldn't be read as an image. Choose a PNG.");
   const canvas = document.createElement('canvas');
   const ctx = canvas.getContext('2d');
   if (!ctx) throw new SignatureError("This browser can't resize images.");

@@ -136,9 +136,9 @@ export function PaymentsSection({ booking, side, dmcsById }: { booking: Booking;
         </ul>
       ) : null}
       {side === 'dmc' && lineDmcs.length === 0 && list.length === 0 ? (
-        <p className="adm-muted adm-pad">Add a Service Line with its DMC first; DMC payments go against a DMC on this booking.</p>
+        <p className="adm-muted adm-pad">Add a Service Line with its DMC first. DMC payments are recorded against a DMC on this booking.</p>
       ) : list.length === 0 && editing !== 'new' ? (
-        <p className="adm-muted adm-pad">No entries yet.</p>
+        <p className="adm-muted adm-pad">No entries yet. Use Add entry to record a payment.</p>
       ) : (
         <div className="adm-table-wrap">
           <table className="adm-table adm-table--pay">
@@ -216,7 +216,7 @@ export function PaymentsSection({ booking, side, dmcsById }: { booking: Booking;
       )}
       <ConfirmDialog
         open={deleting !== null}
-        title="Delete this entry?"
+        title="Delete this payment entry?"
         confirmLabel="Delete entry"
         danger
         busy={busy}
@@ -226,7 +226,7 @@ export function PaymentsSection({ booking, side, dmcsById }: { booking: Booking;
         {deleting ? (
           <p>
             {deleting.kind} of {formatINR(deleting.amount)} on {formatDate(deleting.date)}
-            {side === 'dmc' ? ` (${dmcName((deleting as DmcPayment).dmcId)})` : ''}.
+            {side === 'dmc' ? ` (${dmcName((deleting as DmcPayment).dmcId)})` : ''}. This can't be undone.
           </p>
         ) : null}
       </ConfirmDialog>

@@ -38,7 +38,7 @@ export function StatusControl({ booking, dmcsById }: { booking: Booking; dmcsByI
           `${missing} Service ${missing === 1 ? 'Line has' : 'Lines have'} no confirmation number yet. Status saved anyway.`,
         );
       }
-      toast(wasCancelled ? `Un-cancelled ${booking.bookingNo}: ${status}` : `Status: ${status}`);
+      toast(wasCancelled ? `Un-cancelled ${booking.bookingNo}: ${status}` : `Status changed to ${status}`);
     } catch (err) {
       toast(`Couldn't change the status. ${errorMessage(err as Error)}`, { tone: 'danger' });
     } finally {

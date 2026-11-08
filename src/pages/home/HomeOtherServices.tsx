@@ -20,7 +20,7 @@ export function HomeOtherServices() {
           </h2>
           <p className="home-extras__intro">Bookings, travel essentials and business travel, arranged alongside your plans.</p>
           <Link to={routes.otherServices} className="link-arrow">
-            See other services
+            View other services
             <ArrowRight aria-hidden="true" />
           </Link>
         </div>

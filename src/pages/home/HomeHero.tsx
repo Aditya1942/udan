@@ -25,16 +25,16 @@ export function HomeHero() {
           </p>
           <div className="home-hero__actions">
             <Link to={routes.tours} className="btn btn--primary">
-              Explore Tours
+              View tours and packages
               <ArrowRight aria-hidden="true" />
             </Link>
             <Link to={routes.visa} className="btn btn--light">
-              Explore Visa Services
+              View visa services
             </Link>
           </div>
         </div>
 
-        <aside className="home-hero__contact" aria-label="Speak to UDAN">
+        <aside className="home-hero__contact" aria-label="Contact UDAN by phone">
           <span className="home-hero__contact-icon" aria-hidden="true">
             <Phone strokeWidth={1.75} />
           </span>

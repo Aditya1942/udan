@@ -58,9 +58,9 @@ function BackupRow() {
       const collections = await readBackupCollections(db);
       downloadText(backupFilename(today), backupJson({ projectId: projectIdOf(db), exportedAt: new Date(), collections }), JSON_MIME);
       recordBackup(today);
-      toast('Backup downloaded.');
+      toast('Backup downloaded');
     } catch (err) {
-      toast(errorMessage(err as Error), { tone: 'danger' });
+      toast(`Couldn't download the backup. ${errorMessage(err as Error)}`, { tone: 'danger' });
     } finally {
       setBusy(false);
     }
@@ -157,7 +157,7 @@ function LedgerRow() {
         {rowsState.status === 'loading'
           ? 'Loading bookings…'
           : rowsState.status === 'error'
-            ? "Bookings couldn't be loaded, so the ledger can't be exported."
+            ? "Couldn't load Bookings, so the ledger can't be exported. Reload the page and try again."
             : ready
               ? `${rows.length} ${rows.length === 1 ? 'entry' : 'entries'}, ${formatDate(period.from)} – ${formatDate(period.to)}`
               : ''}

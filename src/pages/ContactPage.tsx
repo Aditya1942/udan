@@ -98,7 +98,7 @@ export default function ContactPage() {
                     rel="noopener noreferrer"
                   >
                     <Navigation aria-hidden="true" />
-                    Get Directions
+                    Get directions
                     <span className="visually-hidden"> (opens in a new tab)</span>
                   </a>
                 </div>

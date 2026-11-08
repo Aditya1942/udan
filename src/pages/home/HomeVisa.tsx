@@ -25,7 +25,7 @@ export function HomeVisa() {
             </span>
           </p>
           <Link to={routes.visa} className="btn btn--primary">
-            Explore Visa Services
+            View visa services
             <ArrowRight aria-hidden="true" />
           </Link>
         </div>
@@ -42,7 +42,8 @@ export function HomeVisa() {
                   <h3 className="home-visa__title">{label}</h3>
                   <p className="home-visa__text">{description}</p>
                   <Link to={getEnquireHref({ service: id })} className="link-arrow">
-                    Enquire<span className="visually-hidden"> about {label}</span>
+                    Enquire
+                    <span className="visually-hidden"> about {label}</span>
                     <ArrowRight aria-hidden="true" />
                   </Link>
                 </div>

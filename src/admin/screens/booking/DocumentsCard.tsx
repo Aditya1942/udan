@@ -75,7 +75,7 @@ function DocumentRow({ kind, booking, client }: { kind: DocumentKind; booking: B
   const missing = kind === 'voucher' ? linesMissingConfirmation(booking).length : 0;
   const idleSub =
     kind === 'invoice'
-      ? (booking.invoiceNo ?? 'Number allocated on first Prepare')
+      ? (booking.invoiceNo ?? 'Number assigned when first prepared')
       : missing
         ? `${missing} line${missing === 1 ? '' : 's'} will print "To be confirmed"`
         : 'Day-by-day services and confirmation numbers';
@@ -91,7 +91,7 @@ function DocumentRow({ kind, booking, client }: { kind: DocumentKind; booking: B
         </span>
       </div>
       {disabled ? null : state.status === 'ready' ? (
-        <ReadyActions kind={kind} booking={booking} client={client} prepared={state} onShareError={() => toast('Sharing failed — use Download', { tone: 'danger' })}>
+        <ReadyActions kind={kind} booking={booking} client={client} prepared={state} onShareError={() => toast("Couldn't share the file. Use Download instead.", { tone: 'danger' })}>
           <LinkButton onClick={prepare}>Prepare again</LinkButton>
         </ReadyActions>
       ) : state.status === 'error' ? (
