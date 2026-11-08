@@ -1,6 +1,6 @@
 /** Edit states of the Booking sections. Each takes the whole form + `set(patch)` and shows errors once a save was tried. */
 import { Plus, Trash2 } from 'lucide-react';
-import { useId, useMemo, useState, type KeyboardEvent } from 'react';
+import { useEffect, useId, useMemo, useState, type KeyboardEvent } from 'react';
 import { formatINR, LINE_TYPES, type Client, type Dmc, type DmcPayment, type Errors, type LineType, type ServiceLine } from '../../model';
 import { Button, ChipInput, ConfirmDialog, Field, IconButton, MoneyInput, Note, Segmented } from '../../ui';
 import { DmcDialog } from '../shared/DmcDialog';
@@ -61,7 +61,11 @@ export function ClientPicker({
       setOpen(false);
     }
   };
-  const showList = open && matches.length > 0;
+  const noMatch = matches.length === 0;
+  const showList = open && (!noMatch || query.trim() !== '');
+  useEffect(() => {
+    if (showList && !noMatch) document.getElementById(`${listId}-${active}`)?.scrollIntoView?.({ block: 'nearest' });
+  }, [active, showList, noMatch, listId]);
 
   return (
     <div className="adm-combo">
@@ -71,7 +75,7 @@ export function ClientPicker({
         aria-expanded={showList}
         aria-controls={listId}
         aria-autocomplete="list"
-        aria-activedescendant={showList ? `${listId}-${active}` : undefined}
+        aria-activedescendant={showList && !noMatch ? `${listId}-${active}` : undefined}
         autoComplete="off"
         placeholder="Type a name or mobile"
         value={query}
@@ -87,6 +91,11 @@ export function ClientPicker({
       />
       {showList ? (
         <ul id={listId} role="listbox" className="adm-combo__list" aria-label="Clients">
+          {noMatch ? (
+            <li className="adm-combo__empty" role="option" aria-selected={false} aria-disabled="true">
+              No match. Try another name or mobile.
+            </li>
+          ) : null}
           {matches.map((c, i) => (
             <li
               key={c.id}
@@ -96,7 +105,8 @@ export function ClientPicker({
               onMouseDown={(e) => e.preventDefault()}
               onClick={() => choose(c)}
             >
-              <strong>{c.name}</strong> <span className="adm-muted">{c.mobile}</span>
+              <strong className="adm-combo__name">{c.name}</strong>
+              <span className="adm-combo__meta">{c.mobile}</span>
             </li>
           ))}
         </ul>
