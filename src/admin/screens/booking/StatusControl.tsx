@@ -143,7 +143,7 @@ function CancelDialog({ booking, dmcsById, onClose }: { booking: Booking; dmcsBy
               }
             >
               <MoneyInput
-                aria-label={`DMC cancellation charge for ${l.type}, ${dmcLabel(l.dmcId)}`}
+                aria-label={`Cancellation charge for ${l.type}, ${dmcLabel(l.dmcId)}`}
                 value={lineCharges[l.id] ?? 0}
                 onChange={(v) => setLineCharges((c) => ({ ...c, [l.id]: v }))}
               />

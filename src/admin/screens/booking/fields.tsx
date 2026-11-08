@@ -526,7 +526,7 @@ export function ServiceFields({
         {deleting && (taggedToDeleting > 0 || deletingDmcHasPayments) ? (
           <Note tone="warn">
             {taggedToDeleting > 0
-              ? `${taggedToDeleting} payment${taggedToDeleting === 1 ? ' is' : 's are'} tagged to this line. They stay on the booking, untagged. `
+              ? 'Payments tagged to this service will stay on the booking, untagged. '
               : ''}
             {deletingDmcHasPayments && deleting.dmcId
               ? `${dmcName(deleting.dmcId)} has payments on this booking. Its outstanding may show “Due back” once the line is gone.`

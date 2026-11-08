@@ -19,10 +19,11 @@ import {
   type PaymentEntry,
   type PaymentKind,
   type PayMode,
+  type ServiceLine,
 } from '../../model';
 import { Button, ConfirmDialog, errorMessage, Field, IconButton, MoneyInput, Note, Panel, useToast } from '../../ui';
 
-type Row = { kind: PaymentKind; date: string; mode: PayMode; ref: string; note: string; amount: number; dmcId: string };
+type Row = { kind: PaymentKind; date: string; mode: PayMode; ref: string; note: string; amount: number; dmcId: string; lineId: string };
 
 const toRow = (p: PaymentEntry): Row => ({
   kind: p.kind,
@@ -32,10 +33,24 @@ const toRow = (p: PaymentEntry): Row => ({
   note: p.note ?? '',
   amount: p.amount,
   dmcId: (p as DmcPayment).dmcId ?? '',
+  lineId: p.lineId ?? '',
 });
 
+const lineLabel = (l: ServiceLine) => `${l.type} — ${l.description}`;
+/** Service choices: every line for Customer; for a DMC only the lines placed with it. */
+const lineChoices = (lines: readonly ServiceLine[], side: PaymentSide, dmcId: string) =>
+  side === 'dmc' ? lines.filter((l) => l.dmcId === dmcId) : lines;
+
 function toEntry(row: Row, side: PaymentSide): Omit<DmcPayment, 'id'> | Omit<ClientPayment, 'id'> {
-  const base = { kind: row.kind, date: row.date, mode: row.mode, amount: row.amount, ref: row.ref.trim() || undefined, note: row.note.trim() || undefined };
+  const base = {
+    kind: row.kind,
+    date: row.date,
+    mode: row.mode,
+    amount: row.amount,
+    ref: row.ref.trim() || undefined,
+    note: row.note.trim() || undefined,
+    ...(row.lineId ? { lineId: row.lineId } : {}),
+  };
   return side === 'dmc' ? { ...base, dmcId: row.dmcId } : base;
 }
 
@@ -52,7 +67,11 @@ export function PaymentsSection({ booking, side, dmcsById }: { booking: Booking;
   const net = list.reduce((s, p) => s + (p.kind === 'Refund' ? -p.amount : p.amount), 0);
   const money = bookingMoney(booking);
   const sorted = [...list].sort((a, b) => a.date.localeCompare(b.date));
-  const cols = side === 'dmc' ? 7 : 6;
+  const cols = side === 'dmc' ? 8 : 7;
+  const serviceLabel = (p: PaymentEntry) => {
+    const l = booking.lines.find((x) => x.id === p.lineId);
+    return l ? lineLabel(l) : null;
+  };
 
   const save = async (row: Row, existing?: PaymentEntry) => {
     setBusy(true);
@@ -84,12 +103,16 @@ export function PaymentsSection({ booking, side, dmcsById }: { booking: Booking;
   const form = (existing?: PaymentEntry) => {
     // DMC choices: DMCs on this Booking's lines (+ the entry's own DMC when editing, even if its line was deleted).
     const allowed = side === 'dmc' ? [...new Set([...lineDmcs, ...(existing ? [(existing as DmcPayment).dmcId] : [])])] : undefined;
+    const start: Row = existing ? toRow(existing) : { kind: 'Payment', date: todayIST(), mode: 'UPI', ref: '', note: '', amount: 0, dmcId: lineDmcs[0] ?? '', lineId: '' };
+    // A tag whose line is gone (or is another DMC's) can't be kept; fall back to Whole booking.
+    if (!lineChoices(booking.lines, side, start.dmcId).some((l) => l.id === start.lineId)) start.lineId = '';
     return (
       <tr className="adm-add-row">
         <td colSpan={cols}>
           <PaymentRowForm
             side={side}
-            initial={existing ? toRow(existing) : { kind: 'Payment', date: todayIST(), mode: 'UPI', ref: '', note: '', amount: 0, dmcId: lineDmcs[0] ?? '' }}
+            initial={start}
+            lines={booking.lines}
             allowedDmcIds={allowed}
             dmcName={dmcName}
             busy={busy}
@@ -147,6 +170,7 @@ export function PaymentsSection({ booking, side, dmcsById }: { booking: Booking;
               <tr>
                 <th scope="col">Date</th>
                 {side === 'dmc' ? <th scope="col">DMC</th> : null}
+                <th scope="col">Service</th>
                 <th scope="col">Kind</th>
                 <th scope="col">Mode</th>
                 <th scope="col">Reference</th>
@@ -168,6 +192,7 @@ export function PaymentsSection({ booking, side, dmcsById }: { booking: Booking;
                       {formatDate(p.date)}
                     </th>
                     {side === 'dmc' ? <td data-label="DMC">{dmcName((p as DmcPayment).dmcId)}</td> : null}
+                    <td data-label="Service">{serviceLabel(p) ?? <span className="adm-muted">Whole booking</span>}</td>
                     <td data-label="Kind">{p.kind}</td>
                     <td data-label="Mode">{p.mode}</td>
                     <td data-label="Reference">
@@ -237,6 +262,7 @@ export function PaymentsSection({ booking, side, dmcsById }: { booking: Booking;
 function PaymentRowForm({
   side,
   initial,
+  lines,
   allowedDmcIds,
   dmcName,
   busy,
@@ -246,6 +272,7 @@ function PaymentRowForm({
 }: {
   side: PaymentSide;
   initial: Row;
+  lines: readonly ServiceLine[];
   allowedDmcIds?: string[];
   dmcName: (id: string) => string;
   busy: boolean;
@@ -255,7 +282,7 @@ function PaymentRowForm({
 }) {
   const [row, setRow] = useState<Row>(initial);
   const [tried, setTried] = useState(false);
-  const errors = validatePayment(toEntry(row, side), allowedDmcIds);
+  const errors = validatePayment(toEntry(row, side), allowedDmcIds, lines);
   const show = (k: keyof typeof errors) => (tried ? errors[k] : undefined);
   const submit = () => {
     setTried(true);
@@ -279,7 +306,7 @@ function PaymentRowForm({
         </Field>
         {side === 'dmc' ? (
           <Field label="DMC" error={show('dmcId')}>
-            <select value={row.dmcId} onChange={(e) => setRow({ ...row, dmcId: e.target.value })}>
+            <select value={row.dmcId} onChange={(e) => setRow({ ...row, dmcId: e.target.value, lineId: '' })}>
               {(allowedDmcIds ?? []).map((id) => (
                 <option key={id} value={id}>
                   {dmcName(id)}
@@ -288,6 +315,16 @@ function PaymentRowForm({
             </select>
           </Field>
         ) : null}
+        <Field label="Service" hint="Optional" error={show('lineId')}>
+          <select value={row.lineId} onChange={(e) => setRow({ ...row, lineId: e.target.value })}>
+            <option value="">Whole booking</option>
+            {lineChoices(lines, side, row.dmcId).map((l) => (
+              <option key={l.id} value={l.id}>
+                {lineLabel(l)}
+              </option>
+            ))}
+          </select>
+        </Field>
         <Field label="Kind" error={show('kind')}>
           <select value={row.kind} onChange={(e) => setRow({ ...row, kind: e.target.value as PaymentKind })}>
             {PAYMENT_KINDS.map((k) => (

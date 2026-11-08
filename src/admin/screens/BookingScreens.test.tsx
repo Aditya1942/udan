@@ -338,6 +338,23 @@ describe('Booking detail sections', () => {
   });
 });
 
+describe('Delete line warning', () => {
+  it('warns that tagged payments stay on the booking, untagged', async () => {
+    await seed(env, {
+      'bookings/b1': { ...BOOKING, clientPayments: [{ id: 'p1', kind: 'Payment', date: '2026-10-01', amount: 30_000, mode: 'UPI', lineId: 'l1' }] },
+    });
+    const user = userEvent.setup();
+    await renderAdmin('/admin/bookings/UDN-001');
+    const service = await screen.findByRole('region', { name: 'Service' });
+    await user.click(within(service).getByRole('button', { name: 'Edit Service' }));
+    await user.click(within(within(service).getByRole('listitem', { name: 'Line 2' })).getByRole('button', { name: /Delete/ }));
+    expect(within(await screen.findByRole('dialog')).queryByText(/Payments tagged to this service/)).not.toBeInTheDocument();
+    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Cancel' }));
+    await user.click(within(within(service).getByRole('listitem', { name: 'Line 1' })).getByRole('button', { name: /Delete/ }));
+    expect(within(await screen.findByRole('dialog')).getByText('Payments tagged to this service will stay on the booking, untagged.')).toBeInTheDocument();
+  });
+});
+
 describe('Category flows', () => {
   it('creates a Visa booking without Travel, then converts it to a Package', async () => {
     const user = userEvent.setup();
@@ -479,6 +496,71 @@ describe('Payments', () => {
     await waitFor(() => expect(money('DMC outstanding')).toBe('₹90,000'));
     expect(within(dmc).getByText('Settled')).toBeInTheDocument();
   });
+
+  it('tags a Customer Payment to a service and lists it', async () => {
+    const user = userEvent.setup();
+    await renderAdmin('/admin/bookings/UDN-001');
+    const payments = await screen.findByRole('region', { name: 'Customer payments' });
+    await user.click(within(payments).getByRole('button', { name: 'Add entry' }));
+    const row = within(payments).getByRole('group', { name: 'New entry' });
+    const picker = within(row).getByLabelText('Service');
+    expect(within(picker).getAllByRole('option').map((o) => o.textContent)).toEqual(['Whole booking', 'Hotel — Atlantis 4N', 'Transfer — Airport transfers']);
+    await user.selectOptions(picker, 'Hotel — Atlantis 4N');
+    await typeMoney(user, within(row).getByLabelText('Amount'), '30000');
+    await user.click(within(row).getByRole('button', { name: 'Add entry' }));
+    await waitFor(() => expect(money('Customer outstanding')).toBe('₹1,20,000'));
+    expect((await readDoc('bookings/b1'))?.clientPayments).toEqual([expect.objectContaining({ amount: 30_000, lineId: 'l1' })]);
+    expect(within(payments).getByRole('columnheader', { name: 'Service' })).toBeInTheDocument();
+    expect(within(payments).getByText('Hotel — Atlantis 4N')).toBeInTheDocument();
+
+    // An untagged entry reads "Whole booking" and stores no lineId.
+    await user.click(within(payments).getByRole('button', { name: 'Add entry' }));
+    const whole = within(payments).getByRole('group', { name: 'New entry' });
+    expect(within(whole).getByLabelText('Service')).toHaveDisplayValue('Whole booking');
+    await typeMoney(user, within(whole).getByLabelText('Amount'), '1000');
+    await user.click(within(whole).getByRole('button', { name: 'Add entry' }));
+    await waitFor(() => expect(money('Customer outstanding')).toBe('₹1,19,000'));
+    expect(within(payments).getByText('Whole booking')).toBeInTheDocument();
+    const stored = (await readDoc('bookings/b1'))?.clientPayments as Record<string, unknown>[];
+    expect(stored.find((p) => p.amount === 1000)).not.toHaveProperty('lineId');
+  });
+
+  it("DMC entry lists only that DMC's services; in-house-only booking disables DMC Add entry", async () => {
+    await seed(env, {
+      'bookings/b1': {
+        ...BOOKING,
+        lines: [
+          ...BOOKING.lines,
+          { id: 'l3', type: 'Sightseeing', dmcId: 'd1', description: 'Desert safari', netCost: 5_000 },
+        ],
+      },
+    });
+    const user = userEvent.setup();
+    await renderAdmin('/admin/bookings/UDN-001');
+    const dmc = await screen.findByRole('region', { name: 'DMC payments' });
+    await user.click(within(dmc).getByRole('button', { name: 'Add entry' }));
+    const row = within(dmc).getByRole('group', { name: 'New entry' });
+    const options = () => within(within(row).getByLabelText('Service')).getAllByRole('option').map((o) => o.textContent);
+    expect(options()).toEqual(['Whole booking', 'Hotel — Atlantis 4N', 'Sightseeing — Desert safari']);
+    await user.selectOptions(within(row).getByLabelText('Service'), 'Sightseeing — Desert safari');
+    await user.selectOptions(within(row).getByLabelText('DMC'), 'Gulf Transfers');
+    expect(within(row).getByLabelText('Service')).toHaveDisplayValue('Whole booking');
+    expect(options()).toEqual(['Whole booking', 'Transfer — Airport transfers']);
+    await user.selectOptions(within(row).getByLabelText('Service'), 'Transfer — Airport transfers');
+    await typeMoney(user, within(row).getByLabelText('Amount'), '4000');
+    await user.click(within(row).getByRole('button', { name: 'Add entry' }));
+    await waitFor(async () => expect((await readDoc('bookings/b1'))?.dmcPayments).toEqual([expect.objectContaining({ dmcId: 'd2', lineId: 'l2', amount: 4000 })]));
+    expect(within(dmc).getByText('Transfer — Airport transfers')).toBeInTheDocument();
+  });
+
+  it('disables DMC Add entry when every line is in-house', async () => {
+    await seed(env, {
+      'bookings/b1': { ...BOOKING, lines: [{ id: 'l1', type: 'Other', description: 'Own pickup', netCost: 0 }] },
+    });
+    await renderAdmin('/admin/bookings/UDN-001');
+    const dmc = await screen.findByRole('region', { name: 'DMC payments' });
+    expect(within(dmc).getByRole('button', { name: 'Add entry' })).toBeDisabled();
+  });
 });
 
 describe('Status and cancellation', () => {
@@ -505,7 +587,7 @@ describe('Status and cancellation', () => {
     expect(preview).toHaveTextContent('Due back ₹40,000');
 
     await typeMoney(user, within(dialog).getByLabelText('Customer cancellation charge'), '20000');
-    await typeMoney(user, within(dialog).getByLabelText('DMC cancellation charge for Hotel, Desert Tours'), '10000');
+    await typeMoney(user, within(dialog).getByLabelText('Cancellation charge for Hotel, Desert Tours'), '10000');
     expect(preview).toHaveTextContent('Commission becomes₹10,000');
     expect(preview).toHaveTextContent('Refund owed ₹30,000');
     expect(preview).toHaveTextContent('Due back ₹30,000');
@@ -551,6 +633,25 @@ describe('Status and cancellation', () => {
     await user.selectOptions(await screen.findByRole('combobox', { name: 'Status' }), 'Voucher Received');
     expect(await screen.findByText('2 Service Lines have no confirmation number yet. Status saved anyway.')).toBeInTheDocument();
     expect((await readDoc('bookings/b1'))?.status).toBe('Voucher Received');
+  });
+});
+
+describe('Status and cancellation (in-house)', () => {
+  it('labels a DMC-less line In-house in the Cancel dialog', async () => {
+    await seed(env, {
+      'bookings/b1': {
+        ...BOOKING,
+        status: 'Confirmed',
+        lines: [{ id: 'l1', type: 'Hotel', dmcId: 'd1', description: 'Atlantis 4N', netCost: 90_000 }, { id: 'l2', type: 'Other', description: 'Own pickup', netCost: 0 }],
+      },
+    });
+    const user = userEvent.setup();
+    await renderAdmin('/admin/bookings/UDN-001');
+    await user.selectOptions(await screen.findByRole('combobox', { name: 'Status' }), 'Cancelled');
+    const dialog = await screen.findByRole('dialog', { name: 'Cancel UDN-001?' });
+    expect(within(dialog).getByText('Other, In-house')).toBeInTheDocument();
+    expect(within(dialog).getByLabelText('Cancellation charge for Other, In-house')).toBeInTheDocument();
+    expect(within(dialog).getByLabelText('Cancellation charge for Hotel, Desert Tours')).toBeInTheDocument();
   });
 });
 
