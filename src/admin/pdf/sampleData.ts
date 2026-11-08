@@ -41,6 +41,8 @@ export function sampleBooking(overrides: Partial<Booking> = {}): Booking {
     bookingNo: 'UDN-001',
     bookingSeq: 1,
     clientId: 'c1',
+    category: 'Package',
+    hasTravel: true,
     status: 'Confirmed',
     destination: 'Kerala — Kochi, Munnar, Alleppey',
     travelStart: '2026-12-18',

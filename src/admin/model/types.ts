@@ -19,8 +19,26 @@ export type PayMode = (typeof PAY_MODES)[number];
 export const BOOKING_STATUSES = ['Pending', 'Confirmed', 'Voucher Received', 'Completed', 'Cancelled'] as const;
 export type BookingStatus = (typeof BOOKING_STATUSES)[number];
 
-export const LINE_TYPES = ['Hotel', 'Transfer', 'Flight', 'Sightseeing', 'Visa', 'Package', 'Other'] as const;
+export const LINE_TYPES = [
+  'Hotel', 'Transfer', 'Flight', 'Train', 'Bus', 'Sightseeing', 'Visa', 'Passport', 'Package', 'Other',
+] as const;
 export type LineType = (typeof LINE_TYPES)[number];
+
+/** What a Booking is for (Admin-facing order). */
+export const BOOKING_CATEGORIES = ['Visa', 'Passport', 'Package', 'Hotel', 'Flight', 'Train', 'Bus'] as const;
+export type BookingCategory = (typeof BOOKING_CATEGORIES)[number];
+
+/** Derived from the Category, never stored. */
+export const DIVISIONS = ['Travel', 'Immigration'] as const;
+export type Division = (typeof DIVISIONS)[number];
+
+/** Package only. */
+export const TRIP_SCOPES = ['Domestic', 'International'] as const;
+export type TripScope = (typeof TRIP_SCOPES)[number];
+
+/** Visa lines only. */
+export const VISA_TYPES = ['Visitor', 'Business'] as const;
+export type VisaType = (typeof VISA_TYPES)[number];
 
 export const PAYMENT_KINDS = ['Payment', 'Refund'] as const;
 export type PaymentKind = (typeof PAYMENT_KINDS)[number];
@@ -30,7 +48,8 @@ export type Pax = { adults: number; children: number; infants: number };
 export type ServiceLine = {
   id: string;
   type: LineType;
-  dmcId: string;
+  /** Absent = in-house. */
+  dmcId?: string;
   description: string;
   /** Absent = "Whole trip". */
   start?: ISODate;
@@ -41,6 +60,9 @@ export type ServiceLine = {
   dmcPayBy?: ISODate;
   /** Only while the Booking is Cancelled. */
   dmcCancellationCharge?: INR;
+  /** Visa lines only. */
+  visaType?: VisaType;
+  visaCountry?: string;
 };
 
 /** A Client Payment or Refund entry. Amounts are always positive; `kind` gives the direction. */
@@ -52,6 +74,8 @@ export type ClientPayment = {
   mode: PayMode;
   ref?: string;
   note?: string;
+  /** Service line this payment is tagged to, if any. */
+  lineId?: string;
 };
 
 /** A DMC Payment (UDAN → DMC) or Refund (DMC → UDAN). */
@@ -99,8 +123,15 @@ export type Dmc = DocMeta & DmcFields;
 /** Booking fields the Admin edits through sections (Client, Travel, Price, Service lines, Notes). */
 export type BookingEditableFields = {
   clientId: string;
+  category: BookingCategory;
+  /** Package only. */
+  tripScope?: TripScope;
+  /** False for Bookings with no travel dates (e.g. Visa, Passport). */
+  hasTravel: boolean;
   destination: string;
+  /** `'' = not entered`. */
   travelStart: ISODate;
+  /** `'' = not entered`. */
   travelEnd: ISODate;
   pax: Pax;
   travellerNames: string[];

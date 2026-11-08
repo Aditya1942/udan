@@ -4,6 +4,7 @@
  */
 export * from './types';
 export * from './dates';
+export * from './category';
 export * from './money';
 export * from './counting';
 export * from './flags';

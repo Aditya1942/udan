@@ -26,6 +26,8 @@ export function booking(overrides: Partial<Booking> = {}): Booking {
     bookingNo: `UDN-${String(seq).padStart(3, '0')}`,
     bookingSeq: seq,
     clientId: 'c1',
+    category: 'Package',
+    hasTravel: true,
     status: 'Confirmed',
     destination: 'Dubai',
     travelStart: '2026-11-10',
