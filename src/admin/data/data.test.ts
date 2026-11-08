@@ -5,6 +5,7 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } 
 import { googleDb, seed, seedAdmins } from '../../test/adminAuth';
 import { createRulesEnv, readAll } from '../../test/firestoreEmulator';
 import { serialiseBackup } from '../export';
+import { bookingFromDoc } from './convert';
 import type { BookingDraft, Booking } from '../model';
 import {
   addClientPayment,
@@ -21,6 +22,7 @@ import {
   getBusinessProfile,
   readBackupCollections,
   saveBookingSection,
+  saveServiceSection,
   saveBusinessProfile,
   saveEnquiryNotes,
   setEnquiryStatus,
@@ -54,6 +56,9 @@ afterEach(() => {
 
 const draft = (o: Partial<BookingDraft> = {}): BookingDraft => ({
   clientId: 'c1',
+  category: 'Package',
+  tripScope: 'International',
+  hasTravel: true,
   destination: 'Dubai',
   travelStart: '2026-12-01',
   travelEnd: '2026-12-05',
@@ -139,6 +144,32 @@ describe('createBooking', () => {
 
   it('accepts same-day travel', async () => {
     await expect(createBooking(db, draft({ travelEnd: '2026-12-01' }))).resolves.toMatchObject({ bookingNo: 'UDN-001' });
+  });
+});
+
+describe('Booking documents', () => {
+  it('reads a legacy Booking as a Package with Travel', async () => {
+    const legacy = {
+      bookingNo: 'UDN-001', bookingSeq: 1, clientId: 'c1', status: 'Pending', destination: 'Dubai',
+      travelStart: '2026-12-01', travelEnd: '2026-12-05', pax: { adults: 1, children: 0, infants: 0 },
+      travellerNames: [], itinerary: '', internalNotes: '', sellingPrice: 0, lines: [], clientPayments: [], dmcPayments: [],
+      createdAt: Timestamp.now(), updatedAt: Timestamp.now(),
+    };
+    const b = bookingFromDoc('b1', legacy);
+    expect(b).toMatchObject({ category: 'Package', hasTravel: true });
+    expect(b).not.toHaveProperty('tripScope');
+  });
+
+  it('creates a Booking without Travel; blank dates are not written', async () => {
+    const { id } = await createBooking(
+      db,
+      draft({ category: 'Visa', tripScope: undefined, hasTravel: false, destination: '', travelStart: '', travelEnd: '', lines: [] }),
+    );
+    const raw = await readDoc(`bookings/${id}`);
+    expect(raw).toMatchObject({ category: 'Visa', hasTravel: false });
+    expect(raw).not.toHaveProperty('travelStart');
+    expect(raw).not.toHaveProperty('travelEnd');
+    expect(raw).not.toHaveProperty('tripScope');
   });
 });
 
@@ -228,6 +259,51 @@ describe('section saves and payments', () => {
     await deleteClientPayment(db, id, pid);
     b = (await readDoc(`bookings/${id}`)) as unknown as Booking;
     expect(b.clientPayments.map((p) => p.amount)).toEqual([10_000]);
+  });
+
+  it('saveServiceSection clears tags for a deleted line and a changed DMC in the same write', async () => {
+    const { id } = await createBooking(db, draft());
+    const la = { id: 'la', type: 'Hotel' as const, dmcId: 'd1', description: 'A', netCost: 1000 };
+    const lb = { id: 'lb', type: 'Transfer' as const, dmcId: 'd1', description: 'B', netCost: 500 };
+    await saveBookingSection(db, id, { lines: [la, lb] });
+    await addClientPayment(db, id, { kind: 'Payment', date: '2026-11-01', amount: 700, mode: 'UPI', lineId: 'lb' });
+    await addDmcPayment(db, id, { dmcId: 'd1', kind: 'Payment', date: '2026-11-01', amount: 300, mode: 'Cash', lineId: 'la' });
+
+    const res = await saveServiceSection(db, id, { category: 'Package', tripScope: 'Domestic', lines: [{ ...la, dmcId: 'd2' }] });
+
+    expect(res).toEqual({ untagged: { client: 1, dmc: 1 } });
+    const b = (await readDoc(`bookings/${id}`)) as unknown as Booking;
+    expect(b).toMatchObject({ category: 'Package', tripScope: 'Domestic' });
+    expect(b.lines.map((l) => l.id)).toEqual(['la']);
+    expect(b.clientPayments).toHaveLength(1);
+    expect(b.clientPayments[0]).toMatchObject({ amount: 700 });
+    expect(b.clientPayments[0]).not.toHaveProperty('lineId');
+    expect(b.dmcPayments).toHaveLength(1);
+    expect(b.dmcPayments[0]).toMatchObject({ amount: 300, dmcId: 'd1' });
+    expect(b.dmcPayments[0]).not.toHaveProperty('lineId');
+  });
+
+  it('saveServiceSection leaves payment lists alone when no tag goes stale, and removes a cleared tripScope', async () => {
+    const { id } = await createBooking(db, draft());
+    const res = await saveServiceSection(db, id, { category: 'Hotel', tripScope: undefined, lines: draft().lines });
+    expect(res).toEqual({ untagged: { client: 0, dmc: 0 } });
+    const b = await readDoc(`bookings/${id}`);
+    expect(b).toMatchObject({ category: 'Hotel' });
+    expect(b).not.toHaveProperty('tripScope');
+  });
+
+  it('rejects a payment tagged to a line that is gone', async () => {
+    const { id } = await createBooking(db, draft());
+    await expect(
+      addClientPayment(db, id, { kind: 'Payment', date: '2026-11-01', amount: 1, mode: 'Cash', lineId: 'nope' }),
+    ).rejects.toMatchObject({ code: 'conflict', message: 'That service is no longer on this booking' });
+    await expect(
+      addDmcPayment(db, id, { dmcId: 'd1', kind: 'Payment', date: '2026-11-01', amount: 1, mode: 'Cash', lineId: 'l2' }),
+    ).rejects.toMatchObject({ code: 'conflict' });
+    const ok = await addClientPayment(db, id, { kind: 'Payment', date: '2026-11-01', amount: 1, mode: 'Cash', lineId: 'l1' });
+    await expect(
+      updateClientPayment(db, id, { id: ok, kind: 'Payment', date: '2026-11-01', amount: 1, mode: 'Cash', lineId: 'nope' }),
+    ).rejects.toMatchObject({ code: 'conflict' });
   });
 
   it('only records DMC Payments for DMCs on the lines', async () => {

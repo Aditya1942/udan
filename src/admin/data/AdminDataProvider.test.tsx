@@ -43,6 +43,9 @@ describe('AdminDataProvider', () => {
 
     await createBooking(db, {
       clientId: 'c1',
+      category: 'Package',
+      tripScope: 'International',
+      hasTravel: true,
       destination: 'Dubai',
       travelStart: '2026-12-01',
       travelEnd: '2026-12-03',

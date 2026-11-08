@@ -16,13 +16,22 @@ export {
   deleteDmcPayment,
   deletePayment,
   saveBookingSection,
+  saveServiceSection,
   setStatus,
   uncancelBooking,
   updateClientPayment,
   updateDmcPayment,
   updatePayment,
 } from './bookings';
-export type { BookingSectionPatch, CancelInput, CreateBookingOptions, CreatedBooking, InvoiceNumber, PaymentSide } from './bookings';
+export type {
+  BookingSectionPatch,
+  CancelInput,
+  CreateBookingOptions,
+  CreatedBooking,
+  InvoiceNumber,
+  PaymentSide,
+  ServiceSectionPatch,
+} from './bookings';
 export { createClient, createDmc, deleteClient, deleteDmc, updateClient, updateDmc } from './directory';
 export { deleteEnquiry, saveEnquiryNotes, setEnquiryStatus } from './enquiries';
 export { getBusinessProfile, saveBusinessProfile } from './businessProfile';

@@ -1,7 +1,7 @@
 /** Firestore document data → model objects (Timestamps → Date, defaults for missing fields), and write helpers. */
 import { deleteField, Timestamp, type DocumentData, type FieldValue } from 'firebase/firestore';
 import type { Booking, BusinessProfile, Client, Dmc, Enquiry } from '../model';
-import { BUSINESS_PROFILE_FIELDS } from '../model';
+import { BOOKING_CATEGORIES, BUSINESS_PROFILE_FIELDS, TRIP_SCOPES } from '../model';
 
 export const COLLECTIONS = {
   clients: 'clients',
@@ -103,6 +103,9 @@ export function bookingFromDoc(id: string, d: DocumentData): Booking {
     bookingSeq: typeof d.bookingSeq === 'number' ? d.bookingSeq : 0,
     clientId: str(d.clientId) ?? '',
     status: d.status ?? 'Pending',
+    category: BOOKING_CATEGORIES.find((c) => c === d.category) ?? 'Package',
+    tripScope: TRIP_SCOPES.find((t) => t === d.tripScope),
+    hasTravel: d.hasTravel !== false,
     destination: str(d.destination) ?? '',
     travelStart: str(d.travelStart) ?? '',
     travelEnd: str(d.travelEnd) ?? '',

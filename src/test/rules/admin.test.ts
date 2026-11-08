@@ -196,8 +196,28 @@ describe('bookings', () => {
     await assertSucceeds(updateDoc(doc(admin, 'bookings/b1'), { status: 'Confirmed', updatedAt: now() }));
   });
 
+  it('allows a legacy Booking (no category, no hasTravel)', async () => {
+    await assertSucceeds(setDoc(doc(admin, 'bookings/b1'), booking()));
+  });
+
+  it('allows a Visa Booking without Travel', async () => {
+    const data = booking({
+      category: 'Visa',
+      hasTravel: false,
+      destination: undefined,
+      travelStart: undefined,
+      travelEnd: undefined,
+      lines: [{ id: 'l1', type: 'Visa', description: 'UAE visa', netCost: 0, visaType: 'Visitor', visaCountry: 'UAE' }],
+    });
+    for (const [k, v] of Object.entries(data)) if (v === undefined) delete (data as Record<string, unknown>)[k];
+    await assertSucceeds(setDoc(doc(admin, 'bookings/b1'), data));
+  });
+
   it.each([
     ['an unknown key', { totalPaid: 0 }],
+    ['a bad category', { category: 'Cruise' }],
+    ['a bad trip scope', { tripScope: 'Local' }],
+    ['Travel on without dates', { hasTravel: true, travelStart: undefined }],
     ['negative money', { sellingPrice: -1 }],
     ['fractional money', { sellingPrice: 10.5 }],
     ['a bad status', { status: 'Booked' }],

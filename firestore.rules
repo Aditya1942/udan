@@ -152,20 +152,27 @@ service cloud.firestore {
 
     function isValidBooking(d) {
       return d.keys().hasOnly([
-          'bookingNo', 'bookingSeq', 'clientId', 'status', 'destination', 'travelStart', 'travelEnd',
+          'bookingNo', 'bookingSeq', 'clientId', 'status', 'category', 'tripScope', 'hasTravel',
+          'destination', 'travelStart', 'travelEnd',
           'pax', 'travellerNames', 'itinerary', 'internalNotes', 'sellingPrice', 'clientBalanceDueBy',
           'lines', 'clientPayments', 'dmcPayments', 'invoiceNo', 'invoiceSeq', 'invoiceDate', 'enquiryId',
           'cancelledAt', 'cancelReason', 'clientCancellationCharge', 'createdAt', 'updatedAt'])
         && d.keys().hasAll([
-          'bookingNo', 'bookingSeq', 'clientId', 'status', 'destination', 'travelStart', 'travelEnd',
+          'bookingNo', 'bookingSeq', 'clientId', 'status',
           'pax', 'travellerNames', 'itinerary', 'internalNotes', 'sellingPrice',
           'lines', 'clientPayments', 'dmcPayments', 'createdAt', 'updatedAt'])
         && d.bookingNo is string && d.bookingNo.matches('^UDN-[0-9]{3,}$')
         && d.bookingSeq is int && d.bookingSeq >= 1
         && nonEmptyString(d.clientId, 200)
         && d.status in bookingStatuses()
-        && nonEmptyString(d.destination, 200)
-        && isDate(d.travelStart) && isDate(d.travelEnd) && d.travelEnd >= d.travelStart
+        && (!('category' in d) || d.category in ['Visa', 'Passport', 'Package', 'Hotel', 'Flight', 'Train', 'Bus'])
+        && (!('tripScope' in d) || d.tripScope in ['Domestic', 'International'])
+        && (!('hasTravel' in d) || d.hasTravel is bool)
+        && (!('destination' in d) || (d.destination is string && d.destination.size() <= 200))
+        && optDate(d, 'travelStart') && optDate(d, 'travelEnd')
+        && (!('travelStart' in d) || !('travelEnd' in d) || d.travelEnd >= d.travelStart)
+        && (d.get('hasTravel', true) == false
+            || (nonEmptyString(d.get('destination', ''), 200) && 'travelStart' in d && 'travelEnd' in d))
         && isValidPax(d.pax)
         && d.travellerNames is list
         && d.itinerary is string && d.internalNotes is string

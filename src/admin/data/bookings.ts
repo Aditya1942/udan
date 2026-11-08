@@ -20,6 +20,8 @@ import {
   lineDmcIds,
   newId,
   todayIST,
+  untagStalePayments,
+  validatePayment,
   type Booking,
   type BookingDraft,
   type BookingEditableFields,
@@ -35,7 +37,7 @@ import { bookingFromDoc, clean, COLLECTIONS, toUpdate } from './convert';
 import { clientCreateData } from './directory';
 import { AdminDataError, run } from './errors';
 
-const OPTIONAL_BOOKING_KEYS = ['clientBalanceDueBy'] as const;
+const OPTIONAL_BOOKING_KEYS = ['clientBalanceDueBy', 'travelStart', 'travelEnd', 'tripScope'] as const;
 
 async function readBooking(tx: Transaction, db: Firestore, bookingId: string): Promise<Booking> {
   const snap = await tx.get(doc(db, COLLECTIONS.bookings, bookingId));
@@ -98,6 +100,8 @@ export function createBooking(db: Firestore, draft: BookingDraft, opts: CreateBo
           ...draft,
           clientId,
           clientBalanceDueBy: draft.clientBalanceDueBy || undefined,
+          travelStart: draft.travelStart || undefined,
+          travelEnd: draft.travelEnd || undefined,
           bookingNo,
           bookingSeq: seq,
           status: 'Pending' satisfies BookingStatus,
@@ -149,15 +153,16 @@ export function allocateInvoiceNo(
   );
 }
 
-/** Fields one section Save may write (Client, Travel, Price, Service lines, Notes). */
+/** Fields one section Save may write (Customer, Service, Travel, Travellers, Price, Notes). */
 export type BookingSectionPatch = Partial<BookingEditableFields>;
 
 /** Section keys, for building patches from form state. */
 export const BOOKING_SECTIONS = {
   client: ['clientId'],
-  travel: ['destination', 'travelStart', 'travelEnd', 'pax', 'travellerNames', 'itinerary'],
+  service: ['category', 'tripScope', 'lines'],
+  travel: ['hasTravel', 'destination', 'travelStart', 'travelEnd', 'itinerary', 'pax', 'travellerNames'],
+  travellers: ['pax', 'travellerNames'],
   price: ['sellingPrice', 'clientBalanceDueBy'],
-  lines: ['lines'],
   notes: ['internalNotes'],
 } as const satisfies Record<string, readonly (keyof BookingEditableFields)[]>;
 
@@ -185,6 +190,32 @@ export function saveBookingSection(
     await batch.commit();
     return { clientId };
   });
+}
+
+export type ServiceSectionPatch = Pick<BookingEditableFields, 'category' | 'tripScope' | 'lines'>;
+
+/**
+ * Service section Save: one transaction writes Category, Trip Scope and lines, and drops payment tags that
+ * the new lines make stale (deleted line, or a DMC Payment whose line changed DMC). Payments stay; `untagged` counts them.
+ */
+export function saveServiceSection(
+  db: Firestore,
+  bookingId: string,
+  patch: ServiceSectionPatch,
+): Promise<{ untagged: { client: number; dmc: number } }> {
+  return run(() =>
+    runTransaction(db, async (tx) => {
+      const booking = await readBooking(tx, db, bookingId);
+      const { clientPayments, dmcPayments, untagged } = untagStalePayments(booking, patch.lines);
+      tx.update(doc(db, COLLECTIONS.bookings, bookingId), {
+        ...toUpdate({ ...patch }, OPTIONAL_BOOKING_KEYS),
+        ...(untagged.client ? { clientPayments: clean(clientPayments) } : {}),
+        ...(untagged.dmc ? { dmcPayments: clean(dmcPayments) } : {}),
+        updatedAt: serverTimestamp(),
+      });
+      return { untagged };
+    }),
+  );
 }
 
 const CANCEL_FIELDS = { cancelledAt: deleteField(), cancelReason: deleteField(), clientCancellationCharge: deleteField() };
@@ -278,6 +309,11 @@ function checkDmc(booking: Booking, entry: Partial<DmcPayment>) {
     throw new AdminDataError('conflict', 'That DMC is no longer on this booking');
 }
 
+function checkLine(booking: Booking, entry: Partial<ClientPayment>) {
+  if (validatePayment(entry, undefined, booking.lines).lineId)
+    throw new AdminDataError('conflict', 'That service is no longer on this booking');
+}
+
 export async function addPayment<S extends PaymentSide>(
   db: Firestore,
   bookingId: string,
@@ -287,6 +323,7 @@ export async function addPayment<S extends PaymentSide>(
   const id = newId();
   await editPayments(db, bookingId, side, (entries, booking) => {
     if (side === 'dmc') checkDmc(booking, entry as Partial<DmcPayment>);
+    checkLine(booking, entry);
     return [...entries, { ...entry, id } as Entry<S>];
   });
   return id;
@@ -298,6 +335,7 @@ export function updatePayment<S extends PaymentSide>(db: Firestore, bookingId: s
     if (i < 0) throw new AdminDataError('conflict', 'That entry no longer exists');
     const prev = entries[i] as Partial<DmcPayment>;
     if (side === 'dmc' && prev.dmcId !== (entry as DmcPayment).dmcId) checkDmc(booking, entry as DmcPayment);
+    checkLine(booking, entry);
     entries[i] = entry;
     return entries;
   });
