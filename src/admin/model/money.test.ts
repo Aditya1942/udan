@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { bookingMoney, formatINR, linesMissingConfirmation, lineDmcIds } from './money';
+import { bookingMoney, formatINR, linesMissingConfirmation, lineDmcIds, lineMoney, untagStalePayments } from './money';
 import { booking, dmcPay, line, pay, refund } from './testFixtures';
 
 describe('bookingMoney: not cancelled', () => {
@@ -97,5 +97,32 @@ describe('helpers', () => {
     const b = booking({ lines: [line({ dmcId: 'd1', confirmationNo: 'ABC' }), line({ dmcId: 'd2', confirmationNo: ' ' }), line({ dmcId: 'd1' })] });
     expect(linesMissingConfirmation(b)).toHaveLength(2);
     expect(lineDmcIds(b)).toEqual(['d1', 'd2']);
+  });
+});
+
+describe('in-house lines and per-line money', () => {
+  it('in-house lines count in Net Cost but in no DMC', () => {
+    const m = bookingMoney(booking({ sellingPrice: 10_000, lines: [line({ dmcId: undefined, netCost: 2_000 }), line({ dmcId: 'd1', netCost: 5_000 })] }));
+    expect(m.netCost).toBe(7_000);
+    expect(m.dmcs.map((d) => d.dmcId)).toEqual(['d1']);
+    expect(lineDmcIds(booking({ lines: [line({ dmcId: undefined })] }))).toEqual([]);
+  });
+  it('lineMoney: per-line received, paid and owed from tagged entries', () => {
+    const b = booking({
+      lines: [line({ id: 'la', dmcId: 'd1', netCost: 8_000 }), line({ id: 'lb', dmcId: undefined, netCost: 1_000 })],
+      clientPayments: [pay(3_000, { lineId: 'la' }), pay(500)],
+      dmcPayments: [dmcPay('d1', 5_000, { lineId: 'la' }), dmcPay('d1', 1_000)],
+    });
+    expect(lineMoney(b)).toEqual([
+      { lineId: 'la', dmcId: 'd1', cost: 8_000, clientReceived: 3_000, dmcPaid: 5_000, dmcOwed: 3_000 },
+      { lineId: 'lb', dmcId: undefined, cost: 1_000, clientReceived: 0, dmcPaid: 0, dmcOwed: undefined },
+    ]);
+  });
+  it('untagStalePayments clears tags for deleted lines and for DMC changes', () => {
+    const prev = { clientPayments: [pay(1, { lineId: 'gone' }), pay(2, { lineId: 'la' })], dmcPayments: [dmcPay('d1', 3, { lineId: 'la' })] };
+    const r = untagStalePayments(prev, [line({ id: 'la', dmcId: 'd2' })]);
+    expect(r.clientPayments.map((p) => p.lineId)).toEqual([undefined, 'la']);
+    expect(r.dmcPayments[0].lineId).toBeUndefined();
+    expect(r.untagged).toEqual({ client: 1, dmc: 1 });
   });
 });

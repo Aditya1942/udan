@@ -2,12 +2,15 @@
  * Form validation for Booking drafts, Service Lines and payment entries.
  * Rules don't validate inside arrays, so these are the only guard for array contents.
  */
+import { divisionOf, isSingleService } from './category';
 import { isISODate } from './dates';
 import { isRupees } from './money';
 import {
+  BOOKING_CATEGORIES,
   LINE_TYPES,
   PAY_MODES,
   PAYMENT_KINDS,
+  VISA_TYPES,
   type BookingEditableFields,
   type ClientFields,
   type ClientPayment,
@@ -58,22 +61,36 @@ export function validateBookingFields(
 ): Errors<BookingErrorKey> {
   const e: Errors<BookingErrorKey> = {};
   if (requireClient && isBlank(b.clientId)) e.clientId = 'Choose a Customer.';
-  if (isBlank(b.destination)) e.destination = 'Enter a destination.';
-  if (!isISODate(b.travelStart)) e.travelStart = 'Enter the travel start date.';
-  if (!isISODate(b.travelEnd)) e.travelEnd = 'Enter the travel end date.';
-  else if (isISODate(b.travelStart) && b.travelEnd < b.travelStart) e.travelEnd = 'Travel end must be on or after the start.';
+  const category = b.category && BOOKING_CATEGORIES.includes(b.category) ? b.category : undefined;
+  if (!category) e.category = 'Choose a category.';
+  if (category === 'Package' && !b.tripScope) e.tripScope = 'Choose Domestic or International.';
+  if (b.hasTravel) {
+    if (isBlank(b.destination)) e.destination = 'Enter a destination.';
+    if (!isISODate(b.travelStart)) e.travelStart = 'Enter the travel start date.';
+    if (!isISODate(b.travelEnd)) e.travelEnd = 'Enter the travel end date.';
+    else if (isISODate(b.travelStart) && b.travelEnd < b.travelStart) e.travelEnd = 'Travel end must be on or after the start.';
+  }
   if (!isRupees(b.sellingPrice)) e.sellingPrice = 'Enter a whole rupee amount (0 or more).';
   if (b.clientBalanceDueBy !== undefined && !isISODate(b.clientBalanceDueBy)) e.clientBalanceDueBy = 'Enter a valid date.';
   if (b.pax && !(isRupees(b.pax.adults) && isRupees(b.pax.children) && isRupees(b.pax.infants)))
     e.pax = 'Passenger counts must be whole numbers.';
-  if (b.lines?.some((l) => Object.keys(validateLine(l)).length)) e.lines = 'Fix the Service Line errors.';
+  if (category && divisionOf(category) === 'Immigration') {
+    if (!b.travellerNames?.some((n) => !isBlank(n))) e.travellerNames = 'Add at least one traveller name.';
+    if (b.pax && !e.pax && b.pax.adults + b.pax.children + b.pax.infants === 0) e.pax = 'Add at least one traveller.';
+  }
+  if (category) {
+    const count = b.lines?.length ?? 0;
+    if (!isSingleService(category)) {
+      if (count === 0) e.lines = 'Add at least one service.';
+    } else if (count !== 1) e.lines = 'Add the service details.';
+  }
+  if (!e.lines && b.lines?.some((l) => Object.keys(validateLine(l)).length)) e.lines = 'Fix the Service Line errors.';
   return e;
 }
 
 export function validateLine(l: Partial<ServiceLine>): Errors<keyof ServiceLine> {
   const e: Errors<keyof ServiceLine> = {};
   if (!l.type || !LINE_TYPES.includes(l.type)) e.type = 'Choose a type.';
-  if (isBlank(l.dmcId)) e.dmcId = 'Choose a DMC.';
   if (isBlank(l.description)) e.description = 'Enter a description.';
   if (!isRupees(l.netCost)) e.netCost = 'Enter a whole rupee amount (0 or more).';
   if (l.start !== undefined && !isISODate(l.start)) e.start = 'Enter a valid date.';
@@ -82,13 +99,21 @@ export function validateLine(l: Partial<ServiceLine>): Errors<keyof ServiceLine>
   if (l.dmcPayBy !== undefined && !isISODate(l.dmcPayBy)) e.dmcPayBy = 'Enter a valid date.';
   if (l.dmcCancellationCharge !== undefined && !isRupees(l.dmcCancellationCharge))
     e.dmcCancellationCharge = 'Enter a whole rupee amount (0 or more).';
+  if (l.type === 'Visa') {
+    if (!l.visaType || !VISA_TYPES.includes(l.visaType)) e.visaType = 'Choose a visa type.';
+    if (isBlank(l.visaCountry)) e.visaCountry = 'Enter the country.';
+  }
   return e;
 }
 
-/** Payments need date, kind, mode, amount > 0. DMC entries need one of `allowedDmcIds` (the Booking's line DMCs). */
+/**
+ * Payments need date, kind, mode, amount > 0. DMC entries need one of `allowedDmcIds` (the Booking's line DMCs).
+ * With `lines`, a tagged `lineId` must be one of them (and, for DMC entries, a line of that DMC).
+ */
 export function validatePayment(
   p: Partial<DmcPayment> | Partial<ClientPayment>,
   allowedDmcIds?: readonly string[],
+  lines?: readonly ServiceLine[],
 ): Errors<keyof DmcPayment> {
   const e: Errors<keyof DmcPayment> = {};
   if (!isISODate(p.date)) e.date = 'Enter a date.';
@@ -98,6 +123,14 @@ export function validatePayment(
   if (allowedDmcIds) {
     const dmcId = (p as Partial<DmcPayment>).dmcId;
     if (!dmcId || !allowedDmcIds.includes(dmcId)) e.dmcId = 'Choose a DMC on this booking.';
+  }
+  if (p.lineId && lines) {
+    const tagged = lines.find((l) => l.id === p.lineId);
+    if (!tagged) e.lineId = 'Choose a service on this booking.';
+    else {
+      const dmcId = (p as Partial<DmcPayment>).dmcId;
+      if (dmcId && tagged.dmcId !== dmcId) e.lineId = 'Choose a service from this DMC.';
+    }
   }
   return e;
 }

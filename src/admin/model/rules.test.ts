@@ -6,7 +6,8 @@ import { emailSubject, invoiceFilename, shareMessage, voucherFilename, whatsappU
 import { bookingFlags, travelEndedNotCompleted } from './flags';
 import { formatBookingNo, formatInvoiceNo, invoiceSeries, parseBookingNo } from './numbering';
 import { booking, dmcPay, line, pay } from './testFixtures';
-import { validateBookingFields, validatePayment } from './validate';
+import type { BookingEditableFields } from './types';
+import { validateBookingFields, validateLine, validatePayment } from './validate';
 
 describe('counting rules', () => {
   const t = totals([
@@ -82,6 +83,13 @@ describe('flags', () => {
     expect(travelEndedNotCompleted(booking({ travelEnd: '2026-11-09', status: 'Pending' }), today)).toBe(false);
   });
 
+  it('travelEnded uses the latest line end when travelEnd is empty; false with no dates', () => {
+    const lines = [line({ end: '2026-11-05' }), line({ end: '2026-11-09' })];
+    expect(travelEndedNotCompleted(booking({ travelEnd: '', lines }), today)).toBe(true);
+    expect(travelEndedNotCompleted(booking({ travelEnd: '', lines: [line({ end: '2026-11-10' })] }), today)).toBe(false);
+    expect(travelEndedNotCompleted(booking({ travelEnd: '', lines: [line()] }), today)).toBe(false);
+  });
+
   it('flags a Customer balance overdue only after the due date and while owed', () => {
     const b = booking({ sellingPrice: 10_000, clientBalanceDueBy: '2026-11-09' });
     expect(bookingFlags(b, today).clientOverdue).toBe(true);
@@ -146,10 +154,30 @@ describe('numbering and documents', () => {
 });
 
 describe('validation', () => {
-  it('requires the Booking basics and travelEnd >= travelStart', () => {
-    const e = validateBookingFields({ destination: ' ', travelStart: '2026-11-10', travelEnd: '2026-11-09', sellingPrice: 1.5 });
-    expect(Object.keys(e).sort()).toEqual(['clientId', 'destination', 'sellingPrice', 'travelEnd']);
-    expect(validateBookingFields({ destination: 'Goa', travelStart: '2026-11-10', travelEnd: '2026-11-10', sellingPrice: 0 }, { requireClient: false })).toEqual({});
+  const base: Partial<BookingEditableFields> = { category: 'Hotel', hasTravel: false, sellingPrice: 0, pax: { adults: 1, children: 0, infants: 0 }, travellerNames: [], lines: [line()] };
+  it('requires a Category; skips Travel checks when Travel is not added', () => {
+    expect(validateBookingFields({ ...base, category: undefined }, { requireClient: false })).toHaveProperty('category');
+    expect(validateBookingFields({ ...base, destination: '', travelStart: '' }, { requireClient: false })).toEqual({});
+    expect(Object.keys(validateBookingFields({ ...base, hasTravel: true, destination: ' ', travelStart: '2026-11-10', travelEnd: '2026-11-09' }, { requireClient: false })).sort()).toEqual(['destination', 'travelEnd']);
+  });
+  it('Package needs Trip Scope and ≥1 line; single Categories exactly 1 line', () => {
+    expect(validateBookingFields({ ...base, category: 'Package', lines: [] }, { requireClient: false })).toEqual({ tripScope: 'Choose Domestic or International.', lines: 'Add at least one service.' });
+    expect(validateBookingFields({ ...base, lines: [line(), line()] }, { requireClient: false })).toHaveProperty('lines');
+  });
+  it('Immigration needs travellers', () => {
+    const e = validateBookingFields({ ...base, category: 'Passport', pax: { adults: 0, children: 0, infants: 0 }, lines: [line({ type: 'Passport' })] }, { requireClient: false });
+    expect(e).toMatchObject({ travellerNames: 'Add at least one traveller name.', pax: 'Add at least one traveller.' });
+  });
+  it('DMC optional on lines; Visa lines need type and country', () => {
+    expect(validateLine(line({ dmcId: undefined }))).toEqual({});
+    expect(validateLine(line({ type: 'Visa' }))).toEqual({ visaType: 'Choose a visa type.', visaCountry: 'Enter the country.' });
+  });
+  it('a tagged payment must point at a line on the Booking (DMC: of that DMC)', () => {
+    const lines = [line({ id: 'la', dmcId: 'd1' }), line({ id: 'lb', dmcId: undefined })];
+    const p = { date: '2026-11-01', kind: 'Payment', mode: 'UPI', amount: 5 } as const;
+    expect(validatePayment({ ...p, lineId: 'zz' }, undefined, lines)).toHaveProperty('lineId');
+    expect(validatePayment({ ...p, lineId: 'lb' }, undefined, lines)).toEqual({});
+    expect(validatePayment({ ...p, dmcId: 'd1', lineId: 'lb' }, ['d1'], lines)).toEqual({ lineId: 'Choose a service from this DMC.' });
   });
 
   it('requires payments > 0 and a DMC on the Booking', () => {

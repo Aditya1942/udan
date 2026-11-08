@@ -2,6 +2,7 @@
  * Booking flags, all relative to an IST "today" (`todayIST()`).
  * Money flags ignore Pending Bookings (quotes carry no outstanding under the counting rules).
  */
+import { bookingEndDate } from './category';
 import { addDays } from './dates';
 import { bookingMoney, dmcOutstandingFor, type BookingMoney } from './money';
 import type { Booking, ISODate, INR } from './types';
@@ -38,8 +39,9 @@ type FlagInput = Pick<
   'status' | 'travelEnd' | 'clientBalanceDueBy' | 'lines' | 'sellingPrice' | 'clientPayments' | 'dmcPayments' | 'clientCancellationCharge'
 >;
 
-export function travelEndedNotCompleted(b: Pick<Booking, 'status' | 'travelEnd'>, today: ISODate): boolean {
-  return b.travelEnd < today && (b.status === 'Confirmed' || b.status === 'Voucher Received');
+export function travelEndedNotCompleted(b: Pick<Booking, 'status' | 'travelEnd' | 'lines'>, today: ISODate): boolean {
+  const end = bookingEndDate(b);
+  return !!end && end < today && (b.status === 'Confirmed' || b.status === 'Voucher Received');
 }
 
 export function clientBalanceOverdue(b: FlagInput, today: ISODate, money: BookingMoney = bookingMoney(b)): boolean {
@@ -51,7 +53,7 @@ export function dmcPaymentsDue(b: FlagInput, today: ISODate, money: BookingMoney
   const horizon = addDays(today, DMC_DUE_DAYS);
   const out: DmcDue[] = [];
   for (const line of b.lines) {
-    if (!line.dmcPayBy || line.dmcPayBy > horizon) continue;
+    if (!line.dmcId || !line.dmcPayBy || line.dmcPayBy > horizon) continue;
     const outstanding = dmcOutstandingFor(money, line.dmcId);
     if (outstanding <= 0) continue;
     out.push({

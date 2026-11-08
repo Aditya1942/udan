@@ -5,7 +5,7 @@
  * Cancelled: Selling Price → `clientCancellationCharge`, each line's Net Cost → its `dmcCancellationCharge`.
  * Outstanding may be negative: Client "Refund ₹X" (owed to the Client) / DMC "Due back ₹X" (owed by the DMC).
  */
-import type { Booking, BookingFields, INR, PaymentEntry, ServiceLine } from './types';
+import type { Booking, BookingFields, ClientPayment, DmcPayment, INR, PaymentEntry, ServiceLine } from './types';
 
 /** The fields money depends on, so the rail can recompute from unsaved form values. */
 export type MoneyInput = Pick<
@@ -75,7 +75,7 @@ export function bookingMoney(b: MoneyInput): BookingMoney {
   for (const line of b.lines) {
     const cost = lineCost(line, cancelled);
     netCost += cost;
-    dmc(line.dmcId).cost += cost;
+    if (line.dmcId) dmc(line.dmcId).cost += cost;
   }
   for (const p of b.dmcPayments) {
     const m = dmc(p.dmcId);
@@ -114,9 +114,64 @@ export function linesMissingConfirmation(b: Pick<Booking, 'lines'>): ServiceLine
   return b.lines.filter((l) => !l.confirmationNo?.trim());
 }
 
-/** Unique DMC ids on a Booking's lines, in line order (DMC Payment targets). */
+/** Unique DMC ids on a Booking's lines, in line order (DMC Payment targets). In-house lines have none. */
 export function lineDmcIds(b: Pick<Booking, 'lines'>): string[] {
-  return [...new Set(b.lines.map((l) => l.dmcId))];
+  return [...new Set(b.lines.flatMap((l) => (l.dmcId ? [l.dmcId] : [])))];
+}
+
+export type LineMoney = {
+  lineId: string;
+  /** Absent = in-house. */
+  dmcId?: string;
+  cost: INR;
+  /** Net of refunds, from Client entries tagged to this line. */
+  clientReceived: INR;
+  /** Net of refunds, from DMC entries tagged to this line. */
+  dmcPaid: INR;
+  /** cost − dmcPaid; undefined for in-house lines. */
+  dmcOwed?: INR;
+};
+
+/** Per-line money from tagged payment entries, in line order. Untagged entries belong to no line. */
+export function lineMoney(b: MoneyInput): LineMoney[] {
+  const cancelled = isCancelled(b);
+  const tagged = (entries: readonly PaymentEntry[], lineId: string) => sumPayments(entries.filter((e) => e.lineId === lineId)).net;
+  return b.lines.map((line) => {
+    const cost = lineCost(line, cancelled);
+    const dmcPaid = tagged(b.dmcPayments, line.id);
+    return {
+      lineId: line.id,
+      dmcId: line.dmcId,
+      cost,
+      clientReceived: tagged(b.clientPayments, line.id),
+      dmcPaid,
+      dmcOwed: line.dmcId ? cost - dmcPaid : undefined,
+    };
+  });
+}
+
+/**
+ * Drops `lineId` from entries whose line was deleted, and from DMC entries whose line now has another DMC.
+ * Entries stay on the Booking, just untagged; `untagged` counts them for the UI to mention.
+ */
+export function untagStalePayments(
+  prev: Pick<Booking, 'clientPayments' | 'dmcPayments'>,
+  nextLines: readonly ServiceLine[],
+): { clientPayments: ClientPayment[]; dmcPayments: DmcPayment[]; untagged: { client: number; dmc: number } } {
+  const byId = new Map(nextLines.map((l) => [l.id, l]));
+  const untag = <T extends ClientPayment>(entries: readonly T[], stale: (p: T) => boolean) => {
+    let count = 0;
+    const out = entries.map((p) => {
+      if (!p.lineId || !stale(p)) return p;
+      count++;
+      const { lineId: _lineId, ...rest } = p;
+      return rest as T;
+    });
+    return { out, count };
+  };
+  const client = untag(prev.clientPayments, (p) => !byId.has(p.lineId!));
+  const dmc = untag(prev.dmcPayments, (p) => byId.get(p.lineId!)?.dmcId !== p.dmcId);
+  return { clientPayments: client.out, dmcPayments: dmc.out, untagged: { client: client.count, dmc: dmc.count } };
 }
 
 const inrFormat = new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 });
