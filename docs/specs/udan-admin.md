@@ -41,21 +41,27 @@ Vocabulary follows `GLOSSARY.md` (Admin, Client, DMC, Booking, Booking Status, S
 
 ### Bookings
 
-8. As an Admin, I want to create a Booking with a Client, travel details, Selling Price and Service Lines on one page, so that I capture a sale in one go.
+8. As an Admin, I want to create a Booking with a Client, a Booking Category, a Selling Price and its service(s) on one page, with travel details optional, so that I capture a sale in one go.
 9. As an Admin, I want each Booking to get the next Booking ID (`UDN-001`, `UDN-002`, …) when I first save it, so that IDs are sequential and never reused.
 10. As an Admin, I want to pick an existing Client by name or mobile, or create a new one inline, so that Client records stay reusable.
-11. As an Admin, I want to add Service Lines (Hotel, Transfer, Flight, Sightseeing, Visa, Package, Other), each with its own DMC, Net Cost, dates, pay-by date and confirmation number, so that one Booking can use several DMCs.
+11. As an Admin, I want to add Service Lines (Hotel, Transfer, Flight, Train, Bus, Sightseeing, Visa, Passport, Package, Other), each with an optional DMC, its own Net Cost, dates, pay-by date and confirmation number, so that one Booking can use several DMCs or UDAN itself.
 12. As an Admin, I want to create a new DMC from inside a Service Line, so that I don't lose my place in the Booking.
 13. As an Admin, I want to edit each section of a Booking (Client, Travel, Price, Service lines, Notes) in place with its own Save and Cancel, so that small changes are quick and safe.
 14. As an Admin, I want Selling Price, Net Cost, Commission, Client outstanding and DMC outstanding always visible beside the Booking and updated live while I edit, so that I see the money effect before saving.
-15. As an Admin, I want to record Client Payments and Refunds inline (date, kind, mode, reference, amount), and to edit or delete them, so that the Client balance is always right.
-16. As an Admin, I want to record DMC Payments and Refunds against a specific DMC on the Booking, so that I know what I owe each DMC.
+15. As an Admin, I want to record Client Payments and Refunds inline (date, kind, mode, reference, amount, optional Service Line), and to edit or delete them, so that the Client balance is always right and I can see what was received per service.
+16. As an Admin, I want to record DMC Payments and Refunds against a specific DMC on the Booking, optionally for one of that DMC's Service Lines, so that I know what I owe each DMC and each line.
 17. As an Admin, I want to change the Booking Status in any direction from a select, so that the status matches reality even after a mistake.
 18. As an Admin, I want cancelling to ask for a reason, the Client Cancellation Charge and each line's DMC Cancellation Charge, with a live preview of Commission and refunds, so that I understand the outcome before confirming.
 19. As an Admin, I want to un-cancel a Booking, so that a wrong cancellation can be reversed.
 20. As an Admin, I want a warning (not a block) when I set Voucher Received while some Service Lines lack a confirmation number, so that I don't send an incomplete Voucher by accident.
 21. As an Admin, I want a "Mark Completed?" note on Bookings whose travel has ended, so that statuses don't go stale.
 22. As an Admin, I want Bookings never deleted, only cancelled, so that the Booking ID series and money history stay intact.
+- 22a. As an Admin, I want to choose a Booking Category (Visa, Passport, Package, Hotel, Flight, Train, Bus) right after the Customer, so that the form shows only what that kind of sale needs.
+- 22b. As an Admin, I want a single-service Booking to show its service's fields inline, and an "Add more service" button that turns it into a Package, so that simple sales stay simple and can grow.
+- 22c. As an Admin, I want to set a Package's Trip Scope (Domestic / International), so that I can tell the two apart.
+- 22d. As an Admin, I want a Visa service to carry its Visa Type (Visitor / Business) and country, so that I know what is being applied for.
+- 22e. As an Admin, I want travel details behind an "Add travel details" button, so that I skip them when they don't apply.
+- 22f. As an Admin, I want each Booking's Division (Travel / Immigration) to follow from its Category, so that I can filter by line of business without extra input.
 
 ### Dashboard — Overview
 
@@ -64,7 +70,7 @@ Vocabulary follows `GLOSSARY.md` (Admin, Client, DMC, Booking, Booking Status, S
 25. As an Admin, I want a Needs attention list (Client balances overdue, DMC payments due in 7 days or overdue, travel ended but not Completed, refunds owed, new Enquiries, Backup overdue), so that I know what to act on today.
 26. As an Admin, I want a calendar of Bookings drawn as bars across their travel days, labelled with Booking ID and Client, coloured by status, so that I see who is travelling when.
 27. As an Admin, I want to click an empty calendar day to start a New booking with that start date, so that I can capture a trip from the calendar.
-28. As an Admin, I want a Bookings table with search, advanced filters, sorting, footer totals and CSV export, all kept in the URL, so that I can find and share any slice of Bookings.
+28. As an Admin, I want a Bookings table (with Category column and Category / Division filters) with search, advanced filters, sorting, footer totals and CSV export, all kept in the URL, so that I can find and share any slice of Bookings.
 29. As an Admin on a phone, I want an agenda list instead of the month grid and cards instead of table rows, so that the dashboard works on a small screen.
 
 ### Dashboard — Insights
@@ -164,7 +170,11 @@ type ISODate = string;   // 'YYYY-MM-DD', IST
 type INR = number;       // integer rupees, >= 0
 type PayMode = 'Cash' | 'UPI' | 'Bank transfer' | 'Card' | 'Cheque' | 'Other';
 type BookingStatus = 'Pending' | 'Confirmed' | 'Voucher Received' | 'Completed' | 'Cancelled';
-type LineType = 'Hotel' | 'Transfer' | 'Flight' | 'Sightseeing' | 'Visa' | 'Package' | 'Other';
+type LineType = 'Hotel' | 'Transfer' | 'Flight' | 'Train' | 'Bus' | 'Sightseeing' | 'Visa' | 'Passport' | 'Package' | 'Other';
+type BookingCategory = 'Visa' | 'Passport' | 'Package' | 'Hotel' | 'Flight' | 'Train' | 'Bus';
+type Division = 'Travel' | 'Immigration';   // derived, never stored: Visa/Passport → Immigration, else Travel
+type TripScope = 'Domestic' | 'International';
+type VisaType = 'Visitor' | 'Business';
 
 // clients/{autoId}
 type Client = {
@@ -189,8 +199,11 @@ type Booking = {
   bookingSeq: number;      // 1, 2, … — immutable; sort key
   clientId: string;
   status: BookingStatus;
-  destination: string;
-  travelStart: ISODate; travelEnd: ISODate;   // entered, not derived from lines
+  category: BookingCategory;                  // absent on legacy docs = 'Package'
+  tripScope?: TripScope;                      // Package only; required on save of a Package
+  hasTravel?: boolean;                        // false = Travel section skipped ("Add travel details")
+  destination: string;                        // '' when Travel skipped
+  travelStart?: ISODate; travelEnd?: ISODate; // entered, not derived from lines; optional with Travel
   pax: { adults: number; children: number; infants: number };
   travellerNames: string[];                   // optional names
   itinerary: string;                          // free text, printed as-is on the Voucher
@@ -209,13 +222,14 @@ type Booking = {
 };
 type ServiceLine = {
   id: string;              // crypto.randomUUID()
-  type: LineType; dmcId: string; description: string;
+  type: LineType; dmcId?: string; description: string;   // no dmcId = UDAN does it in-house
+  visaType?: VisaType; visaCountry?: string;  // Visa lines only; both required there
   start?: ISODate; end?: ISODate;             // absent = "Whole trip"
   netCost: INR;
   confirmationNo?: string; voucherNotes?: string; dmcPayBy?: ISODate;
-  dmcCancellationCharge?: INR;                // only while Cancelled
+  dmcCancellationCharge?: INR;                // only while Cancelled; for in-house lines = cost UDAN still bears
 };
-type ClientPayment = { id: string; kind: 'Payment' | 'Refund'; date: ISODate; amount: INR; mode: PayMode; ref?: string; note?: string };
+type ClientPayment = { id: string; kind: 'Payment' | 'Refund'; date: ISODate; amount: INR; mode: PayMode; ref?: string; note?: string; lineId?: string };
 type DmcPayment = ClientPayment & { dmcId: string };
 
 // counters/booking, counters/invoice-2026-27
@@ -242,20 +256,24 @@ type EnquiryAdminFields = {
 };
 ```
 
+- **Lines per Category** (ADR 0001): every non-Package Booking holds exactly one Service Line, whose `type` equals the Category; a Package holds ≥ 1. "Add more service" appends a line and sets `category: 'Package'`. Changing Category between single Categories rewrites the line's `type`; Package → single Category only with exactly one line. Deleting lines never turns a Package back.
+- **Legacy docs**: Bookings saved before Categories read as `category: 'Package'`, `hasTravel: true`, no `tripScope` (asked on next save).
 - **Embedded lists**: Service Lines and both payment lists live inside the Booking doc. That means one read and an atomic save, far below the 1 MiB limit.
 - **Nothing denormalised**: no Client name snapshot, no stored totals. The admin loads `clients`, `dmcs`, `bookings` and `inquiries` once per session with `onSnapshot` listeners in one `AdminDataProvider`. That gives live updates and keeps concurrent Admins in sync. All joins, totals, filters and search are computed in the browser. Volume is a few hundred Bookings a year, well under Spark's 50K reads/day.
-- **Integrity checks done client-side**: a Client or DMC can't be deleted while any Booking references it (UI shows "Used in N bookings", delete disabled). Client mobile is unique. `travelEnd >= travelStart`. A DMC Payment's `dmcId` must be one of the Booking's line DMCs at the time of entry.
+- **Integrity checks done client-side**: a Client or DMC can't be deleted while any Booking references it (UI shows "Used in N bookings", delete disabled). Client mobile is unique. `travelEnd >= travelStart`. A DMC Payment's `dmcId` must be one of the Booking's line DMCs at the time of entry. A payment's `lineId`, when set, must be a line on the Booking (for DMC Payments, a line of that DMC). Deleting a line clears `lineId` on payments tagged to it; changing a line's DMC clears `lineId` on DMC Payments tagged to it (they stay on the old DMC's total; the form warns before saving).
 - **Seeding `settings/business`**: on first open of Settings, or on first Prepare, if the doc is missing, seed it from `src/content/business.ts` (trading name, address, phone). Email and website stay empty. The logo is the bundled `src/assets/brand/` asset and can't be edited.
 
 ### Money rules (one pure module: `src/admin/model/money.ts`)
 
 Not Cancelled:
 
-- Net Cost = Σ line `netCost`
+- Net Cost = Σ line `netCost` (lines with or without a DMC)
 - Commission = Selling Price − Net Cost
 - Client net received = Σ Client Payments − Σ Client Refunds
 - Client outstanding = Selling Price − Client net received
-- DMC outstanding (per DMC) = Σ that DMC's lines' `netCost` − (Σ its DMC Payments − Σ its DMC Refunds). Total DMC outstanding = the sum over DMCs.
+- DMC outstanding (per DMC) = Σ that DMC's lines' `netCost` − (Σ its DMC Payments − Σ its DMC Refunds). Total DMC outstanding = the sum over DMCs. In-house lines (no DMC) count in Net Cost but in no DMC's outstanding.
+- Per line, DMC side (display only): paid = Σ DMC Payments − Refunds tagged to that line; still owed = line `netCost` (or `dmcCancellationCharge`) − paid. Untagged payments reduce only the DMC total, which stays the source of truth.
+- Per line, Client side (display only): received = Σ Client Payments − Refunds tagged to that line. No per-line Client outstanding (lines have no Selling Price).
 
 Cancelled:
 
@@ -275,11 +293,11 @@ Deleting a line that has DMC Payments is allowed. That DMC's outstanding may go 
 | Confirmed / Voucher Received / Completed | included | included | included |
 | Cancelled | cancellation outstanding; negatives listed separately as Refunds owed, never netted into totals | Cancellation Charge as Selling Price, Σ line Cancellation Charges as Net Cost | excluded from counts; feeds Cancellation rate |
 
-**Month basis**: a Booking belongs to the IST month of its `travelStart` in every money or month view.
+**Month basis**: a Booking belongs to the IST month of its **Booking date** in every money or month view: `travelStart` if set, else the earliest line `start`, else the IST date of `createdAt`. Its **end date** is `travelEnd` if set, else the latest line `end`, else none.
 
 **Flags**:
 
-- **Travel ended, not marked Completed** = `travelEnd < today` and status is Confirmed or Voucher Received.
+- **Travel ended, not marked Completed** = end date (see Month basis) `< today` and status is Confirmed or Voucher Received. Never shown when there is no end date.
 - **Client balance overdue** = `clientBalanceDueBy < today` and Client outstanding > 0.
 - **DMC payment due / overdue** = a line's `dmcPayBy` within the next 7 days / before today, and that DMC's outstanding on the Booking > 0.
 
@@ -296,7 +314,7 @@ Deleting a line that has DMC Payments is allowed. That DMC's outstanding may go 
 - Meanings, not gates: Pending = quote stage; Confirmed = Client committed + DMC(s) booked; Voucher Received = confirmation numbers in hand; Completed = travelled.
 - → **Voucher Received** while any line lacks `confirmationNo`: an inline warning, but the change still saves.
 - → **Cancelled** opens the **Cancel dialog**:
-  - Fields: reason (required), Client Cancellation Charge (default 0; hint shows the original Selling Price), and a DMC Cancellation Charge per line (default 0).
+  - Fields: reason (required), Client Cancellation Charge (default 0; hint shows the original Selling Price), and a Cancellation Charge per line (default 0) — what the DMC keeps, or for in-house lines what UDAN still bears.
   - Live preview: what Commission becomes, Client refund owed / still owes, DMC due back / you owe.
   - A note to record refunds as Refund entries.
   - Buttons: "Keep booking" and a red "Cancel booking".
@@ -358,7 +376,7 @@ H1 "Dashboard", then underline tabs **Overview | Insights**. These are real rout
 **Calendar** (hand-rolled, no library):
 
 - Month grid, weeks start Monday. Today is a teal circle. Days from other months get a tinted background.
-- Each Booking is a 24px bar spanning `travelStart`–`travelEnd`, labelled with the **Booking ID in bold + Client name** and coloured by status. Bars break at week edges with square ends.
+- Each Booking is a 24px bar spanning Booking date – end date (one day when there is no end date; see Month basis), labelled with the **Booking ID in bold + Client name** and coloured by status. Bars break at week edges with square ends.
 - At most 3 bars per day cell, then "+N more" → a day popover.
 - Cancelled is hidden by default ("Show cancelled" checkbox). Status legend below the grid.
 - Click a bar → Booking detail. Click an empty day → `/admin/bookings/new?start=<date>`.
@@ -368,10 +386,11 @@ H1 "Dashboard", then underline tabs **Overview | Insights**. These are real rout
 **Table** — this **is** the Booking list; there is no separate bookings page.
 
 - **Tools row**: search box, scope switch (selected month | All time), "Filters" popover with removable chips + "Clear all", CSV button.
-- **Columns**: Booking ID, Client (name + mobile), Destination, Travel dates (+ "Not marked Completed" flag), Pax, Status, Selling Price, Received, Client outstanding, Commission, DMC(s). Column visibility menu.
+- **Columns**: Booking ID, Client (name + mobile), Category, Destination, Travel dates (+ "Not marked Completed" flag), Pax, Status, Selling Price, Received, Client outstanding, Commission, DMC(s). Column visibility menu.
 - **Search**: debounced, case-insensitive substring across Booking ID, Client name/mobile/email, destination, DMC name, confirmation no., invoice no. and traveller names. With text in a month scope, show a "Search all time" link.
 - **Filters**:
   - Status (multi)
+  - Category (multi); Division (Travel / Immigration)
   - Date range on Travel start / Travel end / Booked on (`createdAt`); a range overrides the month scope
   - Client; DMC (multi); Service Line type (multi)
   - Client payment: Fully paid / Outstanding / Overdue / Refund owed
@@ -422,7 +441,12 @@ H1 "Dashboard", then underline tabs **Overview | Insights**. These are real rout
   - Cancelled → red note with date + reason. Travel ended → warn note "Mark Completed?".
   - Breadcrumb "← Bookings" → dashboard table, All time.
 - **Layout**: main column (1fr) + a **sticky rail** (16–20rem). Under 60rem the rail moves above the sections and stops sticking.
-- **Sections**: Client, Travel, Price, Service lines, Client payments, DMC payments, Notes. Each is a panel with its own **Edit** button.
+- **Sections**: Client, Category, Travel, Price, Service lines, Client payments, DMC payments, Notes. Each is a panel with its own **Edit** button.
+  - **Category** sits right after Client: Category select; Trip Scope (Package only, required); Division shown read-only.
+  - **Service** (non-Package): the single line's fields inline in the Category section — no Service lines panel — plus an **Add more service** button that converts to Package and shows the Service lines panel with this line first.
+  - **Service lines** panel: Package only.
+  - **Travel**: hidden behind **Add travel details** on every Category (`hasTravel`); removable again.
+  - **Travellers** (pax + names): for Immigration, shown outside Travel, always and required.
   - **Edit** swaps the section into its fields with **Save / Cancel**. Save = one `updateDoc` of that section's fields + `updatedAt`. Cancel discards.
   - Several sections may be open at once. The Money rail recomputes live from unsaved values.
 - **Read states**:
@@ -435,10 +459,11 @@ H1 "Dashboard", then underline tabs **Overview | Insights**. These are real rout
   - **Client**: segmented Existing / New. Existing = type-ahead on name/mobile. New = name + mobile (required), email, city inline; the Client is created in the same write. From an Enquiry: note "Matched existing Client X by mobile" or "A new Client will be created", with fields prefilled.
   - **Travel**: destination, start, end (min = start), adults/children/infants, traveller names as chip input (Enter adds), itinerary textarea.
   - **Price**: Selling Price (₹ input with en-IN grouping) + Client balance due by.
-  - **Service lines**: repeatable cards — Type, DMC select with "+ New DMC…" dialog, Description, Start/End (optional), Net cost, Pay DMC by, Confirmation no., Voucher notes. Deleting a line asks to confirm and warns if that DMC has payments.
+  - **Service lines**: repeatable cards — Type, DMC select (optional, "In-house" when empty) with "+ New DMC…" dialog, Description, Start/End (optional), Net cost, Pay DMC by, Confirmation no., Voucher notes; Visa lines add Visa Type + Country. A new Package starts with one blank card. Deleting a line asks to confirm and warns if payments are tagged to it or that DMC has payments.
   - **Notes**: internal notes.
 - **Payment entries** live inline in the Client payments and DMC payments sections:
-  - "Add entry" opens a row form: date (default today), DMC (DMC side only; only DMCs on this Booking's lines), kind Payment/Refund, mode, reference, note, amount.
+  - "Add entry" opens a row form: date (default today), DMC (DMC side only; only DMCs on this Booking's lines), Service Line (optional; DMC side lists only that DMC's lines), kind Payment/Refund, mode, reference, note, amount.
+  - Entries show their Service Line when tagged; the Service lines table shows per-line received (Client) and paid / still owed (DMC).
   - Each entry is editable (pencil, same inline row) and deletable (with confirm). Each change writes the whole list array.
   - Refund rows show "−₹X" in warn. Footer: "Net received" / "Net paid".
   - DMC "Add entry" is disabled when there are no lines. Payment sections are hidden on New booking until it is saved.
@@ -449,8 +474,9 @@ H1 "Dashboard", then underline tabs **Overview | Insights**. These are real rout
   - `?start=` prefills `travelStart`. `?enquiry=` prefills per Enquiry conversion.
   - **Create** is one Firestore transaction: read `counters/booking` → create/bump it → create the Client (if new) → create the Booking with `bookingNo`/`bookingSeq` → update the Enquiry (if converting). On success, navigate to `/admin/bookings/<bookingNo>`. Cancel/leave = nothing written.
 - **Validation (in the form)**:
-  - Required: Client, destination, travelStart, travelEnd ≥ travelStart, sellingPrice ≥ 0 integer.
-  - Each line needs type, DMC, description, netCost ≥ 0 integer; end ≥ start when both are set.
+  - Required: Client, Category, sellingPrice ≥ 0 integer. Package: Trip Scope, ≥ 1 line. Other Categories: exactly 1 line.
+  - With Travel added: destination, travelStart, travelEnd ≥ travelStart. Immigration: ≥ 1 traveller name and pax.
+  - Each line needs type, description, netCost ≥ 0 integer; DMC optional; end ≥ start when both are set. Visa lines need Visa Type + Country.
   - Payments need date, kind, mode, amount > 0 integer.
   - Rules don't validate inside arrays, so the form is the only guard for array contents.
 
@@ -497,7 +523,8 @@ H1 "Dashboard", then underline tabs **Overview | Insights**. These are real rout
   - A converted row shows only "View UDN-xxx".
 - **Convert** → `/admin/bookings/new?enquiry=<id>`:
   - **Client**: exact E.164 match of the enquiry phone against `clients.mobile` → suggest that Client (Admin confirms or picks another). Otherwise, a new Client prefilled with name + mobile.
-  - **Booking prefill**: `destination` ← enquiry destination; `internalNotes` ← "From enquiry <date>: <service label> — <message>"; status Pending; no Service Lines; `enquiryId` set.
+  - **Booking prefill**: `destination` ← enquiry destination; `internalNotes` ← "From enquiry <date>: <service label> — <message>"; status Pending; `enquiryId` set.
+  - **Category preset** from the enquiry service: international-domestic-tours → Package; hotel-booking → Hotel; flight-train-tickets → Flight; visa-services, visitor-business-visa → Visa (Visa Type left to the Admin); passport-services → Passport; others → none.
   - **On save** (same Create transaction): Enquiry → `status: 'converted'`, `clientId`, `bookingId`, `convertedAt`, `updatedAt`.
   - One Enquiry → at most one Booking. Any service may convert.
 - The Privacy page doesn't change.
@@ -516,7 +543,7 @@ H1 "Dashboard", then underline tabs **Overview | Insights**. These are real rout
 
 - **Header**: wordmark left. On the right: "Invoice", the invoice number, "Date <invoiceDate>", "Booking UDN-xxx". Thin rule below.
 - **Two columns**: "Billed to" (Client name, mobile, email, city; empty hidden) | "From" (Business profile: trading name, address, phones, email, website; filled only).
-- **Description**: one priced row, "Holiday package — <destination>", with dates + pax under it. Amount = Selling Price.
+- **Description**: one priced row, "<Category label> — <destination, or the line description when Travel is skipped>" (Package reads "Holiday package"), with dates + pax under it when known. Amount = Selling Price.
 - **Included services**: the Service Lines in order — type, description, dates ("—" if none). **Never prices, never DMC.**
 - **Totals** (right, 230pt):
   - Package price. One line per Payment ("Received <date> · <mode>", −amount) and per Refund ("Refunded <date> · <mode>", +amount). A rule.
@@ -542,7 +569,8 @@ H1 "Dashboard", then underline tabs **Overview | Insights**. These are real rout
 - **Good to know**: voucher standard notes as bullets; hidden if empty.
 - **Footer**: "<trading name> · phones · email · website" (filled only).
 - **Never** DMC names, costs or payments. No signature, no QR. Allowed with missing confirmations.
-- **Disabled when Cancelled**.
+- **Disabled when Cancelled**. **Hidden for Immigration Bookings** (Visa, Passport); the Invoice stays for every Category.
+- Trip column shows only what is known (destination, range, pax) when Travel is skipped.
 
 **Documents card** (Booking detail rail):
 
@@ -611,6 +639,7 @@ function isAdmin() {
   - **No validation inside arrays** (`lines`, `clientPayments`, `dmcPayments`, `travellerNames`) beyond `is list`.
 - **`bookings`**:
   - `bookingNo`, `bookingSeq` and `createdAt` are immutable.
+  - Allows `category`, `tripScope`, `hasTravel`; `category`/`tripScope` in their enums when present. `destination` may be empty and `travelStart`/`travelEnd` absent when `hasTravel == false`; when both dates are present, `travelEnd >= travelStart`.
   - `invoiceNo`, `invoiceSeq`, `invoiceDate` and `enquiryId` can be **set once** (absent → present), then never changed or removed.
   - **Delete denied.**
 - **`clients`, `dmcs`**: Admin may delete. The "in use" check is client-side only.
@@ -656,7 +685,7 @@ function isAdmin() {
 - Counting-rules table (Pending excluded, Cancelled via charges, Cancellation rate).
 - Flags (overdue, due in 7 days, travel ended) around IST midnight.
 - FY derivation (31 Mar / 1 Apr IST). `UDN-` / `UDAN/FY/` formatting incl. ≥ 1000. Filename `/` → `_`.
-- Table search/filter/sort and footer totals. Insights series (month basis = travelStart, ageing buckets, enquiry cohort conversion).
+- Table search/filter/sort and footer totals. Insights series (month basis = Booking date, ageing buckets, enquiry cohort conversion).
 
 **Seam 2 — Firestore rules** (extends the website's Seam 2: Vitest node, `@firebase/rules-unit-testing`, `firebase emulators:exec`):
 

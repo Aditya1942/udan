@@ -26,11 +26,25 @@ _Avoid_: Order, trip, reservation
 Where a Booking stands, set by the Admin: Pending (quoted, not yet committed), Confirmed (Customer committed and DMCs booked), Voucher Received (DMC confirmation numbers in hand), Completed (travelled) or Cancelled. Never changes on its own.
 
 **Cancellation Charge**:
-On a Cancelled Booking, the amount UDAN keeps from the Customer, or that a DMC keeps from UDAN for one Service Line; replaces Selling Price and Net Cost while the Booking stays Cancelled.
+On a Cancelled Booking, the amount UDAN keeps from the Customer, or that a DMC keeps, or UDAN still bears, for one Service Line; replaces Selling Price and Net Cost while the Booking stays Cancelled.
 _Avoid_: Cancellation fee, penalty
 
+**Booking Category**:
+What a Booking sells, chosen right after the Customer: Visa, Passport, Package, Hotel, Flight, Train or Bus. Every Category except Package has exactly one Service Line; adding a second service makes the Booking a Package. Visa and Passport are Immigration; the rest are Travel.
+_Avoid_: Booking type, service (for the Booking as a whole)
+
+**Division**:
+UDAN's two lines of business, Travel and Immigration; a Booking's Division follows from its Booking Category and is never chosen.
+_Avoid_: Business, vertical
+
+**Trip Scope**:
+Whether a Package is Domestic or International.
+
+**Visa Type**:
+The kind of visa a Visa Service Line applies for: Visitor or Business, for a named country.
+
 **Service Line**:
-One service within a Booking (hotel, transfer, flight, sightseeing, visa, package or other), fulfilled by one DMC at its own Net Cost; a Booking's Net Cost is the sum of its Service Lines.
+One service within a Booking, with a type (Hotel, Transfer, Flight, Train, Bus, Sightseeing, Visa, Passport, Package or Other) and its own Net Cost, fulfilled either by one DMC or by UDAN itself; a Booking's Net Cost is the sum of its Service Lines.
 _Avoid_: Item, component, leg
 
 **Selling Price**:
@@ -38,7 +52,7 @@ The total the Customer pays UDAN for a Booking.
 _Avoid_: Package price, sale amount
 
 **Net Cost**:
-The total UDAN owes its DMCs for a Booking — the sum of its Service Lines' Net Cost.
+What a Booking costs UDAN — the sum of its Service Lines' Net Cost, whether owed to a DMC or spent by UDAN itself.
 _Avoid_: DMC cost, purchase price
 
 **Commission**:
@@ -46,10 +60,10 @@ Selling Price minus Net Cost — UDAN's gross profit on a Booking, before expens
 _Avoid_: Margin, profit, markup
 
 **Customer Payment**:
-One amount received from the Customer against a Booking, or a Refund paid back to them; outstanding is Selling Price (or Cancellation Charge) minus payments net of refunds.
+One amount received from the Customer against a Booking, or a Refund paid back to them, optionally for one Service Line; outstanding is Selling Price (or Cancellation Charge) minus payments net of refunds.
 
 **DMC Payment**:
-One amount paid by UDAN to a DMC against a Booking, or a Refund received back from them; outstanding is tracked per DMC as that DMC's Service Lines' Net Cost (or Cancellation Charges) minus its payments net of refunds.
+One amount paid by UDAN to a DMC against a Booking, or a Refund received back from them, optionally for one of that DMC's Service Lines; outstanding is tracked per DMC as that DMC's Service Lines' Net Cost (or Cancellation Charges) minus its payments net of refunds.
 
 **Refund**:
 Money returned after it was paid — to the Customer by UDAN, or to UDAN by a DMC; recorded alongside payments, never as a negative payment.
