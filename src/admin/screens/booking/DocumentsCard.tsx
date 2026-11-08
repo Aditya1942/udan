@@ -8,6 +8,7 @@ import { Download, Eye, FileText, Mail, MessageCircle, Share2 } from 'lucide-rea
 import { useEffect, useState, type ReactNode } from 'react';
 import { allocateInvoiceNo, getBusinessProfile, useAdminDb } from '../../data';
 import {
+  divisionOf,
   emailSubject,
   linesMissingConfirmation,
   mailtoUrl,
@@ -177,7 +178,7 @@ export function DocumentsCard({ booking, client }: { booking: Booking; client?: 
     <Panel title="Documents">
       <ul className="adm-docs">
         <DocumentRow kind="invoice" booking={booking} client={client} />
-        <DocumentRow kind="voucher" booking={booking} client={client} />
+        {divisionOf(booking.category) === 'Immigration' ? null : <DocumentRow kind="voucher" booking={booking} client={client} />}
       </ul>
     </Panel>
   );

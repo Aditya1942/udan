@@ -6,6 +6,8 @@
  * The Voucher builder never receives DMCs and copies only customer-facing line fields: no DMC name, cost or payment.
  */
 import {
+  bookingDate,
+  bookingEndDate,
   bookingMoney,
   formatDate,
   formatINR,
@@ -104,7 +106,9 @@ export function invoiceView({ booking, client, profile: raw }: InvoiceInput): In
   const name = p.tradingName;
 
   const entries = [...booking.clientPayments].sort((a, b) => a.date.localeCompare(b.date));
-  const tripDetail = [dateRangeText(booking.travelStart, booking.travelEnd), paxLine(booking.pax)].filter(Boolean).join(' · ');
+  const tripDetail = [dateRangeText(bookingDate(booking), bookingEndDate(booking)), paxLine(booking.pax)].filter(Boolean).join(' · ');
+  const subject = booking.hasTravel ? booking.destination : (booking.lines[0]?.description ?? '');
+  const kind = cancelled ? 'Cancellation charge' : booking.category === 'Package' ? 'Holiday package' : booking.category;
 
   const result: InvoiceView['totals']['result'] =
     balance > 0
@@ -152,7 +156,7 @@ export function invoiceView({ booking, client, profile: raw }: InvoiceInput): In
     },
     from: { name, lines: [...textLines(p.address), ...phoneList(p.phones), p.email, p.website].filter((l): l is string => Boolean(l)) },
     item: {
-      title: `${cancelled ? 'Cancellation charge' : 'Holiday package'} — ${booking.destination}`,
+      title: subject ? `${kind} — ${subject}` : kind,
       detail: tripDetail,
       amount: formatINR(total),
     },
@@ -257,7 +261,7 @@ export function voucherView({ booking, client, profile: raw, today }: VoucherInp
       lines: client?.mobile ? [displayMobile(client.mobile)] : [],
       travellers: booking.travellerNames.length ? `Travellers: ${booking.travellerNames.join(', ')}` : undefined,
     },
-    trip: { destination: booking.destination, dates: dateRangeText(booking.travelStart, booking.travelEnd), pax: paxLine(booking.pax) },
+    trip: { destination: booking.hasTravel ? booking.destination : '', dates: dateRangeText(booking.travelStart, booking.travelEnd), pax: paxLine(booking.pax) },
     emergency: emergency.length ? emergency : phoneList(p.phones),
     days,
     throughout: booking.lines.filter((l) => !l.start).map(item),

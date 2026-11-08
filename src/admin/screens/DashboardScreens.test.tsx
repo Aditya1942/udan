@@ -277,6 +277,49 @@ describe('Overview', () => {
     expect(tableIds()).toEqual(['UDN-001', 'UDN-002']);
   });
 
+  it('Category: a column after Booking ID, a filter chip that narrows the table, and cat= in the URL', async () => {
+    await seed(env, {
+      'bookings/b5': booking({
+        bookingNo: 'UDN-005',
+        bookingSeq: 5,
+        clientId: 'c2',
+        category: 'Visa',
+        hasTravel: false,
+        destination: '',
+        sellingPrice: 8_000,
+        lines: [{ id: 'l6', type: 'Visa', description: 'UAE tourist visa', netCost: 5_000, start: `${month}-12`, end: `${month}-13` }],
+      }),
+    });
+    const user = userEvent.setup();
+    const router = await renderAdmin('/admin?view=table&scope=all');
+
+    await waitFor(() => expect(tableIds()).toContain('UDN-005'));
+    expect(screen.getAllByRole('columnheader').map((h) => h.textContent).slice(0, 3)).toEqual(['Booking ID', 'Category', 'Customer']);
+    // Booking date and end date fall back to the Service line's dates.
+    const visaRow = screen.getByRole('row', { name: /UDN-005/ });
+    expect(within(visaRow).getByText('Visa', { selector: 'td' })).toBeInTheDocument();
+    expect(visaRow).toHaveTextContent(`${formatDate(`${month}-12`)} – ${formatDate(`${month}-13`)}`);
+    expect(screen.getByRole('row', { name: /UDN-001/ })).toHaveTextContent('Package');
+
+    await user.click(screen.getByText('Filters'));
+    const filters = within(screen.getByRole('group', { name: 'Filters' }));
+    await user.click(within(filters.getByRole('group', { name: 'Category' })).getByRole('checkbox', { name: 'Visa' }));
+    expect(params(router).get('cat')).toBe('Visa');
+    expect(tableIds()).toEqual(['UDN-005']);
+    expect(screen.getByRole('button', { name: 'Remove filter Category: Visa' })).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Clear all' }));
+    await waitFor(() => expect(params(router).get('cat')).toBeNull());
+    if (!screen.queryByRole('group', { name: 'Filters' })) await user.click(screen.getByText('Filters'));
+    const division = within(screen.getByRole('group', { name: 'Filters' }));
+    await user.click(division.getByRole('radio', { name: 'Immigration' }));
+    expect(params(router).get('div')).toBe('immigration');
+    expect(tableIds()).toEqual(['UDN-005']);
+    expect(screen.getByRole('button', { name: 'Remove filter Division: Immigration' })).toBeInTheDocument();
+    await user.click(division.getByRole('radio', { name: 'Any' }));
+    expect(params(router).get('div')).toBeNull();
+  });
+
   it('a URL with filters renders them; CSV downloads the filtered, sorted rows', async () => {
     const files = captureDownloads();
     const user = userEvent.setup();

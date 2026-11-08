@@ -240,4 +240,23 @@ describe('Documents card', () => {
     await user.click(within(row('Voucher')).getByRole('button', { name: 'Retry' }));
     expect(await within(row('Voucher')).findByRole('link', { name: 'Download Voucher' })).toBeInTheDocument();
   });
+
+  it('a Passport Booking shows the Invoice row and no Voucher row', async () => {
+    const { travelStart: _start, travelEnd: _end, ...rest } = BOOKING;
+    await seed(env, {
+      'bookings/b3': {
+        ...rest,
+        bookingNo: 'UDN-003',
+        bookingSeq: 3,
+        category: 'Passport',
+        hasTravel: false,
+        destination: '',
+        lines: [{ id: 'l1', type: 'Passport', description: 'Fresh passport', netCost: 1_000 }],
+      },
+    });
+    await renderBooking('UDN-003');
+
+    expect(row('Invoice')).toBeInTheDocument();
+    expect(within(card()).queryByRole('listitem', { name: 'Voucher' })).not.toBeInTheDocument();
+  });
 });

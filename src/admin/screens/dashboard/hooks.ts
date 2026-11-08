@@ -21,7 +21,7 @@ export function useMediaQuery(query: string): boolean {
 }
 
 /** Params owned by `parseTableQuery` / `tableQueryToParams`; everything else (`view`, Insights' keys) is kept as is. */
-const TABLE_KEYS = ['month', 'scope', 'q', 'status', 'date', 'from', 'to', 'client', 'dmc', 'type', 'cpay', 'dpay', 'inv', 'flag', 'sort', 'dir'];
+const TABLE_KEYS = ['month', 'scope', 'q', 'status', 'cat', 'div', 'date', 'from', 'to', 'client', 'dmc', 'type', 'cpay', 'dpay', 'inv', 'flag', 'sort', 'dir'];
 
 /** `/admin?<params>` for a query (defaults omitted), e.g. Needs attention's pre-filtered table links. */
 export function tableHref(patch: Partial<TableQuery>, today: ISODate): string {

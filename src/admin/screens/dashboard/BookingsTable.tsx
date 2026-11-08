@@ -11,6 +11,8 @@ import {
   activeFilterCount,
   ALL_TIME_PAGE_SIZE,
   applyTableQuery,
+  bookingDate,
+  bookingEndDate,
   clearFilters,
   formatINR,
   formatMonthShort,
@@ -24,11 +26,12 @@ import { Outstanding } from '../directory/shared';
 import { FilterChips, FilterFields } from './TableFilters';
 import { Popover } from './Popover';
 
-type ColumnKey = 'client' | 'destination' | 'travel' | 'pax' | 'status' | 'sellingPrice' | 'received' | 'outstanding' | 'commission' | 'dmcs';
+type ColumnKey = 'category' | 'client' | 'destination' | 'travel' | 'pax' | 'status' | 'sellingPrice' | 'received' | 'outstanding' | 'commission' | 'dmcs';
 type Column = { key: ColumnKey; label: string; sort?: SortKey; num?: boolean };
 
 /** Booking ID is always shown (row header); the rest can be hidden from the Columns menu. */
 export const BOOKING_TABLE_COLUMNS: Column[] = [
+  { key: 'category', label: 'Category' },
   { key: 'client', label: 'Customer', sort: 'client' },
   { key: 'destination', label: 'Destination', sort: 'destination' },
   { key: 'travel', label: 'Travel dates', sort: 'travelStart' },
@@ -67,6 +70,8 @@ const paxCount = (r: BookingRow) => r.booking.pax.adults + r.booking.pax.childre
 function Cell({ col, row }: { col: ColumnKey; row: BookingRow }) {
   const { booking: b, money: m } = row;
   switch (col) {
+    case 'category':
+      return <>{b.category}</>;
     case 'client':
       return (
         <>
@@ -79,7 +84,7 @@ function Cell({ col, row }: { col: ColumnKey; row: BookingRow }) {
     case 'travel':
       return (
         <>
-          {dateRange(b.travelStart, b.travelEnd)}
+          {dateRange(bookingDate(b), bookingEndDate(b))}
           {row.flags.travelEnded ? <span className="adm-flag">Not marked Completed</span> : null}
         </>
       );

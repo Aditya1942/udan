@@ -2,7 +2,7 @@ import { Pencil, Plus, Trash2 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router';
 import { deleteClient, updateClient, useAdminData, useBookingRows } from '../data';
-import { clientSummary, clientWhatsapp, formatINR, hasErrors, type Client } from '../model';
+import { bookingDate, bookingEndDate, clientSummary, clientWhatsapp, formatINR, hasErrors, type Client } from '../model';
 import {
   Button,
   ButtonLink,
@@ -143,7 +143,7 @@ function ClientPage({ client }: { client: Client }) {
                         </Link>
                       </th>
                       <td data-label="Destination">{b.destination}</td>
-                      <td data-label="Travel">{dateRange(b.travelStart, b.travelEnd)}</td>
+                      <td data-label="Travel">{dateRange(bookingDate(b), bookingEndDate(b))}</td>
                       <td>
                         <StatusBadge status={b.status} />
                       </td>

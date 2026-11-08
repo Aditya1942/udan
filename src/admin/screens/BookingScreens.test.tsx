@@ -388,6 +388,9 @@ describe('Category flows', () => {
     expect(within(detail).getByText('Category', { selector: 'dt' }).nextElementSibling).toHaveTextContent('Visa');
     expect(within(detail).getByText('Division', { selector: 'dt' }).nextElementSibling).toHaveTextContent('Immigration');
     expect(within(detail).getByText('In-house')).toBeInTheDocument();
+    const documents = within(screen.getByRole('region', { name: 'Documents' }));
+    expect(documents.getByRole('listitem', { name: 'Invoice' })).toBeInTheDocument();
+    expect(documents.queryByRole('listitem', { name: 'Voucher' })).not.toBeInTheDocument();
     const created = (await readAll(env, 'bookings')).find((b) => b.bookingNo === 'UDN-002')!;
     expect(created).toMatchObject({
       category: 'Visa',

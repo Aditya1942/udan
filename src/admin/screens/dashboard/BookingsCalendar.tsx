@@ -1,5 +1,5 @@
 /**
- * Bookings calendar (hand-rolled): Monday-first month grid, each Booking a bar across its travel days labelled
+ * Bookings calendar (hand-rolled): Monday-first month grid, each Booking a bar from its Booking date to its end date labelled
  * Booking ID + Client and coloured by Status; bars break at week edges with square ends; max 3 per day, then
  * "+N more" (day popover). Click a bar → Booking detail; click a day → New booking with that start date.
  * Phones get an agenda list grouped by day instead.
@@ -7,7 +7,7 @@
 import { Plus } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router';
-import { addDays, BOOKING_STATUSES, daysBetween, formatDate, formatMonth, isoWeekday, monthEnd, monthOf, monthStart } from '../../model';
+import { addDays, BOOKING_STATUSES, bookingDate, bookingEndDate, daysBetween, formatDate, formatMonth, isoWeekday, monthEnd, monthOf, monthStart } from '../../model';
 import type { BookingRow, BookingStatus, ISODate, ISOMonth } from '../../model';
 import { ButtonLink, Checkbox, StatusBadge } from '../../ui';
 import { dateRange } from '../booking/views';
@@ -21,8 +21,14 @@ const statusSlug = (s: BookingStatus) => s.toLowerCase().replace(/\s+/g, '-');
 const newBookingHref = (date: ISODate) => `/admin/bookings/new?start=${date}`;
 const bookingHref = (r: BookingRow) => `/admin/bookings/${r.booking.bookingNo}`;
 const clientName = (r: BookingRow) => r.client?.name ?? 'Unknown customer';
+/** Booking date and end (the end defaults to the start); a Booking with neither (no createdAt) never lands on the calendar. */
+const span = (r: BookingRow): { start: ISODate; end: ISODate } | undefined => {
+  const start = bookingDate(r.booking);
+  return start ? { start, end: bookingEndDate(r.booking) ?? start } : undefined;
+};
+const dates = (r: BookingRow) => dateRange(bookingDate(r.booking), bookingEndDate(r.booking));
 const describe = (r: BookingRow) =>
-  `${r.booking.bookingNo} ${clientName(r)}, ${r.booking.destination}, ${dateRange(r.booking.travelStart, r.booking.travelEnd)}, ${r.booking.status}`;
+  [r.booking.bookingNo, clientName(r), r.booking.destination, dates(r), r.booking.status].filter(Boolean).join(', ');
 
 type Placed = { row: BookingRow; start: number; end: number; lane: number; contL: boolean; contR: boolean };
 type Week = { days: ISODate[]; bars: Placed[]; /** per weekday: every Booking on that day */ byDay: BookingRow[][] };
@@ -33,29 +39,27 @@ export function layoutMonth(rows: readonly BookingRow[], month: ISOMonth): Week[
   const last = monthEnd(month);
   const gridStart = addDays(first, -(isoWeekday(first) - 1));
   const weeks: Week[] = [];
+  const spans = rows.flatMap((row) => {
+    const s = span(row);
+    return s ? [{ row, s }] : [];
+  });
   for (let ws = gridStart; ws <= last; ws = addDays(ws, 7)) {
     const we = addDays(ws, 6);
     const days = Array.from({ length: 7 }, (_, i) => addDays(ws, i));
-    const hits = rows
-      .filter((r) => r.booking.travelStart <= we && (r.booking.travelEnd || r.booking.travelStart) >= ws)
-      .sort(
-        (a, b) =>
-          a.booking.travelStart.localeCompare(b.booking.travelStart) ||
-          b.booking.travelEnd.localeCompare(a.booking.travelEnd) ||
-          a.booking.bookingSeq - b.booking.bookingSeq,
-      );
+    const hits = spans
+      .filter(({ s }) => s.start <= we && s.end >= ws)
+      .sort((a, b) => a.s.start.localeCompare(b.s.start) || b.s.end.localeCompare(a.s.end) || a.row.booking.bookingSeq - b.row.booking.bookingSeq);
     const laneEnd: number[] = [];
     const bars: Placed[] = [];
     const byDay: BookingRow[][] = days.map(() => []);
-    for (const row of hits) {
-      const end = row.booking.travelEnd || row.booking.travelStart;
-      const s = Math.max(0, daysBetween(ws, row.booking.travelStart));
-      const e = Math.min(6, daysBetween(ws, end));
+    for (const { row, s: range } of hits) {
+      const s = Math.max(0, daysBetween(ws, range.start));
+      const e = Math.min(6, daysBetween(ws, range.end));
       for (let d = s; d <= e; d++) byDay[d].push(row);
       let lane = laneEnd.findIndex((x) => x < s);
       if (lane === -1) lane = laneEnd.length;
       laneEnd[lane] = e;
-      bars.push({ row, start: s, end: e, lane, contL: row.booking.travelStart < ws, contR: end > we });
+      bars.push({ row, start: s, end: e, lane, contL: range.start < ws, contR: range.end > we });
     }
     weeks.push({ days, bars, byDay });
   }
@@ -166,11 +170,15 @@ function Agenda({ rows, month }: { rows: readonly BookingRow[]; month: ISOMonth 
   const groups = useMemo(() => {
     const map = new Map<ISODate, BookingRow[]>();
     const inMonth = rows
-      .filter((r) => r.booking.travelStart <= last && (r.booking.travelEnd || r.booking.travelStart) >= first)
-      .sort((a, b) => a.booking.travelStart.localeCompare(b.booking.travelStart) || a.booking.bookingSeq - b.booking.bookingSeq);
-    for (const r of inMonth) {
-      const day = r.booking.travelStart < first ? first : r.booking.travelStart;
-      map.set(day, [...(map.get(day) ?? []), r]);
+      .flatMap((row) => {
+        const s = span(row);
+        return s ? [{ row, s }] : [];
+      })
+      .filter(({ s }) => s.start <= last && s.end >= first)
+      .sort((a, b) => a.s.start.localeCompare(b.s.start) || a.row.booking.bookingSeq - b.row.booking.bookingSeq);
+    for (const { row, s } of inMonth) {
+      const day = s.start < first ? first : s.start;
+      map.set(day, [...(map.get(day) ?? []), row]);
     }
     return [...map.entries()];
   }, [rows, first, last]);
@@ -199,7 +207,7 @@ function Agenda({ rows, month }: { rows: readonly BookingRow[]; month: ISOMonth 
                   </span>
                   <StatusBadge status={r.booking.status} />
                   <span className="adm-sub adm-muted">
-                    {r.booking.destination}, {dateRange(r.booking.travelStart, r.booking.travelEnd)}
+                    {[r.booking.destination, dates(r)].filter(Boolean).join(', ')}
                   </span>
                 </Link>
               </li>

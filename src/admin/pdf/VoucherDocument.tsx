@@ -95,8 +95,8 @@ export function VoucherDocument({ view: v, wordmark }: { view: VoucherView; word
           </View>
           <View style={{ flex: 1 }}>
             <Text style={base.label}>Trip</Text>
-            <Text style={base.semi}>{v.trip.destination}</Text>
-            <Text>{v.trip.dates}</Text>
+            {v.trip.destination ? <Text style={base.semi}>{v.trip.destination}</Text> : null}
+            {v.trip.dates ? <Text>{v.trip.dates}</Text> : null}
             {v.trip.pax ? <Text>{v.trip.pax}</Text> : null}
           </View>
           {v.emergency.length > 0 ? (

@@ -6,6 +6,26 @@ import { invoiceView, upiPayUri, voucherView } from './view';
 const SEEDED = { tradingName: 'UDAN Immigration & Tours', address: 'Vastrapur\nAhmedabad', phones: '+91 96872 32015' };
 
 describe('Invoice view-model', () => {
+  it('titles the invoice by Category', () => {
+    const visa = sampleBooking({
+      category: 'Visa',
+      hasTravel: false,
+      destination: '',
+      travelStart: '',
+      travelEnd: '',
+      lines: [{ id: 'l1', type: 'Visa', description: 'UAE tourist visa', netCost: 5_000 }],
+    });
+    const v = invoiceView({ booking: visa, client: SAMPLE_CLIENT, profile: FULL_PROFILE });
+    expect(v.item.title).toBe('Visa — UAE tourist visa');
+    expect(v.item.detail).toBe('2 adults, 1 child');
+    // No dates and no pax: the detail line is dropped.
+    expect(invoiceView({ booking: { ...visa, pax: { adults: 0, children: 0, infants: 0 } }, client: SAMPLE_CLIENT, profile: FULL_PROFILE }).item.detail).toBe('');
+    expect(invoiceView({ booking: sampleBooking(), client: SAMPLE_CLIENT, profile: FULL_PROFILE }).item.title).toBe('Holiday package — Kerala — Kochi, Munnar, Alleppey');
+    expect(invoiceView({ booking: { ...visa, status: 'Cancelled', cancelledAt: '2026-12-05', clientCancellationCharge: 1_000 }, client: SAMPLE_CLIENT, profile: FULL_PROFILE }).item.title).toBe(
+      'Cancellation charge — UAE tourist visa',
+    );
+  });
+
   it('partial payment: price, payments, Balance due with due date, Payment details with a UPI QR for the balance', () => {
     const v = invoiceView({ booking: sampleBooking(), client: SAMPLE_CLIENT, profile: FULL_PROFILE });
     expect(v.invoiceNo).toBe('UDAN/2026-27/001');
@@ -145,6 +165,12 @@ describe('Voucher view-model', () => {
     expect(v.goodToKnow).toHaveLength(3);
     expect(v.itinerary[0]).toBe('Day 1: Arrive Kochi, Fort Kochi walk');
     expect(v.footer).toBe('UDAN Immigration & Tours · +91 96872 32015 · hello@udantours.in · udantours.in');
+  });
+
+  it('a Booking without travel details leaves out the destination and dates and does not crash', () => {
+    const v = view(sampleBooking({ hasTravel: false, destination: '', travelStart: '', travelEnd: '', lines: [] }));
+    expect(v.trip.destination).toBe('');
+    expect(v.trip.dates).toBe('');
   });
 
   it('timeline: dated lines grouped by start date in order; undated lines under Throughout your trip', () => {

@@ -1,7 +1,7 @@
 /** Bookings table: the "Filters" popover body and the active-filter chips (each removable, plus "Clear all"). */
 import { X } from 'lucide-react';
-import { BOOKING_STATUSES, clearFilters, formatDate, hasDateRange, LINE_TYPES } from '../../model';
-import type { Client, ClientPaymentFilter, DateField, Dmc, DmcPaymentFilter, TableQuery } from '../../model';
+import { BOOKING_CATEGORIES, BOOKING_STATUSES, clearFilters, DIVISIONS, formatDate, hasDateRange, LINE_TYPES } from '../../model';
+import type { Client, ClientPaymentFilter, DateField, Division, Dmc, DmcPaymentFilter, TableQuery } from '../../model';
 import { Checkbox, Field, LinkButton } from '../../ui';
 
 export const DATE_FIELD_LABELS: Record<DateField, string> = { travelStart: 'Travel start', travelEnd: 'Travel end', bookedOn: 'Booked on' };
@@ -38,6 +38,25 @@ export function FilterFields({ query: q, update, clients, dmcs }: Props) {
         <div className="adm-checks">
           {BOOKING_STATUSES.map((s) => (
             <Checkbox key={s} label={s} checked={q.status.includes(s)} onChange={() => update({ status: toggle(q.status, s) })} />
+          ))}
+        </div>
+      </fieldset>
+      <fieldset className="adm-fieldset">
+        <legend>Category</legend>
+        <div className="adm-checks">
+          {BOOKING_CATEGORIES.map((c) => (
+            <Checkbox key={c} label={c} checked={q.categories.includes(c)} onChange={() => update({ categories: toggle(q.categories, c) })} />
+          ))}
+        </div>
+      </fieldset>
+      <fieldset className="adm-fieldset">
+        <legend>Division</legend>
+        <div className="adm-checks">
+          {([undefined, ...DIVISIONS] as (Division | undefined)[]).map((d) => (
+            <label key={d ?? 'any'} className="adm-check">
+              <input type="radio" name="division" checked={q.division === d} onChange={() => update({ division: d })} />
+              {d ?? 'Any'}
+            </label>
           ))}
         </div>
       </fieldset>
@@ -129,6 +148,8 @@ type Chip = { key: string; label: string; remove: Partial<TableQuery> };
 export function filterChips(q: TableQuery, clients: readonly Client[], dmcs: readonly Dmc[]): Chip[] {
   const chips: Chip[] = [];
   if (q.status.length) chips.push({ key: 'status', label: `Status: ${q.status.join(', ')}`, remove: { status: [] } });
+  if (q.categories.length) chips.push({ key: 'cat', label: `Category: ${q.categories.join(', ')}`, remove: { categories: [] } });
+  if (q.division) chips.push({ key: 'div', label: `Division: ${q.division}`, remove: { division: undefined } });
   if (hasDateRange(q)) {
     const range = q.from && q.to ? `${formatDate(q.from)} – ${formatDate(q.to)}` : q.from ? `from ${formatDate(q.from)}` : `to ${formatDate(q.to!)}`;
     chips.push({ key: 'date', label: `${DATE_FIELD_LABELS[q.dateField]}: ${range}`, remove: { from: undefined, to: undefined } });
