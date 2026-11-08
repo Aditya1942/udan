@@ -9,8 +9,8 @@ import { Fragment, useMemo, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router';
 import { createBooking, saveBookingSection, saveServiceSection, useAdminData } from '../../data';
 import {
-  bookingDate,
   bookingEndDate,
+  serviceDates,
   formatBookingNo,
   formatDate,
   todayIST,
@@ -243,11 +243,8 @@ export function BookingDetail({ booking }: { booking: Booking }) {
   };
 
   const endDate = bookingEndDate(booking);
-  // Only real service dates in the subtitle, never the createdAt fallback of bookingDate.
-  const hasServiceDates = !!booking.travelStart || booking.lines.some((l) => l.start);
-  const subtitle = [client?.name, booking.destination, hasServiceDates ? dateRange(bookingDate(booking), endDate) : '']
-    .filter(Boolean)
-    .join(', ');
+  const dates = serviceDates(booking);
+  const subtitle = [client?.name, booking.destination, dateRange(dates.start, dates.end)].filter(Boolean).join(', ');
 
   return (
     <>

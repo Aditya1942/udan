@@ -18,6 +18,8 @@ describe('Invoice view-model', () => {
     const v = invoiceView({ booking: visa, client: SAMPLE_CLIENT, profile: FULL_PROFILE });
     expect(v.item.title).toBe('Visa — UAE tourist visa');
     expect(v.item.detail).toBe('2 adults, 1 child');
+    // The createdAt fallback is never printed as a trip date.
+    expect(invoiceView({ booking: { ...visa, createdAt: new Date('2026-11-03T06:00:00Z') }, client: SAMPLE_CLIENT, profile: FULL_PROFILE }).item.detail).toBe('2 adults, 1 child');
     // No dates and no pax: the detail line is dropped.
     expect(invoiceView({ booking: { ...visa, pax: { adults: 0, children: 0, infants: 0 } }, client: SAMPLE_CLIENT, profile: FULL_PROFILE }).item.detail).toBe('');
     expect(invoiceView({ booking: sampleBooking(), client: SAMPLE_CLIENT, profile: FULL_PROFILE }).item.title).toBe('Holiday package — Kerala — Kochi, Munnar, Alleppey');

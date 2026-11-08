@@ -12,12 +12,16 @@ export function isSingleService(category: BookingCategory): boolean {
   return category !== 'Package';
 }
 
+/** Dates the Admin actually entered (travel, else line dates) — never the createdAt fallback. For display. */
+export function serviceDates(b: Pick<Booking, 'travelStart' | 'travelEnd' | 'lines'>): { start?: ISODate; end?: ISODate } {
+  const starts = b.lines.map((l) => l.start).filter((d): d is ISODate => !!d);
+  const start = b.travelStart || (starts.length ? starts.reduce((a, d) => (d < a ? d : a)) : undefined);
+  return { start, end: bookingEndDate(b) };
+}
+
 /** travelStart, else earliest line start, else the IST date of createdAt (undefined only without createdAt). */
 export function bookingDate(b: Pick<Booking, 'travelStart' | 'lines' | 'createdAt'>): ISODate | undefined {
-  if (b.travelStart) return b.travelStart;
-  const starts = b.lines.map((l) => l.start).filter((d): d is ISODate => !!d);
-  if (starts.length) return starts.reduce((a, d) => (d < a ? d : a));
-  return b.createdAt ? toISTDate(b.createdAt) : undefined;
+  return serviceDates({ ...b, travelEnd: '' }).start ?? (b.createdAt ? toISTDate(b.createdAt) : undefined);
 }
 
 /** travelEnd, else latest line end, else none. */
@@ -27,7 +31,7 @@ export function bookingEndDate(b: Pick<Booking, 'travelEnd' | 'lines'>): ISODate
   return ends.length ? ends.reduce((a, d) => (d > a ? d : a)) : undefined;
 }
 
-const SERVICE_CATEGORY: Record<string, BookingCategory> = {
+const SERVICE_CATEGORY: Readonly<Record<string, BookingCategory>> = {
   'international-domestic-tours': 'Package',
   'hotel-booking': 'Hotel',
   'flight-train-tickets': 'Flight',
@@ -38,5 +42,5 @@ const SERVICE_CATEGORY: Record<string, BookingCategory> = {
 
 /** Category preset for a converted enquiry's service; undefined = none. */
 export function categoryForService(serviceId: string): BookingCategory | undefined {
-  return SERVICE_CATEGORY[serviceId];
+  return Object.hasOwn(SERVICE_CATEGORY, serviceId) ? SERVICE_CATEGORY[serviceId] : undefined;
 }
