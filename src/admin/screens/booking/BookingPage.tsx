@@ -21,7 +21,7 @@ import {
 } from '../../model';
 import { Button, errorMessage, Note, PageHeader, Panel, StatusBadge, useToast } from '../../ui';
 import { DocumentsCard } from './DocumentsCard';
-import { ClientFields, NotesFields, PriceFields, ServiceFields, TravelFields, TravellersFields } from './fields';
+import { ClientFields, ContactFields, NotesFields, PriceFields, ServiceFields, TravelFields, TravellersFields } from './fields';
 import {
   formFromBooking,
   isValid,
@@ -43,7 +43,7 @@ import {
 import { MoneyPanel } from './MoneyRail';
 import { PaymentsSection } from './PaymentsSection';
 import { StatusControl } from './StatusControl';
-import { ClientView, dateRange, LinesTable, NotesView, PriceView, ServiceSummary, TravellersView, TravelView } from './views';
+import { ClientView, ContactView, dateRange, LinesTable, NotesView, PriceView, ServiceSummary, TravellersView, TravelView } from './views';
 
 export const BOOKINGS_BACK = { to: '/admin?view=table&scope=all', label: 'Bookings' };
 
@@ -83,6 +83,8 @@ function SectionFields({
   switch (section) {
     case 'client':
       return <ClientFields form={form} set={set} errors={errors.fields} clients={clients.data} conversion={conversion} />;
+    case 'contact':
+      return <ContactFields form={form} set={set} errors={errors.fields} />;
     case 'service':
       return (
         <ServiceFields
@@ -111,6 +113,8 @@ function SectionView({ section, booking, onAddTravel }: { section: SectionKey; b
   switch (section) {
     case 'client':
       return <ClientView client={clientsById.get(booking.clientId)} />;
+    case 'contact':
+      return <ContactView booking={booking} />;
     case 'service':
       return (
         <>

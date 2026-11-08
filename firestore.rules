@@ -152,7 +152,7 @@ service cloud.firestore {
 
     function isValidBooking(d) {
       return d.keys().hasOnly([
-          'bookingNo', 'bookingSeq', 'clientId', 'status', 'category', 'tripScope', 'hasTravel',
+          'bookingNo', 'bookingSeq', 'clientId', 'contactName', 'contactPhone', 'status', 'category', 'tripScope', 'hasTravel',
           'destination', 'travelStart', 'travelEnd',
           'pax', 'travellerNames', 'itinerary', 'internalNotes', 'sellingPrice', 'clientBalanceDueBy',
           'lines', 'clientPayments', 'dmcPayments', 'invoiceNo', 'invoiceSeq', 'invoiceDate', 'enquiryId',
@@ -164,6 +164,8 @@ service cloud.firestore {
         && d.bookingNo is string && d.bookingNo.matches('^UDN-[0-9]{3,}$')
         && d.bookingSeq is int && d.bookingSeq >= 1
         && nonEmptyString(d.clientId, 200)
+        && (!('contactName' in d) || (d.contactName is string && d.contactName.size() <= 200))
+        && (!('contactPhone' in d) || (d.contactPhone is string && d.contactPhone.matches('^[+][1-9][0-9]{6,14}$')))
         && d.status in bookingStatuses()
         && (!('category' in d) || d.category in ['Visa', 'Passport', 'Package', 'Hotel', 'Flight', 'Train', 'Bus'])
         && (!('tripScope' in d) || d.tripScope in ['Domestic', 'International'])

@@ -20,6 +20,22 @@ export function travelRange(b: Parameters<typeof serviceDates>[0]): string {
   return dateRange(d.start, d.end);
 }
 
+/** Contact person read state: name and a tel link, or a muted "No contact person". */
+export function ContactView({ booking }: { booking: Booking }) {
+  if (!booking.contactName && !booking.contactPhone) return <p className="adm-muted">No contact person.</p>;
+  return (
+    <KeyValues
+      items={[
+        { label: 'Name', value: booking.contactName || <span className="adm-muted">Not added</span> },
+        {
+          label: 'Number',
+          value: booking.contactPhone ? <a href={telUrl(booking.contactPhone)}>{booking.contactPhone}</a> : <span className="adm-muted">Not added</span>,
+        },
+      ]}
+    />
+  );
+}
+
 export function ClientView({ client }: { client?: Client }) {
   if (!client) return <p className="adm-muted">This Customer record no longer exists. Edit to pick another.</p>;
   const extra = [client.city, client.email].filter(Boolean).join(', ');

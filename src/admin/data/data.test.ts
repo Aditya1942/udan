@@ -146,6 +146,17 @@ describe('createBooking', () => {
     await expect(createBooking(db, draft({ travelEnd: '2026-12-01' }))).resolves.toMatchObject({ bookingNo: 'UDN-001' });
   });
 
+  it('stores an optional Contact person; clearing it removes the keys; rules reject a bad number', async () => {
+    const { id } = await createBooking(db, draft({ contactName: 'Mehul Shah', contactPhone: '+919825011224' }));
+    expect(await readDoc(`bookings/${id}`)).toMatchObject({ contactName: 'Mehul Shah', contactPhone: '+919825011224' });
+    await saveBookingSection(db, id, { contactName: undefined, contactPhone: undefined });
+    const raw = await readDoc(`bookings/${id}`);
+    expect(raw).not.toHaveProperty('contactName');
+    expect(raw).not.toHaveProperty('contactPhone');
+    await expect(saveBookingSection(db, id, { contactPhone: '12345' })).rejects.toBeTruthy();
+    expect(bookingFromDoc(id, { ...raw, contactName: 'A', contactPhone: '+919825011224' })).toMatchObject({ contactName: 'A', contactPhone: '+919825011224' });
+  });
+
   it('accepts Travel with no end date (one-way); rejects Visa/Passport with Travel', async () => {
     const { id } = await createBooking(db, draft({ travelEnd: '' }));
     expect(await readDoc(`bookings/${id}`)).not.toHaveProperty('travelEnd');

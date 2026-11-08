@@ -120,9 +120,13 @@ export type DmcFields = {
 };
 export type Dmc = DocMeta & DmcFields;
 
-/** Booking fields the Admin edits through sections (Client, Travel, Price, Service lines, Notes). */
+/** Booking fields the Admin edits through sections (Customer, Contact person, Service, Travel, Travellers, Price, Notes). */
 export type BookingEditableFields = {
   clientId: string;
+  /** Optional Contact Person printed on the Invoice (e.g. the traveller's relative or the booking agent). */
+  contactName?: string;
+  /** E.164; optional. */
+  contactPhone?: string;
   category: BookingCategory;
   /** Package only. */
   tripScope?: TripScope;

@@ -28,10 +28,11 @@ import {
 } from '../../model';
 
 export type SectionKey = keyof typeof BOOKING_SECTIONS;
-/** Section order on the page (Customer → Service → Travel → Travellers → Price → Notes). */
-export const SECTION_KEYS: SectionKey[] = ['client', 'service', 'travel', 'travellers', 'price', 'notes'];
+/** Section order on the page (Customer → Contact person → Service → Travel → Travellers → Price → Notes). */
+export const SECTION_KEYS: SectionKey[] = ['client', 'contact', 'service', 'travel', 'travellers', 'price', 'notes'];
 export const SECTION_TITLES: Record<SectionKey, string> = {
   client: 'Customer',
+  contact: 'Contact person',
   service: 'Service',
   travel: 'Travel',
   travellers: 'Travellers',
@@ -64,6 +65,8 @@ const blankNewClient = (): NewClientInput => ({ name: '', mobile: '', email: '',
 export function formFromBooking(b: Booking): BookingForm {
   return {
     clientId: b.clientId,
+    contactName: b.contactName,
+    contactPhone: b.contactPhone,
     category: b.category,
     tripScope: b.tripScope,
     hasTravel: b.hasTravel,
@@ -207,7 +210,10 @@ export function sectionErrors(section: SectionKey, form: BookingForm, clients: r
       if (Object.keys(e).length) lines[l.id] = e;
     }
   }
-  const all = validateBookingFields({ ...form, category: form.category || undefined }, { requireClient: false });
+  const all = validateBookingFields(
+    { ...form, ...sectionPatch('contact', form), category: form.category || undefined },
+    { requireClient: false },
+  );
   return { fields: pick(all, BOOKING_SECTIONS[section]), lines };
 }
 
@@ -229,6 +235,10 @@ export function sectionPatch(section: SectionKey, form: BookingForm): BookingSec
     else Object.assign(patch, NO_TRAVEL);
   }
   if (section === 'price') patch.clientBalanceDueBy = form.clientBalanceDueBy || undefined;
+  if (section === 'contact') {
+    patch.contactName = form.contactName?.trim() || undefined;
+    patch.contactPhone = form.contactPhone?.trim() ? toE164(form.contactPhone) : undefined;
+  }
   return patch as BookingSectionPatch;
 }
 
@@ -262,9 +272,17 @@ export function liveMoneyInput(booking: Booking | undefined, form: BookingForm, 
 
 /** New booking → `createBooking` arguments. */
 export function toCreateArgs(form: BookingForm): { draft: BookingDraft; newClient?: ClientFields } {
-  const patch = { ...sectionPatch('travel', form), ...sectionPatch('price', form), ...sectionPatch('service', form), ...sectionPatch('notes', form) };
+  const patch = {
+    ...sectionPatch('contact', form),
+    ...sectionPatch('travel', form),
+    ...sectionPatch('price', form),
+    ...sectionPatch('service', form),
+    ...sectionPatch('notes', form),
+  };
   const draft: BookingDraft = {
     category: form.category as BookingCategory,
+    contactName: patch.contactName,
+    contactPhone: patch.contactPhone,
     tripScope: patch.tripScope,
     hasTravel: patch.hasTravel ?? form.hasTravel,
     destination: patch.destination ?? '',

@@ -61,6 +61,8 @@ export function validateBookingFields(
 ): Errors<BookingErrorKey> {
   const e: Errors<BookingErrorKey> = {};
   if (requireClient && isBlank(b.clientId)) e.clientId = 'Choose a Customer.';
+  if (b.contactName && b.contactName.trim().length > 200) e.contactName = 'Keep the name under 200 characters.';
+  if (b.contactPhone && !E164.test(b.contactPhone)) e.contactPhone = 'Enter a number in +91… format.';
   const category = b.category && BOOKING_CATEGORIES.includes(b.category) ? b.category : undefined;
   if (!category) e.category = 'Choose a category.';
   if (category === 'Package' && !b.tripScope) e.tripScope = 'Choose Domestic or International.';

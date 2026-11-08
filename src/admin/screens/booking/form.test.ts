@@ -69,9 +69,10 @@ describe('category selection', () => {
 
 describe('sections', () => {
   it('has the Service/Travellers sections in order with titles', () => {
-    expect(SECTION_KEYS).toEqual(['client', 'service', 'travel', 'travellers', 'price', 'notes']);
+    expect(SECTION_KEYS).toEqual(['client', 'contact', 'service', 'travel', 'travellers', 'price', 'notes']);
     expect(SECTION_TITLES).toEqual({
       client: 'Customer',
+      contact: 'Contact person',
       service: 'Service',
       travel: 'Travel',
       travellers: 'Travellers',
@@ -84,7 +85,7 @@ describe('sections', () => {
     const passport = visibleSections(setCategory(blankForm(), 'Passport'));
     expect(passport).toContain('travellers');
     expect(passport).not.toContain('travel');
-    expect(visibleSections(setCategory(blankForm(), 'Hotel'))).toEqual(['client', 'service', 'travel', 'travellers', 'price', 'notes']);
+    expect(visibleSections(setCategory(blankForm(), 'Hotel'))).toEqual(['client', 'contact', 'service', 'travel', 'travellers', 'price', 'notes']);
     expect(visibleSections(blankForm())).toContain('travellers');
   });
 });
@@ -171,6 +172,18 @@ describe('service section', () => {
 
     const single = sectionPatch('service', { ...setCategory(blankForm(), 'Hotel'), tripScope: 'Domestic' });
     expect(single.tripScope).toBeUndefined();
+  });
+});
+
+describe('contact section', () => {
+  it('optional; trims the name, normalises the number to E.164, blanks → removed', () => {
+    const f = { ...setCategory(blankForm(), 'Hotel'), contactName: ' Mehul Shah ', contactPhone: '98250 11224' };
+    expect(sectionErrors('contact', f, clients).fields).toEqual({});
+    expect(sectionPatch('contact', f)).toEqual({ contactName: 'Mehul Shah', contactPhone: '+919825011224' });
+    expect(sectionPatch('contact', { ...f, contactName: ' ', contactPhone: '' })).toEqual({ contactName: undefined, contactPhone: undefined });
+    expect(sectionErrors('contact', { ...f, contactPhone: '123' }, clients).fields).toHaveProperty('contactPhone');
+    expect(toCreateArgs({ ...f, clientId: 'c1' }).draft).toMatchObject({ contactName: 'Mehul Shah', contactPhone: '+919825011224' });
+    expect(visibleSections(f)[1]).toBe('contact');
   });
 });
 

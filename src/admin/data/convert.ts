@@ -102,6 +102,8 @@ export function bookingFromDoc(id: string, d: DocumentData): Booking {
     bookingNo: str(d.bookingNo) ?? '',
     bookingSeq: typeof d.bookingSeq === 'number' ? d.bookingSeq : 0,
     clientId: str(d.clientId) ?? '',
+    contactName: str(d.contactName),
+    contactPhone: str(d.contactPhone),
     status: d.status ?? 'Pending',
     category: BOOKING_CATEGORIES.find((c) => c === d.category) ?? 'Package',
     tripScope: TRIP_SCOPES.find((t) => t === d.tripScope),

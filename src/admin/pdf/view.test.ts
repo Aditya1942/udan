@@ -122,6 +122,19 @@ describe('Invoice view-model', () => {
     expect(v.payment?.qr?.caption).toBe('Scan to pay ₹10,000');
   });
 
+  it('Contact person prints only when entered (name, formatted number), also as rich detail rows', () => {
+    const none = invoiceView({ booking: sampleBooking(), client: SAMPLE_CLIENT, profile: FULL_PROFILE });
+    expect(none.contact).toEqual([]);
+    expect(none.billedToDetails.map((d) => d.label)).not.toContain('Contact person');
+    const v = invoiceView({ booking: { ...sampleBooking(), contactName: 'Mehul Shah', contactPhone: '+919825011224' }, client: SAMPLE_CLIENT, profile: FULL_PROFILE });
+    expect(v.contact).toEqual(['Mehul Shah', '+91 98250 11224']);
+    expect(v.billedToDetails).toEqual(expect.arrayContaining([
+      { label: 'Contact person', value: 'Mehul Shah' },
+      { label: 'Contact no.', value: '+91 98250 11224' },
+    ]));
+    expect(invoiceView({ booking: { ...sampleBooking(), contactName: 'Mehul Shah' }, client: SAMPLE_CLIENT, profile: FULL_PROFILE }).contact).toEqual(['Mehul Shah']);
+  });
+
   it('empty Business profile: nothing from the profile prints, generic footer, no Payment details even with a balance', () => {
     const v = invoiceView({ booking: sampleBooking(), client: { id: 'c9', name: 'Asha', mobile: '+919811111111' }, profile: {} });
     expect(v.from).toEqual({ name: undefined, lines: [] });

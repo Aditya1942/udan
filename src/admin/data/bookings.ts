@@ -37,7 +37,7 @@ import { bookingFromDoc, clean, COLLECTIONS, toUpdate } from './convert';
 import { clientCreateData } from './directory';
 import { AdminDataError, run } from './errors';
 
-const OPTIONAL_BOOKING_KEYS = ['clientBalanceDueBy', 'travelStart', 'travelEnd', 'tripScope'] as const;
+const OPTIONAL_BOOKING_KEYS = ['clientBalanceDueBy', 'travelStart', 'travelEnd', 'tripScope', 'contactName', 'contactPhone'] as const;
 
 async function readBooking(tx: Transaction, db: Firestore, bookingId: string): Promise<Booking> {
   const snap = await tx.get(doc(db, COLLECTIONS.bookings, bookingId));
@@ -153,12 +153,13 @@ export function allocateInvoiceNo(
   );
 }
 
-/** Fields one section Save may write (Customer, Service, Travel, Travellers, Price, Notes). */
+/** Fields one section Save may write (Customer, Contact person, Service, Travel, Travellers, Price, Notes). */
 export type BookingSectionPatch = Partial<BookingEditableFields>;
 
 /** Section keys, for building patches from form state. */
 export const BOOKING_SECTIONS = {
   client: ['clientId'],
+  contact: ['contactName', 'contactPhone'],
   service: ['category', 'tripScope', 'lines'],
   travel: ['hasTravel', 'destination', 'travelStart', 'travelEnd', 'itinerary'],
   travellers: ['pax', 'travellerNames'],

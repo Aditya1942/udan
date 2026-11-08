@@ -61,6 +61,7 @@ Vocabulary follows `GLOSSARY.md` (Admin, Client, DMC, Booking, Booking Status, S
 - 22c. As an Admin, I want to set a Package's Trip Scope (Domestic / International), so that I can tell the two apart.
 - 22d. As an Admin, I want a Visa service to carry its Visa Type (Visitor / Business) and country, so that I know what is being applied for.
 - 22e. As an Admin, I want travel details behind an "Add travel details" button, shown only for travel Categories (Package, Hotel, Flight, Train, Bus), so that I skip them when they don't apply.
+- 22h. As an Admin, I want an optional Contact person (name + number) on a Booking, printed on the Invoice, so that the person to reach (when not the Customer) is on the document.
 - 22g. As an Admin, I want a Travellers section (head-counts and names, all optional) on every Booking, so that I can record who the service is for whatever the Category.
 - 22f. As an Admin, I want each Booking's Division (Travel / Immigration) to follow from its Category, so that I can filter by line of business without extra input.
 
@@ -199,6 +200,8 @@ type Booking = {
   bookingNo: string;       // 'UDN-001' — immutable; route key
   bookingSeq: number;      // 1, 2, … — immutable; sort key
   clientId: string;
+  contactName?: string;                       // optional Contact person, printed on the Invoice
+  contactPhone?: string;                      // E.164, optional
   status: BookingStatus;
   category: BookingCategory;                  // absent on legacy docs = 'Package'
   tripScope?: TripScope;                      // Package only; required on save of a Package
@@ -442,7 +445,7 @@ H1 "Dashboard", then underline tabs **Overview | Insights**. These are real rout
   - Cancelled → red note with date + reason. Travel ended → warn note "Mark Completed?".
   - Breadcrumb "← Bookings" → dashboard table, All time.
 - **Layout**: main column (1fr) + a **sticky rail** (16–20rem). Under 60rem the rail moves above the sections and stops sticking.
-- **Sections**: Client, Service, Travel, Travellers, Price, Client payments, DMC payments, Notes. Each is a panel with its own **Edit** button.
+- **Sections**: Client, Contact person, Service, Travel, Travellers, Price, Client payments, DMC payments, Notes. Each is a panel with its own **Edit** button.
   - **Service** sits right after Client, one panel (section key `service`, title "Service"): Category select; Trip scope (Package only, required); Division shown read-only; then either the single service's fields inline (non-Package, with **Add more service**, which converts to Package) or the line cards (Package, with **Add service line**). Save writes category, tripScope and lines together in one transaction (`saveServiceSection`), which also clears payment tags that point at deleted lines or lines whose DMC changed.
   - **Travel** (destination, dates, itinerary): travel Categories only (Package, Hotel, Flight, Train, Bus), hidden behind **Add travel details** (`hasTravel`); removable again. Not shown for Visa/Passport; picking Visa/Passport turns Travel off, and the Service save clears any saved travel details in the same write.
   - **Travellers** (pax + names): its own section on every Category, all optional.
@@ -450,6 +453,7 @@ H1 "Dashboard", then underline tabs **Overview | Insights**. These are real rout
   - Several sections may be open at once. The Money rail recomputes live from unsaved values.
 - **Read states**:
   - **Client**: link to the Client, city/email, tel + WhatsApp.
+  - **Contact person**: name and tel link, or "No contact person". Edit: Contact name + Contact number, both optional; the number is normalised to E.164 (Indian 10-digit accepted) and must be valid when entered. Blank fields are removed on save.
   - **Travel**: destination, dates, balance due by.
   - **Travellers**: pax breakdown ("None" at 0), traveller names ("Names not added").
   - **Price**: Selling Price, balance due by.
@@ -544,7 +548,7 @@ H1 "Dashboard", then underline tabs **Overview | Insights**. These are real rout
 **Invoice** ("Minimal letter" + Included services):
 
 - **Header**: wordmark left. On the right: "Invoice", the invoice number, "Date <invoiceDate>", "Booking UDN-xxx". Thin rule below.
-- **Two columns**: "Billed to" (Client name, mobile, email, city; empty hidden) | "From" (Business profile: trading name, address, phones, email, website; filled only).
+- **Two columns**: "Billed to" (Client name, mobile, email, city; empty hidden; then a "Contact person" block with the Booking's contact name and number when entered) | "From" (Business profile: trading name, address, phones, email, website; filled only).
 - **Description**: one priced row, "<Category label> — <destination, or the line description when Travel is skipped>" (Package reads "Holiday package"), with dates + pax under it when known. Amount = Selling Price.
 - **Included services**: the Service Lines in order — type, description, dates ("—" if none). **Never prices, never DMC.**
 - **Totals** (right, 230pt):
@@ -641,7 +645,7 @@ function isAdmin() {
   - **No validation inside arrays** (`lines`, `clientPayments`, `dmcPayments`, `travellerNames`) beyond `is list`.
 - **`bookings`**:
   - `bookingNo`, `bookingSeq` and `createdAt` are immutable.
-  - Allows `category`, `tripScope`, `hasTravel`; `category`/`tripScope` in their enums when present. `destination` may be empty and `travelStart`/`travelEnd` absent when `hasTravel == false`; with Travel, `destination` and `travelStart` are required and `travelEnd` optional; when both dates are present, `travelEnd >= travelStart`. A Visa/Passport Booking must have `hasTravel == false`.
+  - Allows `contactName` (string ≤ 200) and `contactPhone` (E.164) when present. Allows `category`, `tripScope`, `hasTravel`; `category`/`tripScope` in their enums when present. `destination` may be empty and `travelStart`/`travelEnd` absent when `hasTravel == false`; with Travel, `destination` and `travelStart` are required and `travelEnd` optional; when both dates are present, `travelEnd >= travelStart`. A Visa/Passport Booking must have `hasTravel == false`.
   - `invoiceNo`, `invoiceSeq`, `invoiceDate` and `enquiryId` can be **set once** (absent → present), then never changed or removed.
   - **Delete denied.**
 - **`clients`, `dmcs`**: Admin may delete. The "in use" check is client-side only.

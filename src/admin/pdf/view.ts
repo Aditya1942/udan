@@ -6,15 +6,20 @@
  * The Voucher builder never receives DMCs and copies only customer-facing line fields: no DMC name, cost or payment.
  */
 import {
+  daysBetween,
   divisionOf,
   serviceDates,
   bookingMoney,
   formatDate,
+  lineMoney,
   formatINR,
   normaliseBusinessProfile,
   type Booking,
+  type BookingCategory,
+  type BookingStatus,
   type BusinessProfile,
   type Client,
+  type Dmc,
   type INR,
   type ISODate,
   type LineType,
@@ -61,6 +66,82 @@ export function upiPayUri({ upiId, payee, amount, note }: { upiId: string; payee
   return `upi://pay?${params.join('&')}`;
 }
 
+
+/* ------------------------- shared rich fields ------------------------- */
+
+/** A printed label/value pair (filled values only). */
+export type Pair = { label: string; value: string };
+
+const pairs = (rows: [string, string | undefined | false][]): Pair[] =>
+  rows.flatMap(([label, value]) => (value ? [{ label, value }] : []));
+
+/** Business identity, split for letterheads and "Issued by" blocks (filled only). */
+export type Letterhead = {
+  name?: string;
+  address: string[];
+  phones: string[];
+  email?: string;
+  website?: string;
+};
+
+function letterhead(p: BusinessProfile): Letterhead {
+  return { name: p.tradingName, address: textLines(p.address), phones: phoneList(p.phones), email: p.email, website: p.website };
+}
+
+/** Bank / UPI rows for a bank-details table (filled only), whatever the balance. */
+function bankRows(p: BusinessProfile): Pair[] {
+  return pairs([
+    ['Account name', p.accountName],
+    ['Account no.', p.accountNumber],
+    ['IFSC', p.ifsc],
+    ['Bank / branch', p.bankBranch],
+    ['UPI', p.upiId],
+  ]);
+}
+
+/** Nights between two dates (0 when either is missing or end <= start). */
+export function nightsBetween(start?: ISODate, end?: ISODate): number {
+  return start && end && end > start ? daysBetween(start, end) : 0;
+}
+
+const ONES = [
+  '', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Eleven', 'Twelve', 'Thirteen',
+  'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen',
+];
+const TENS = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+const below100 = (n: number) => (n < 20 ? ONES[n] : `${TENS[Math.floor(n / 10)]}${n % 10 ? ` ${ONES[n % 10]}` : ''}`);
+const below1000 = (n: number) =>
+  n >= 100 ? `${ONES[Math.floor(n / 100)]} Hundred${n % 100 ? ` ${below100(n % 100)}` : ''}` : below100(n);
+
+/** `18000` → `Rupees Eighteen Thousand Only` (Indian grouping: crore, lakh, thousand). */
+export function inrInWords(amount: INR): string {
+  let n = Math.abs(Math.round(amount));
+  if (n === 0) return 'Rupees Zero Only';
+  const parts: string[] = [];
+  const crore = Math.floor(n / 10_000_000);
+  n %= 10_000_000;
+  const lakh = Math.floor(n / 100_000);
+  n %= 100_000;
+  const thousand = Math.floor(n / 1000);
+  n %= 1000;
+  if (crore) parts.push(`${crore >= 1000 ? inrInWords(crore).replace(/^Rupees | Only$/g, '') : below1000(crore)} Crore`);
+  if (lakh) parts.push(`${below100(lakh)} Lakh`);
+  if (thousand) parts.push(`${below100(thousand)} Thousand`);
+  if (n) parts.push(below1000(n));
+  return `Rupees ${parts.join(' ')} Only`;
+}
+
+/** Category → what the booking is, in customer words. */
+const CATEGORY_LABEL: Record<BookingCategory, string> = {
+  Package: 'Holiday package',
+  Hotel: 'Hotel booking',
+  Flight: 'Flight tickets',
+  Train: 'Train tickets',
+  Bus: 'Bus tickets',
+  Visa: 'Visa services',
+  Passport: 'Passport services',
+};
+
 /* -------------------------------- Invoice -------------------------------- */
 
 export type Tone = 'danger' | 'action' | 'warn';
@@ -76,6 +157,8 @@ export type InvoiceView = {
   /** Red sentence under the addresses (Cancelled only). */
   cancelledNote?: string;
   billedTo: { name: string; lines: string[] };
+  /** The Booking's Contact person: name, number (filled only; empty = not printed). */
+  contact: string[];
   /** Trading name + address, phones, email, website (filled only). */
   from: { name?: string; lines: string[] };
   /** The one priced row. */
@@ -97,6 +180,27 @@ export type InvoiceView = {
   signature?: { image: string; caption: string };
   footer: string[];
   filenameTitle: string;
+
+  /* ---- Rich fields for template variants (all optional to print) ---- */
+  bookingNo: string;
+  /** `1 Nov 2026`. */
+  invoiceDate: string;
+  category: BookingCategory;
+  /** `Holiday package`, `Visa services`… */
+  categoryLabel: string;
+  status: BookingStatus;
+  /** Client address/city/state/country, GSTIN, PAN, WhatsApp… as label/value rows (filled only). */
+  billedToDetails: Pair[];
+  /** Business identity split into parts. */
+  letterhead: Letterhead;
+  /** Trip facts (filled only): destination, dates, pax, travellers. */
+  trip: { destination: string; dates: string; pax: string; travellers: string[] };
+  /** Numbered line items (one per Service line) for itemised layouts; no per-line price exists. */
+  lineItems: { no: string; type: LineType; description: string; dates: string; detail: string }[];
+  /** Raw totals, formatted. */
+  summary: { total: string; received: string; refunded: string; balance: string; inWords: string };
+  /** Bank + UPI rows, printed whatever the balance (filled only). */
+  bankRows: Pair[];
 };
 
 export type InvoiceInput = {
@@ -163,6 +267,7 @@ export function invoiceView({ booking, client, profile: raw }: InvoiceInput): In
       name: client?.name ?? '',
       lines: [client?.mobile && displayMobile(client.mobile), client?.email, client?.city].filter((l): l is string => Boolean(l)),
     },
+    contact: [booking.contactName, booking.contactPhone && displayMobile(booking.contactPhone)].filter((l): l is string => Boolean(l)),
     from: { name, lines: [...textLines(p.address), ...phoneList(p.phones), p.email, p.website].filter((l): l is string => Boolean(l)) },
     item: {
       title: subject ? `${kind} — ${subject}` : kind,
@@ -189,8 +294,209 @@ export function invoiceView({ booking, client, profile: raw }: InvoiceInput): In
     signature: p.signature ? { image: p.signature, caption: name ? `For ${name}` : 'Authorised signatory' } : undefined,
     footer: [name ? `Thank you for travelling with ${name}.` : 'Thank you for travelling with us.', 'This is not a tax invoice.'],
     filenameTitle: `Invoice ${booking.invoiceNo}`,
+    ...richInvoiceFields(booking, client, p),
   };
 }
+
+/** The variant-only fields shared by the customer and admin invoices. */
+function richInvoiceFields(booking: Booking, client: Client | undefined, p: BusinessProfile) {
+  const m = bookingMoney(booking);
+  const [start, end] = dateArgs(booking);
+  const lineDetail = (l: Booking['lines'][number]) =>
+    [
+      l.visaType || l.visaCountry ? [l.visaType && `${l.visaType} visa`, l.visaCountry].filter(Boolean).join(' · ') : '',
+      l.type === 'Hotel' && nightsBetween(l.start, l.end) ? `${nightsBetween(l.start, l.end)} night${nightsBetween(l.start, l.end) === 1 ? '' : 's'}` : '',
+    ]
+      .filter(Boolean)
+      .join(' · ');
+  return {
+    bookingNo: booking.bookingNo,
+    invoiceDate: booking.invoiceDate ? formatDate(booking.invoiceDate) : '',
+    category: booking.category,
+    categoryLabel: CATEGORY_LABEL[booking.category],
+    status: booking.status,
+    billedToDetails: pairs([
+      ['Mobile', client?.mobile && displayMobile(client.mobile)],
+      ['WhatsApp', client?.whatsapp && displayMobile(client.whatsapp)],
+      ['Email', client?.email],
+      ['Address', [client?.address, client?.city, client?.state, client?.country].filter(Boolean).join(', ')],
+      ['GSTIN', client?.gstin],
+      ['PAN', client?.pan],
+      ['Contact person', booking.contactName],
+      ['Contact no.', booking.contactPhone && displayMobile(booking.contactPhone)],
+    ]),
+    letterhead: letterhead(p),
+    trip: {
+      destination: booking.hasTravel ? booking.destination : '',
+      dates: dateRangeText(start, end),
+      pax: paxText(booking),
+      travellers: booking.travellerNames,
+    },
+    lineItems: booking.lines.map((l, i) => ({
+      no: String(i + 1).padStart(2, '0'),
+      type: l.type,
+      description: l.description,
+      dates: dateRangeText(l.start, l.end),
+      detail: lineDetail(l),
+    })),
+    summary: {
+      total: formatINR(m.sellingPrice),
+      received: formatINR(m.clientPaid),
+      refunded: formatINR(m.clientRefunded),
+      balance: formatINR(m.clientOutstanding),
+      inWords: inrInWords(m.sellingPrice),
+    },
+    bankRows: bankRows(p),
+  };
+}
+
+/* ----------------------------- Admin invoice ----------------------------- */
+
+/**
+ * Internal copy of the invoice for UDAN's own records: everything the customer invoice prints plus the business side —
+ * DMC per line, net costs, commission and margin, DMC payments and what is still owed either way, pay-by dates and
+ * internal notes. Never sent to a customer.
+ */
+export type AdminInvoiceView = Omit<InvoiceView, 'invoiceNo' | 'invoiceDate' | 'dateLine'> & {
+  /** Invoice no., or `Not invoiced yet`. */
+  invoiceNo: string;
+  invoiceDate: string;
+  dateLine: string;
+  /** `INTERNAL — NOT FOR CUSTOMER`. */
+  internalBanner: string;
+  /** `Prepared 20 Nov 2026`. */
+  preparedLine: string;
+  cancelReason?: string;
+  /** Per Service line: who supplies it and what it costs UDAN. */
+  costLines: {
+    no: string;
+    type: LineType;
+    description: string;
+    dates: string;
+    /** DMC name, or `In-house`. */
+    supplier: string;
+    netCost: string;
+    /** Cancelled only: the DMC cancellation charge replacing the net cost. */
+    cancellationCharge?: string;
+    confirmation: { text: string; pending: boolean };
+    /** `Pay by 10 Dec 2026` when set. */
+    payBy?: string;
+    /** DMC paid / owed on this line from tagged entries (DMC lines only). */
+    dmcPaid?: string;
+    dmcOwed?: string;
+  }[];
+  /** Headline business numbers. Commission tone: action (> 0), danger (< 0). */
+  profit: {
+    sellingPrice: string;
+    netCost: string;
+    commission: string;
+    commissionTone: Tone;
+    /** `18.4%` of the selling price; `—` when the price is 0. */
+    margin: string;
+    clientReceived: string;
+    clientOutstanding: string;
+    clientOutstandingTone: Tone;
+    dmcOutstanding: string;
+    dmcOutstandingTone: Tone;
+    /** Cash position today: net received from the client − net paid to DMCs. */
+    cashInHand: string;
+  };
+  /** One row per DMC: cost, paid, outstanding (signed label). */
+  dmcs: { name: string; contact: string; cost: string; paid: string; outstanding: string; tone: Tone; label: 'Due' | 'Settled' | 'Due back' }[];
+  /** Every money movement, oldest first. */
+  ledger: { date: string; party: string; direction: 'In' | 'Out'; kind: string; mode: string; ref: string; amount: string }[];
+  internalNotes: string[];
+};
+
+export type AdminInvoiceInput = InvoiceInput & { dmcs: Dmc[]; today: ISODate };
+
+export function adminInvoiceView({ booking, client, profile, dmcs, today }: AdminInvoiceInput): AdminInvoiceView {
+  const invoiced = Boolean(booking.invoiceNo && booking.invoiceDate);
+  const base = invoiceView({
+    booking: invoiced ? booking : { ...booking, invoiceNo: 'Not invoiced yet', invoiceDate: today },
+    client,
+    profile,
+  });
+  const m = bookingMoney(booking);
+  const perLine = lineMoneyById(booking);
+  const dmcName = (id?: string) => (id ? (dmcs.find((d) => d.id === id)?.name ?? 'Unknown DMC') : 'In-house');
+  const dmcContact = (id: string) => {
+    const d = dmcs.find((x) => x.id === id);
+    return [d?.contactPerson, d?.phone].filter(Boolean).join(' · ');
+  };
+  const pct = m.sellingPrice ? `${((m.commission / m.sellingPrice) * 100).toFixed(1)}%` : '—';
+  const signedTone = (n: INR, positive: Tone): Tone => (n > 0 ? positive : n < 0 ? 'warn' : 'action');
+
+  const ledger = [
+    ...booking.clientPayments.map((e) => ({ e, party: client?.name || 'Client', direction: (e.kind === 'Refund' ? 'Out' : 'In') as 'In' | 'Out' })),
+    ...booking.dmcPayments.map((e) => ({ e, party: dmcName(e.dmcId), direction: (e.kind === 'Refund' ? 'In' : 'Out') as 'In' | 'Out' })),
+  ]
+    .sort((a, b) => a.e.date.localeCompare(b.e.date))
+    .map(({ e, party, direction }) => ({
+      date: formatDate(e.date),
+      party,
+      direction,
+      kind: e.kind,
+      mode: e.mode,
+      ref: e.ref ?? '',
+      amount: formatINR(e.amount),
+    }));
+  const dmcNet = booking.dmcPayments.reduce((sum, e) => sum + (e.kind === 'Refund' ? -e.amount : e.amount), 0);
+
+  return {
+    ...base,
+    invoiceNo: invoiced ? booking.invoiceNo! : 'Not invoiced yet',
+    invoiceDate: invoiced ? formatDate(booking.invoiceDate!) : '',
+    dateLine: invoiced ? base.dateLine : '',
+    internalBanner: 'INTERNAL — NOT FOR CUSTOMER',
+    preparedLine: `Prepared ${formatDate(today)}`,
+    cancelReason: booking.status === 'Cancelled' ? booking.cancelReason : undefined,
+    footer: [`${base.letterhead.name ?? 'UDAN'} · internal booking sheet · ${booking.bookingNo}`, 'Confidential: contains costs and commission. Do not share with the customer.'],
+    filenameTitle: `Admin invoice ${booking.bookingNo}`,
+    costLines: booking.lines.map((l, i) => {
+      const lm = perLine.get(l.id);
+      return {
+        no: String(i + 1).padStart(2, '0'),
+        type: l.type,
+        description: l.description,
+        dates: dateRangeText(l.start, l.end) || 'Whole trip',
+        supplier: dmcName(l.dmcId),
+        netCost: formatINR(l.netCost),
+        cancellationCharge: m.cancelled ? formatINR(l.dmcCancellationCharge ?? 0) : undefined,
+        confirmation: l.confirmationNo?.trim() ? { text: l.confirmationNo.trim(), pending: false } : { text: 'To be confirmed', pending: true },
+        payBy: l.dmcPayBy ? `Pay by ${formatDate(l.dmcPayBy)}` : undefined,
+        dmcPaid: l.dmcId && lm ? formatINR(lm.dmcPaid) : undefined,
+        dmcOwed: l.dmcId && lm?.dmcOwed !== undefined ? formatINR(lm.dmcOwed) : undefined,
+      };
+    }),
+    profit: {
+      sellingPrice: formatINR(m.sellingPrice),
+      netCost: formatINR(m.netCost),
+      commission: formatINR(m.commission),
+      commissionTone: m.commission < 0 ? 'danger' : 'action',
+      margin: pct,
+      clientReceived: formatINR(m.clientNetReceived),
+      clientOutstanding: formatINR(m.clientOutstanding),
+      clientOutstandingTone: signedTone(m.clientOutstanding, 'danger'),
+      dmcOutstanding: formatINR(m.dmcOutstanding),
+      dmcOutstandingTone: signedTone(m.dmcOutstanding, 'danger'),
+      cashInHand: formatINR(m.clientNetReceived - dmcNet),
+    },
+    dmcs: m.dmcs.map((d) => ({
+      name: dmcName(d.dmcId),
+      contact: dmcContact(d.dmcId),
+      cost: formatINR(d.cost),
+      paid: formatINR(d.netPaid),
+      outstanding: formatINR(Math.abs(d.outstanding)),
+      tone: d.outstanding > 0 ? 'danger' : d.outstanding < 0 ? 'warn' : 'action',
+      label: d.outstanding > 0 ? 'Due' : d.outstanding < 0 ? 'Due back' : 'Settled',
+    })),
+    ledger,
+    internalNotes: textLines(booking.internalNotes),
+  };
+}
+
+const lineMoneyById = (b: Booking) => new Map(lineMoney(b).map((l) => [l.lineId, l]));
 
 /* -------------------------------- Voucher -------------------------------- */
 
@@ -221,6 +527,42 @@ export type VoucherView = {
   /** `<trading name> · phones · email · website` (filled only); empty = no footer. */
   footer: string;
   filenameTitle: string;
+
+  /* ---- Rich fields for template variants ---- */
+  /** Voucher no. = Booking ID (`UDN-001`). */
+  voucherNo: string;
+  bookingNo: string;
+  /** `1 Nov 2026`. */
+  issueDate: string;
+  /** `Confirmed`, `Voucher Received`… (never Cancelled). */
+  status: BookingStatus;
+  category: BookingCategory;
+  categoryLabel: string;
+  /** Lead guest + contact as label/value rows (filled only), incl. pax counts and travellers. */
+  guestRows: Pair[];
+  travellers: string[];
+  paxCounts: Pax;
+  /** Every Service line, flat, in date order (undated last): for table/card layouts. */
+  services: {
+    type: LineType;
+    description: string;
+    /** `12 Nov 2026`; empty when undated. */
+    start: string;
+    end: string;
+    /** Hotels: nights; 0 = n/a. */
+    nights: number;
+    /** `12 Nov 2026 – 14 Nov 2026`, or `Whole trip`. */
+    dates: string;
+    notes?: string;
+    confirmation: { text: string; pending: boolean };
+  }[];
+  /** Hotel lines as stays (check-in/out/nights) for hotel-voucher layouts. */
+  stays: { name: string; checkIn: string; checkOut: string; nights: number; confirmation: { text: string; pending: boolean }; notes?: string }[];
+  /** Business identity for an "Issued by" block. */
+  letterhead: Letterhead;
+  signature?: { image: string; caption: string };
+  /** `2 pending` count of lines still To be confirmed. */
+  pendingCount: number;
 };
 
 export type VoucherInput = {
@@ -279,5 +621,56 @@ export function voucherView({ booking, client, profile: raw, today }: VoucherInp
     goodToKnow: textLines(p.voucherNotes),
     footer: [p.tradingName, ...phoneList(p.phones), p.email, p.website].filter(Boolean).join(' · '),
     filenameTitle: `Travel voucher ${booking.bookingNo}`,
+    ...richVoucherFields(booking, client, p, today, item),
+  };
+}
+
+function richVoucherFields(booking: Booking, client: Client | undefined, p: BusinessProfile, today: ISODate, item: (l: Booking['lines'][number]) => VoucherItem) {
+  const ordered = booking.lines
+    .map((l, i) => ({ l, i }))
+    .sort((a, b) => (a.l.start ?? '9999').localeCompare(b.l.start ?? '9999') || a.i - b.i)
+    .map(({ l }) => l);
+  const pax = paxText(booking);
+  return {
+    voucherNo: booking.bookingNo,
+    bookingNo: booking.bookingNo,
+    issueDate: formatDate(today),
+    status: booking.status,
+    category: booking.category,
+    categoryLabel: CATEGORY_LABEL[booking.category],
+    guestRows: pairs([
+      ['Lead guest', client?.name],
+      ['Mobile', client?.mobile && displayMobile(client.mobile)],
+      ['Travellers', booking.travellerNames.length ? booking.travellerNames.join(', ') : undefined],
+      ['Guests', pax],
+    ]),
+    travellers: booking.travellerNames,
+    paxCounts: booking.pax,
+    services: ordered.map((l) => {
+      const it = item(l);
+      return {
+        type: l.type,
+        description: l.description,
+        start: l.start ? formatDate(l.start) : '',
+        end: l.end ? formatDate(l.end) : '',
+        nights: l.type === 'Hotel' ? nightsBetween(l.start, l.end) : 0,
+        dates: dateRangeText(l.start, l.end) || 'Whole trip',
+        notes: it.notes,
+        confirmation: it.confirmation,
+      };
+    }),
+    stays: ordered
+      .filter((l) => l.type === 'Hotel')
+      .map((l) => ({
+        name: l.description,
+        checkIn: l.start ? formatDate(l.start) : '',
+        checkOut: l.end ? formatDate(l.end) : '',
+        nights: nightsBetween(l.start, l.end),
+        confirmation: item(l).confirmation,
+        notes: item(l).notes,
+      })),
+    letterhead: letterhead(p),
+    signature: p.signature ? { image: p.signature, caption: p.tradingName ? `For ${p.tradingName}` : 'Authorised signatory' } : undefined,
+    pendingCount: booking.lines.filter((l) => !l.confirmationNo?.trim()).length,
   };
 }

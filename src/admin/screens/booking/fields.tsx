@@ -268,6 +268,20 @@ export function PriceFields({ form, set, errors }: { form: BookingForm; set: Set
   );
 }
 
+/** Optional Contact person (name + number), printed on the Invoice. */
+export function ContactFields({ form, set, errors }: { form: BookingForm; set: SetForm; errors: Errors }) {
+  return (
+    <div className="adm-grid-3">
+      <Field label="Contact name" hint="Optional. Printed on the Invoice" error={errors.contactName}>
+        <input value={form.contactName ?? ''} onChange={(e) => set({ contactName: e.target.value })} autoComplete="off" />
+      </Field>
+      <Field label="Contact number" hint="Optional. +91… or 10 digits" error={errors.contactPhone}>
+        <input type="tel" value={form.contactPhone ?? ''} onChange={(e) => set({ contactPhone: e.target.value })} autoComplete="off" />
+      </Field>
+    </div>
+  );
+}
+
 export function NotesFields({ form, set }: { form: BookingForm; set: SetForm }) {
   return (
     <Field label="Internal notes" hint="Admin only, never printed">

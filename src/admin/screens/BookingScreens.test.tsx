@@ -448,6 +448,24 @@ describe('Category flows', () => {
     expect(screen.queryByRole('region', { name: 'Travel' })).not.toBeInTheDocument();
   });
 
+  it('Contact person: optional section, saved with a normalised number', async () => {
+    await seed(env, { 'bookings/b1': { ...BOOKING } });
+    const user = userEvent.setup();
+    await renderAdmin('/admin/bookings/UDN-001');
+    const contact = await screen.findByRole('region', { name: 'Contact person' });
+    expect(within(contact).getByText('No contact person.')).toBeInTheDocument();
+    await user.click(within(contact).getByRole('button', { name: 'Edit Contact person' }));
+    await user.type(within(contact).getByLabelText('Contact name'), 'Mehul Shah');
+    await user.type(within(contact).getByLabelText('Contact number'), '12');
+    await user.click(within(contact).getByRole('button', { name: 'Save' }));
+    expect(within(contact).getByText('Enter a number in +91… format.')).toBeInTheDocument();
+    await user.clear(within(contact).getByLabelText('Contact number'));
+    await user.type(within(contact).getByLabelText('Contact number'), '98250 11224');
+    await user.click(within(contact).getByRole('button', { name: 'Save' }));
+    await waitFor(async () => expect(await readDoc('bookings/b1')).toMatchObject({ contactName: 'Mehul Shah', contactPhone: '+919825011224' }));
+    expect(await within(contact).findByText('Mehul Shah')).toBeInTheDocument();
+  });
+
   it('Travel is hidden until Add travel details', async () => {
     const user = userEvent.setup();
     await renderAdmin('/admin/bookings/new');

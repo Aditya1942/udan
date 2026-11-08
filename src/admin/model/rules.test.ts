@@ -170,6 +170,12 @@ describe('validation', () => {
     expect(validateBookingFields({ ...base, category: 'Package', lines: [] }, { requireClient: false })).toEqual({ tripScope: 'Choose Domestic or International.', lines: 'Add at least one service.' });
     expect(validateBookingFields({ ...base, lines: [line(), line()] }, { requireClient: false })).toHaveProperty('lines');
   });
+  it('Contact person is optional; a number must be E.164', () => {
+    const v = (o: object) => validateBookingFields({ ...base, ...o }, { requireClient: false });
+    expect(v({ contactName: 'Mehul', contactPhone: '+919825011224' })).toEqual({});
+    expect(v({ contactName: 'Mehul' })).toEqual({});
+    expect(v({ contactPhone: '98250' })).toHaveProperty('contactPhone');
+  });
   it('travellers are optional on every Category', () => {
     for (const category of ['Passport', 'Hotel'] as const) {
       const e = validateBookingFields(

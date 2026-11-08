@@ -54,6 +54,14 @@ export function InvoiceDocument({ view: v, wordmark, qr }: { view: InvoiceView; 
             {v.billedTo.lines.map((l, i) => (
               <Text key={i}>{l}</Text>
             ))}
+            {v.contact.length ? (
+              <>
+                <Text style={[base.label, { marginTop: 8 }]}>Contact person</Text>
+                {v.contact.map((l, i) => (
+                  <Text key={i}>{l}</Text>
+                ))}
+              </>
+            ) : null}
           </View>
           {v.from.name || v.from.lines.length ? (
             <View style={{ flex: 1 }}>
