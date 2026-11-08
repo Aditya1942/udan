@@ -67,7 +67,21 @@ export type ClientFields = {
   /** E.164; unique across Clients (checked in the UI). */
   mobile: string;
   email?: string;
+  /** Set when WhatsApp is the mobile; `whatsapp` is then absent. */
+  whatsappSameAsMobile?: boolean;
+  /** E.164, when different from `mobile`. */
+  whatsapp?: string;
+  address?: string;
   city?: string;
+  state?: string;
+  country?: string;
+  emergencyName?: string;
+  /** E.164. */
+  emergencyPhone?: string;
+  /** GSTIN, uppercase. */
+  gstin?: string;
+  /** PAN, uppercase. */
+  pan?: string;
   notes?: string;
 };
 export type Client = DocMeta & ClientFields;

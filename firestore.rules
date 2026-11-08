@@ -104,11 +104,15 @@ service cloud.firestore {
 
     // clients/{autoId}
     function isValidClient(d) {
-      return d.keys().hasOnly(['name', 'mobile', 'email', 'city', 'notes', 'createdAt', 'updatedAt'])
+      return d.keys().hasOnly(['name', 'mobile', 'email', 'whatsappSameAsMobile', 'whatsapp', 'address', 'city', 'state',
+          'country', 'emergencyName', 'emergencyPhone', 'gstin', 'pan', 'notes', 'createdAt', 'updatedAt'])
         && d.keys().hasAll(['name', 'mobile', 'createdAt', 'updatedAt'])
         && nonEmptyString(d.name, 200)
         && d.mobile is string && d.mobile.matches('^[+][1-9][0-9]{6,14}$')
         && optString(d, 'email') && optString(d, 'city') && optString(d, 'notes')
+        && (!('whatsappSameAsMobile' in d) || d.whatsappSameAsMobile is bool)
+        && optString(d, 'whatsapp') && optString(d, 'address') && optString(d, 'state') && optString(d, 'country')
+        && optString(d, 'emergencyName') && optString(d, 'emergencyPhone') && optString(d, 'gstin') && optString(d, 'pan')
         && stamped(d);
     }
 

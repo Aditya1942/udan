@@ -65,7 +65,7 @@ export function needsAttention({ rows, enquiries, lastBackup, today }: Attention
   const item = (r: BookingRow, detail: string): AttentionItem => ({
     bookingId: r.booking.id,
     bookingNo: r.booking.bookingNo,
-    clientName: r.client?.name ?? 'Unknown client',
+    clientName: r.client?.name ?? 'Unknown customer',
     detail,
   });
   const dmcName = (r: BookingRow, id: string) => r.dmcs.find((d) => d.id === id)?.name ?? 'Unknown DMC';
@@ -95,7 +95,7 @@ export function needsAttention({ rows, enquiries, lastBackup, today }: Attention
     anyDmcOverdue ||= flags.dmcOverdue;
     if (flags.clientRefundOwed) {
       anyClientRefund = true;
-      refunds.push(item(r, `Refund ${formatINR(-money.clientOutstanding)} to Client`));
+      refunds.push(item(r, `Refund ${formatINR(-money.clientOutstanding)} to Customer`));
     }
     if (flags.dmcDueBack)
       for (const d of money.dmcs)
@@ -111,7 +111,7 @@ export function needsAttention({ rows, enquiries, lastBackup, today }: Attention
   push({
     key: 'clientOverdue',
     tone: 'danger',
-    label: 'Client balance overdue',
+    label: 'Customer balance overdue',
     items: clientOverdue,
     links: [{ label: 'Show in table', query: { scope: 'all', clientPayment: 'overdue' } }],
   });
@@ -128,9 +128,9 @@ export function needsAttention({ rows, enquiries, lastBackup, today }: Attention
   push({
     key: 'refunds',
     tone: 'warn',
-    label: 'Refunds owed to Clients / due from DMCs',
+    label: 'Refunds owed to Customers / due from DMCs',
     items: refunds,
-    links: anyClientRefund ? [{ label: 'Refunds owed to Clients', query: { scope: 'all', clientPayment: 'refund' } }] : [],
+    links: anyClientRefund ? [{ label: 'Refunds owed to Customers', query: { scope: 'all', clientPayment: 'refund' } }] : [],
   });
   push({
     key: 'travelEnded',

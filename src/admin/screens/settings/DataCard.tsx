@@ -31,7 +31,7 @@ import { formatDate, isBackupOverdue, isISODate, todayIST } from '../../model';
 import { Button, errorMessage, Field, Note, Panel, useToast } from '../../ui';
 
 const PRESET_LABELS: Record<LedgerPreset, string> = { thisFy: 'This FY', lastFy: 'Last FY', thisMonth: 'This month', custom: 'Custom' };
-const SIDE_LABELS: Record<LedgerSide, string> = { both: 'Both', client: 'Client', dmc: 'DMC' };
+const SIDE_LABELS: Record<LedgerSide, string> = { both: 'Both', client: 'Customer', dmc: 'DMC' };
 
 export function DataCard() {
   return (
@@ -72,7 +72,7 @@ function BackupRow() {
         Backup
       </h3>
       <p className="adm-muted">
-        A complete copy of Clients, DMCs, Bookings, Enquiries, counters and the Business profile as one JSON file. There is no restore
+        A complete copy of Customers, DMCs, Bookings, Enquiries, counters and the Business profile as one JSON file. There is no restore
         in the app: keep the file safe; it holds everything needed to rebuild the data with a script if it is ever lost.
       </p>
       <div className="adm-data-row">
@@ -114,7 +114,7 @@ function LedgerRow() {
         Payments ledger
       </h3>
       <p className="adm-muted">
-        Every Client Payment, DMC Payment and Refund by payment date, including Cancelled bookings. Signed amount: money in +, money out −.
+        Every Customer Payment, DMC Payment and Refund by payment date, including Cancelled bookings. Signed amount: money in +, money out −.
       </p>
       <div className="adm-filters">
         <Field label="Period">
@@ -174,7 +174,7 @@ function DirectoryRow() {
   return (
     <section className="adm-stack adm-data-block" aria-labelledby="dir-h">
       <h3 id="dir-h" className="adm-h3">
-        Clients and DMCs
+        Customers and DMCs
       </h3>
       <p className="adm-muted">Every field of each record, plus its Bookings count.</p>
       <div className="adm-actions">
@@ -183,7 +183,7 @@ function DirectoryRow() {
           disabled={!ready}
           onClick={() => downloadText(clientsFilename(today), clientsCsv(clientCsvRows(clients.data, rowsState.rows)), CSV_MIME)}
         >
-          Export Clients CSV
+          Export Customers CSV
         </Button>
         <Button
           icon={<Download aria-hidden />}

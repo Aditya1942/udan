@@ -55,7 +55,7 @@ export function OverviewScreen() {
               { label: 'Bookings', value: stats.bookings },
               { label: 'Selling Price', value: formatINR(stats.sellingPrice) },
               { label: 'Commission', value: formatINR(stats.commission) },
-              { label: 'Client outstanding', value: formatINR(stats.clientOutstanding) },
+              { label: 'Customer outstanding', value: formatINR(stats.clientOutstanding) },
             ]}
           />
         </DataRegion>

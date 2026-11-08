@@ -22,6 +22,7 @@
 .adm-sub { display: block; overflow-wrap: anywhere; }
 .adm-num, .adm .num { text-align: right; font-variant-numeric: tabular-nums; }
 .adm-stack { display: grid; gap: var(--space-3); }
+.adm-stack--tight { gap: 0; align-content: start; }
 .adm-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; }
 .adm .is-overdue { color: var(--color-danger); font-weight: var(--fw-semibold); font-variant-numeric: tabular-nums; }
 .adm .is-refund { color: var(--color-warn); font-weight: var(--fw-semibold); font-variant-numeric: tabular-nums; }
@@ -231,6 +232,17 @@
   transition-timing-function: ease-out;
   transition-behavior: allow-discrete; }
 .adm-dialog--wide { width: min(100% - 2 * var(--gutter), 46rem); }
+/* New customer: two side-by-side sections; stack (and scroll) below 60rem */
+.adm-dialog--customer { width: min(100% - 2 * var(--gutter), 64rem); }
+.adm-form-intro { color: var(--color-text-muted); font-size: var(--fs-xs); }
+.adm-form-sections { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-5); align-items: start; }
+.adm-form-section + .adm-form-section { border-inline-start: 1px solid var(--color-border); padding-inline-start: var(--space-5); }
+.adm-form-section > legend { margin-bottom: var(--space-2); font-family: var(--font-heading); font-size: var(--fs-base); font-weight: var(--fw-bold); }
+.adm-stack--tight > .adm-check { min-height: 2rem; }
+@media (max-width: 60rem) {
+  .adm-form-sections { grid-template-columns: minmax(0, 1fr); }
+  .adm-form-section + .adm-form-section { border-inline-start: 0; padding-inline-start: 0; }
+}
 .adm-dialog[open] { opacity: 1; transition-duration: 180ms; }
 @starting-style {
   .adm-dialog[open] { opacity: 0; }
@@ -426,6 +438,7 @@
   .adm-stat dd { font-size: var(--fs-lg); }
   .adm-brand__word { display: none; }
   .adm-grid-2, .adm-grid-3 { grid-template-columns: minmax(0, 1fr); }
+  .adm-grid-gap { display: none; }
   .adm-kv > div { grid-template-columns: minmax(0, 1fr); gap: 0; }
   .adm-dialog { width: min(calc(100% - 2 * var(--space-3)), 34rem); max-height: calc(100dvh - 2 * var(--space-3) - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)); }
   .adm-dialog__inner { max-height: calc(100dvh - 2 * var(--space-3) - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)); }

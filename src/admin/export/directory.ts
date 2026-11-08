@@ -1,5 +1,5 @@
-/** Clients / DMCs CSV: every record field + a Bookings count (same count as the directory lists). No filters. */
-import { clientSummary, dmcSummary, toISTDate, type BookingRow, type Client, type Dmc, type ISODate } from '../model';
+/** Customers / DMCs CSV: every record field + a Bookings count (same count as the directory lists). No filters. */
+import { clientSummary, clientWhatsapp, dmcSummary, toISTDate, type BookingRow, type Client, type Dmc, type ISODate } from '../model';
 import { csvFrom, type CsvColumn } from './csv';
 
 const day = (d?: Date) => (d ? toISTDate(d) : '');
@@ -17,11 +17,19 @@ export function dmcCsvRows(dmcs: readonly Dmc[], rows: readonly BookingRow[]): D
 }
 
 export const CLIENT_COLUMNS: CsvColumn<ClientCsvRow>[] = [
-  { header: 'Client ID', value: (r) => r.client.id },
+  { header: 'Customer ID', value: (r) => r.client.id },
   { header: 'Name', value: (r) => r.client.name },
   { header: 'Mobile', value: (r) => r.client.mobile },
+  { header: 'WhatsApp', value: (r) => clientWhatsapp(r.client) },
   { header: 'Email', value: (r) => r.client.email },
+  { header: 'Address', value: (r) => r.client.address },
   { header: 'City', value: (r) => r.client.city },
+  { header: 'State', value: (r) => r.client.state },
+  { header: 'Country', value: (r) => r.client.country },
+  { header: 'Emergency contact name', value: (r) => r.client.emergencyName },
+  { header: 'Emergency contact phone', value: (r) => r.client.emergencyPhone },
+  { header: 'GST number', value: (r) => r.client.gstin },
+  { header: 'PAN number', value: (r) => r.client.pan },
   { header: 'Notes', value: (r) => r.client.notes },
   { header: 'Bookings', value: (r) => r.bookings },
   { header: 'Created', value: (r) => day(r.client.createdAt) },
@@ -44,5 +52,5 @@ export const DMC_COLUMNS: CsvColumn<DmcCsvRow>[] = [
 export const clientsCsv = (rows: readonly ClientCsvRow[]) => csvFrom(CLIENT_COLUMNS, rows);
 export const dmcsCsv = (rows: readonly DmcCsvRow[]) => csvFrom(DMC_COLUMNS, rows);
 
-export const clientsFilename = (today: ISODate) => `udan-clients-${today}.csv`;
+export const clientsFilename = (today: ISODate) => `udan-customers-${today}.csv`;
 export const dmcsFilename = (today: ISODate) => `udan-dmcs-${today}.csv`;

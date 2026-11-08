@@ -9,7 +9,7 @@ const paxCount = (r: BookingRow) => r.booking.pax.adults + r.booking.pax.childre
 
 export const BOOKING_COLUMNS: CsvColumn<BookingRow>[] = [
   { header: 'Booking ID', value: (r) => r.booking.bookingNo },
-  { header: 'Client', value: (r) => r.client?.name },
+  { header: 'Customer', value: (r) => r.client?.name },
   { header: 'Mobile', value: (r) => r.client?.mobile },
   { header: 'Destination', value: (r) => r.booking.destination },
   { header: 'Travel start', value: (r) => r.booking.travelStart },
@@ -19,7 +19,7 @@ export const BOOKING_COLUMNS: CsvColumn<BookingRow>[] = [
   { header: 'Status', value: (r) => r.booking.status },
   { header: 'Selling price', value: (r) => r.money.sellingPrice },
   { header: 'Received', value: (r) => r.money.clientNetReceived },
-  { header: 'Client outstanding', value: (r) => r.money.clientOutstanding },
+  { header: 'Customer outstanding', value: (r) => r.money.clientOutstanding },
   { header: 'Commission', value: (r) => r.money.commission },
   { header: 'Net cost', value: (r) => r.money.netCost },
   { header: 'DMC outstanding', value: (r) => r.money.dmcOutstanding },

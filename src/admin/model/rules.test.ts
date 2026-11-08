@@ -82,7 +82,7 @@ describe('flags', () => {
     expect(travelEndedNotCompleted(booking({ travelEnd: '2026-11-09', status: 'Pending' }), today)).toBe(false);
   });
 
-  it('flags a Client balance overdue only after the due date and while owed', () => {
+  it('flags a Customer balance overdue only after the due date and while owed', () => {
     const b = booking({ sellingPrice: 10_000, clientBalanceDueBy: '2026-11-09' });
     expect(bookingFlags(b, today).clientOverdue).toBe(true);
     expect(bookingFlags({ ...b, clientBalanceDueBy: today }, today).clientOverdue).toBe(false);

@@ -13,10 +13,12 @@ export type DialogProps = {
   /** Wrap the body in a <form> and call this on submit (Enter submits). */
   onSubmit?: () => void;
   wide?: boolean;
+  /** Extra class on the <dialog>, e.g. a custom width. */
+  className?: string;
 };
 
 /** Centred native <dialog> (modal, focus-trapped by the browser), backdrop --adm-scrim. */
-export function Dialog({ open, onClose, title, children, footer, onSubmit, wide }: DialogProps) {
+export function Dialog({ open, onClose, title, children, footer, onSubmit, wide, className }: DialogProps) {
   const ref = useRef<HTMLDialogElement>(null);
   const titleId = useId();
   const previousActive = useRef<HTMLElement | null>(null);
@@ -60,7 +62,7 @@ export function Dialog({ open, onClose, title, children, footer, onSubmit, wide 
   return (
     <dialog
       ref={ref}
-      className={wide ? 'adm-dialog adm-dialog--wide' : 'adm-dialog'}
+      className={['adm-dialog', wide && 'adm-dialog--wide', className].filter(Boolean).join(' ')}
       aria-labelledby={titleId}
       aria-modal="true"
       onCancel={(e) => {

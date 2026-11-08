@@ -141,6 +141,20 @@ describe('clients and dmcs', () => {
     await assertSucceeds(setDoc(doc(admin, 'clients/c1'), client()));
     await assertSucceeds(getDoc(doc(admin, 'clients/c1')));
     await assertSucceeds(updateDoc(doc(admin, 'clients/c1'), { city: 'Ahmedabad', updatedAt: now() }));
+    await assertSucceeds(
+      updateDoc(doc(admin, 'clients/c1'), {
+        whatsappSameAsMobile: true,
+        address: '12 Park Road',
+        state: 'Gujarat',
+        country: 'India',
+        emergencyName: 'Ravi',
+        emergencyPhone: '+919800000000',
+        gstin: '24ABCDE1234F1Z5',
+        pan: 'ABCDE1234F',
+        updatedAt: now(),
+      }),
+    );
+    await assertSucceeds(updateDoc(doc(admin, 'clients/c1'), { whatsappSameAsMobile: deleteField(), whatsapp: '+919811111111', updatedAt: now() }));
     await assertSucceeds(deleteDoc(doc(admin, 'clients/c1')));
     await assertSucceeds(setDoc(doc(admin, 'dmcs/d1'), dmc()));
     await assertSucceeds(updateDoc(doc(admin, 'dmcs/d1'), { notes: 'Pays late', updatedAt: now() }));
@@ -151,6 +165,8 @@ describe('clients and dmcs', () => {
   it.each([
     ['an unknown key', { passport: 'X123' }],
     ['a wrong type', { city: 42 }],
+    ['a non-boolean whatsappSameAsMobile', { whatsappSameAsMobile: 'yes' }],
+    ['a non-string GST number', { gstin: 24 }],
     ['a non-E.164 mobile', { mobile: '98765 43210' }],
     ['an empty name', { name: '' }],
     ['a client-supplied createdAt', { createdAt: past }],

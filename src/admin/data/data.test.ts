@@ -103,7 +103,7 @@ describe('createBooking', () => {
     expect((stored?.lines as unknown[])[1]).toEqual({ id: 'l2', type: 'Transfer', dmcId: 'd2', description: 'Airport transfers', netCost: 10_000 });
   });
 
-  it('creates Client + Booking + Enquiry update atomically', async () => {
+  it('creates Customer + Booking + Enquiry update atomically', async () => {
     await seed(env, { 'inquiries/e1': enquiryDoc() });
     const r = await createBooking(db, draft({ clientId: undefined }), {
       newClient: { name: 'Neha Shah', mobile: '+919811111111', email: ' ', city: 'Surat' },
@@ -210,14 +210,14 @@ describe('section saves and payments', () => {
     expect(b).not.toHaveProperty('clientBalanceDueBy');
   });
 
-  it('creates a new Client in the same write as the Client section', async () => {
+  it('creates a new Customer in the same write as the Customer section', async () => {
     const { id } = await createBooking(db, draft());
     const { clientId } = await saveBookingSection(db, id, {}, { newClient: { name: 'Ravi', mobile: '+919812345678' } });
     expect(await readDoc(`bookings/${id}`)).toMatchObject({ clientId });
     expect(await readDoc(`clients/${clientId}`)).toMatchObject({ name: 'Ravi' });
   });
 
-  it('adds, edits and deletes Client Payments', async () => {
+  it('adds, edits and deletes Customer Payments', async () => {
     const { id } = await createBooking(db, draft());
     const pid = await addClientPayment(db, id, { kind: 'Payment', date: '2026-11-01', amount: 50_000, mode: 'UPI', ref: undefined });
     await addClientPayment(db, id, { kind: 'Payment', date: '2026-11-03', amount: 10_000, mode: 'Cash' });
@@ -240,8 +240,8 @@ describe('section saves and payments', () => {
   });
 });
 
-describe('Clients, DMCs, Enquiries, Business profile', () => {
-  it('creates, updates and deletes Clients and DMCs', async () => {
+describe('Customers, DMCs, Enquiries, Business profile', () => {
+  it('creates, updates and deletes Customers and DMCs', async () => {
     const cid = await createClient(db, { name: ' Asha ', mobile: '+919876543210', city: 'Ahmedabad' });
     await updateClient(db, cid, { city: '', email: 'asha@example.com' });
     const c = await readDoc(`clients/${cid}`);

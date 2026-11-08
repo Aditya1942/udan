@@ -69,7 +69,7 @@ describe('table: scope, search, filters, sort', () => {
     expect(nos(applyTableQuery(rows, q()))).toEqual(['UDN-003', 'UDN-002', 'UDN-001']);
   });
 
-  it('searches Client, mobile, DMC, confirmation and traveller names case-insensitively', () => {
+  it('searches Customer, mobile, DMC, confirmation and traveller names case-insensitively', () => {
     const all = (text: string) => nos(applyTableQuery(rows, q({ scope: 'all', q: text })));
     expect(all('ASHA')).toEqual(['UDN-001', 'UDN-004']);
     expect(all('98123')).toEqual(['UDN-003', 'UDN-002']);
@@ -151,7 +151,7 @@ describe('overview', () => {
     ]);
     expect(cats[0].items[0]).toEqual({ bookingId: 'b1', bookingNo: 'UDN-001', clientName: 'Asha Patel', detail: '₹60,000 overdue since 5 Nov 2026' });
     expect(cats[1].items.map((i) => i.detail)).toEqual(['Gulf Holidays ₹80,000 due 12 Nov 2026', 'Kerala Trails ₹15,000 overdue since 30 Oct 2026']);
-    expect(cats[2].items.map((i) => i.detail)).toEqual(['Refund ₹15,000 to Client', 'Gulf Holidays due back ₹4,000']);
+    expect(cats[2].items.map((i) => i.detail)).toEqual(['Refund ₹15,000 to Customer', 'Gulf Holidays due back ₹4,000']);
   });
 
   it('hides empty categories and a recent backup', () => {
@@ -213,7 +213,7 @@ describe('insights', () => {
     expect(data.byStatus.find((s) => s.status === 'Pending')?.count).toBe(1);
   });
 
-  it('buckets Client outstanding ageing by days past due', () => {
+  it('buckets Customer outstanding ageing by days past due', () => {
     expect(data.clientAgeing.map((a) => [a.bucket, a.amount])).toEqual([
       ['notDue', 0],
       ['0-30', 60_000],
@@ -249,7 +249,7 @@ describe('insights', () => {
 });
 
 describe('directory summaries', () => {
-  it('summarises a Client excluding Pending', () => {
+  it('summarises a Customer excluding Pending', () => {
     expect(clientSummary(rows, 'c2')).toEqual({ bookings: 1, billed: 30_000, outstanding: 0, refundsOwed: 0, usedIn: 2 });
   });
 

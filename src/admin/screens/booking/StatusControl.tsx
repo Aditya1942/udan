@@ -123,7 +123,7 @@ function CancelDialog({ booking, dmcsById, onClose }: { booking: Booking; dmcsBy
         <textarea rows={2} value={reason} onChange={(e) => setReason(e.target.value)} />
       </Field>
       <Field
-        label="Client cancellation charge"
+        label="Customer cancellation charge"
         hint={`Replaces the Selling price (${formatINR(booking.sellingPrice)}) while Cancelled. 0 = full refund.`}
       >
         <MoneyInput value={clientCharge} onChange={setClientCharge} />
@@ -155,7 +155,7 @@ function CancelDialog({ booking, dmcsById, onClose }: { booking: Booking; dmcsBy
           items={[
             { label: 'Commission becomes', value: formatINR(preview.commission) },
             {
-              label: 'Client',
+              label: 'Customer',
               value: client < 0 ? `Refund owed ${formatINR(-client)}` : client > 0 ? `Still owes ${formatINR(client)}` : 'Settled',
             },
             { label: 'DMC', value: dmc < 0 ? `Due back ${formatINR(-dmc)}` : dmc > 0 ? `You owe ${formatINR(dmc)}` : 'Settled' },
@@ -163,7 +163,7 @@ function CancelDialog({ booking, dmcsById, onClose }: { booking: Booking; dmcsBy
         />
       </section>
       <p className="adm-muted">
-        Record actual refunds afterwards as Refund entries in Client or DMC payments. The Voucher is disabled while Cancelled.
+        Record actual refunds afterwards as Refund entries in Customer or DMC payments. The Voucher is disabled while Cancelled.
       </p>
       {failure ? <Note tone="danger">{failure}</Note> : null}
     </Dialog>

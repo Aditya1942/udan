@@ -215,7 +215,7 @@ describe('Documents card', () => {
     );
   });
 
-  it('Cancelled: Voucher disabled "Booking cancelled"; Invoice still prepares; no Email without a Client email', async () => {
+  it('Cancelled: Voucher disabled "Booking cancelled"; Invoice still prepares; no Email without a Customer email', async () => {
     const user = userEvent.setup();
     await renderBooking('UDN-002');
 

@@ -48,8 +48,8 @@ export function AdminApp({ auth, db, signIn }: AdminAppProps) {
           />
           <Route path="bookings/new" element={<NewBookingScreen />} />
           <Route path="bookings/:bookingNo" element={<BookingDetailScreen />} />
-          <Route path="clients" element={<ClientsScreen />} />
-          <Route path="clients/:id" element={<ClientDetailScreen />} />
+          <Route path="customers" element={<ClientsScreen />} />
+          <Route path="customers/:id" element={<ClientDetailScreen />} />
           <Route path="dmcs" element={<DmcsScreen />} />
           <Route path="dmcs/:id" element={<DmcDetailScreen />} />
           <Route path="enquiries" element={<EnquiriesScreen />} />

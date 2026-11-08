@@ -67,7 +67,7 @@ describe('site shell', () => {
 
   it('lazy-loads /admin as a sibling of the site layout (no site header), marked noindex', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
-    renderAt('/admin/clients');
+    renderAt('/admin/customers');
     // Tests run without VITE_FIREBASE_* → the admin explains it isn't configured.
     expect(await screen.findByRole('heading', { level: 1, name: "UDAN admin isn't configured" })).toBeInTheDocument();
     expect(screen.queryByRole('navigation', { name: 'Main' })).not.toBeInTheDocument();

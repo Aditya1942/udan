@@ -49,7 +49,7 @@ export function sampleBooking(overrides: Partial<Booking> = {}): Booking {
     travellerNames: ['Rahul Patel', 'Neha Patel', 'Aarav Patel'],
     itinerary:
       'Day 1: Arrive Kochi, Fort Kochi walk\nDay 2–3: Munnar tea gardens, Eravikulam\nDay 4–5: Thekkady spice tour\nDay 6: Alleppey houseboat\nDay 7: Depart Kochi',
-    internalNotes: 'Client prefers ground-floor rooms.',
+    internalNotes: 'Customer prefers ground-floor rooms.',
     sellingPrice: 148_500,
     clientBalanceDueBy: '2026-12-01',
     lines: [

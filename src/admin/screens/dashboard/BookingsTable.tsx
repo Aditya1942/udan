@@ -29,14 +29,14 @@ type Column = { key: ColumnKey; label: string; sort?: SortKey; num?: boolean };
 
 /** Booking ID is always shown (row header); the rest can be hidden from the Columns menu. */
 export const BOOKING_TABLE_COLUMNS: Column[] = [
-  { key: 'client', label: 'Client', sort: 'client' },
+  { key: 'client', label: 'Customer', sort: 'client' },
   { key: 'destination', label: 'Destination', sort: 'destination' },
   { key: 'travel', label: 'Travel dates', sort: 'travelStart' },
   { key: 'pax', label: 'Pax', num: true },
   { key: 'status', label: 'Status', sort: 'status' },
   { key: 'sellingPrice', label: 'Selling Price', sort: 'sellingPrice', num: true },
   { key: 'received', label: 'Received', num: true },
-  { key: 'outstanding', label: 'Client outstanding', sort: 'outstanding', num: true },
+  { key: 'outstanding', label: 'Customer outstanding', sort: 'outstanding', num: true },
   { key: 'commission', label: 'Commission', sort: 'commission', num: true },
   { key: 'dmcs', label: 'DMC(s)' },
 ];
@@ -70,7 +70,7 @@ function Cell({ col, row }: { col: ColumnKey; row: BookingRow }) {
     case 'client':
       return (
         <>
-          {row.client?.name ?? <span className="adm-muted">Unknown client</span>}
+          {row.client?.name ?? <span className="adm-muted">Unknown customer</span>}
           {row.client?.mobile ? <span className="adm-sub">{row.client.mobile}</span> : null}
         </>
       );
@@ -326,7 +326,7 @@ function SearchInput({ value, onChange }: { value: string; onChange: (q: string)
         type="search"
         value={text}
         onChange={(e) => setText(e.target.value)}
-        placeholder="Search ID, client, mobile, destination, DMC, confirmation or invoice no."
+        placeholder="Search ID, customer, mobile, destination, DMC, confirmation or invoice no."
         autoComplete="off"
       />
     </label>

@@ -2,7 +2,7 @@ import { Pencil, Plus, Trash2 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router';
 import { deleteClient, updateClient, useAdminData, useBookingRows } from '../data';
-import { clientSummary, formatINR, hasErrors, type Client } from '../model';
+import { clientSummary, clientWhatsapp, formatINR, hasErrors, type Client } from '../model';
 import {
   Button,
   ButtonLink,
@@ -32,38 +32,38 @@ import {
   useRetryRows,
 } from './directory/shared';
 
-const BACK = { to: '/admin/clients', label: 'Clients' };
+const BACK = { to: '/admin/customers', label: 'Customers' };
 
-/** `/admin/clients/:id` — head (tel / WhatsApp / New booking), strip, Bookings table, Details with inline Edit/Save, Delete. */
+/** `/admin/customers/:id` — head (tel / WhatsApp / New booking), strip, Bookings table, Details with inline Edit/Save, Delete. */
 export function ClientDetailScreen() {
   const { id = '' } = useParams();
   const { clientsById } = useAdminData();
   const rowsState = useBookingRows();
   const retryRows = useRetryRows();
   const client = clientsById.get(id);
-  useAdminTitle(client?.name ?? 'Client');
+  useAdminTitle(client?.name ?? 'Customer');
 
   if (rowsState.status === 'error') {
     return (
       <>
-        <PageHeader title="Client" back={BACK} />
-        <ErrorState title="Couldn't load this Client" error={rowsState.errors[0]} onRetry={retryRows} />
+        <PageHeader title="Customer" back={BACK} />
+        <ErrorState title="Couldn't load this Customer" error={rowsState.errors[0]} onRetry={retryRows} />
       </>
     );
   }
   if (rowsState.status === 'loading') {
     return (
       <>
-        <PageHeader title="Client" back={BACK} />
-        <LoadingState lines={6} label="Loading Client" />
+        <PageHeader title="Customer" back={BACK} />
+        <LoadingState lines={6} label="Loading Customer" />
       </>
     );
   }
   if (!client) {
     return (
       <>
-        <PageHeader title="Client" back={BACK} />
-        <EmptyState title="Client not found" action={<ButtonLink to="/admin/clients">All Clients</ButtonLink>}>
+        <PageHeader title="Customer" back={BACK} />
+        <EmptyState title="Customer not found" action={<ButtonLink to="/admin/customers">All Customers</ButtonLink>}>
           It may have been deleted.
         </EmptyState>
       </>
@@ -87,7 +87,7 @@ function ClientPage({ client }: { client: Client }) {
         subtitle={[client.city, client.email].filter(Boolean).join(', ') || undefined}
         actions={
           <>
-            <ContactButtons phone={client.mobile} />
+            <ContactButtons phone={client.mobile} whatsapp={clientWhatsapp(client)} />
             <ButtonLink to={`/admin/bookings/new?client=${client.id}`} variant="primary" icon={<Plus aria-hidden />}>
               New booking
             </ButtonLink>
@@ -95,7 +95,7 @@ function ClientPage({ client }: { client: Client }) {
         }
       />
       <StatStrip
-        label="Client totals (Pending excluded)"
+        label="Customer totals (Pending excluded)"
         items={[
           { label: 'Bookings', value: summary.bookings },
           { label: 'Billed', value: formatINR(summary.billed) },
@@ -194,7 +194,7 @@ function ClientDetailsPanel({ client, usedIn }: { client: Client; usedIn: number
     try {
       await updateClient(db, client.id, fields);
       setEditing(false);
-      toast('Client saved.');
+      toast('Customer saved.');
     } catch (err) {
       setFailure(errorMessage(err as Error));
     } finally {
@@ -206,7 +206,7 @@ function ClientDetailsPanel({ client, usedIn }: { client: Client; usedIn: number
     try {
       await deleteClient(db, client.id);
       toast(`${client.name} deleted.`);
-      navigate('/admin/clients', { replace: true });
+      navigate('/admin/customers', { replace: true });
     } catch (err) {
       setDeleting(false);
       setConfirmDelete(false);
@@ -230,7 +230,7 @@ function ClientDetailsPanel({ client, usedIn }: { client: Client; usedIn: number
         {editing ? (
           <form
             className="adm-stack"
-            aria-label="Edit client details"
+            aria-label="Edit customer details"
             onSubmit={(e) => {
               e.preventDefault();
               void save();
@@ -251,8 +251,21 @@ function ClientDetailsPanel({ client, usedIn }: { client: Client; usedIn: number
           <KeyValues
             items={[
               { label: 'Mobile', value: client.mobile },
+              {
+                label: 'WhatsApp',
+                value: client.whatsappSameAsMobile ? <>{client.mobile} <span className="adm-muted">(same as mobile)</span></> : client.whatsapp || NONE,
+              },
               { label: 'Email', value: client.email || NONE },
+              { label: 'Address', value: client.address ? <span className="adm-pre">{client.address}</span> : NONE },
               { label: 'City', value: client.city || NONE },
+              { label: 'State', value: client.state || NONE },
+              { label: 'Country', value: client.country || NONE },
+              {
+                label: 'Emergency contact',
+                value: [client.emergencyName, client.emergencyPhone].filter(Boolean).join(', ') || NONE,
+              },
+              { label: 'GST number', value: client.gstin || NONE },
+              { label: 'PAN number', value: client.pan || NONE },
               { label: 'Notes', value: client.notes ? <span className="adm-pre">{client.notes}</span> : NONE },
             ]}
           />
@@ -260,7 +273,7 @@ function ClientDetailsPanel({ client, usedIn }: { client: Client; usedIn: number
       </div>
       <div className="adm-danger-zone">
         <Button size="sm" icon={<Trash2 aria-hidden />} disabled={usedIn > 0} onClick={() => setConfirmDelete(true)}>
-          Delete client
+          Delete customer
         </Button>
         {usedIn > 0 ? (
           <span className="adm-muted">
@@ -271,13 +284,13 @@ function ClientDetailsPanel({ client, usedIn }: { client: Client; usedIn: number
       <ConfirmDialog
         open={confirmDelete}
         title={`Delete ${client.name}?`}
-        confirmLabel="Delete client"
+        confirmLabel="Delete customer"
         danger
         busy={deleting}
         onConfirm={() => void remove()}
         onClose={() => setConfirmDelete(false)}
       >
-        <p>This removes the Client record. It can't be undone.</p>
+        <p>This removes the Customer record. It can't be undone.</p>
       </ConfirmDialog>
     </Panel>
   );

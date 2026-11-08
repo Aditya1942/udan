@@ -104,14 +104,14 @@ function KpiStrip({ data }: { data: InsightsData }) {
 function TopTables({ data }: { data: InsightsData }) {
   return (
     <div className="adm-top-tables">
-      <Panel title="Top Clients" padded={false}>
+      <Panel title="Top Customers" padded={false}>
         {data.topClients.length ? (
           <div className="adm-table-wrap">
             <table className="adm-table">
-              <caption className="visually-hidden">Top Clients</caption>
+              <caption className="visually-hidden">Top Customers</caption>
               <thead>
                 <tr>
-                  <th scope="col">Client</th>
+                  <th scope="col">Customer</th>
                   <th scope="col" className="num">Bookings</th>
                   <th scope="col" className="num">Selling Price</th>
                   <th scope="col" className="num">Commission</th>
@@ -122,7 +122,7 @@ function TopTables({ data }: { data: InsightsData }) {
                 {data.topClients.map((c) => (
                   <tr key={c.clientId}>
                     <th scope="row">
-                      <Link to={`/admin/clients/${c.clientId}`}>{c.name}</Link>
+                      <Link to={`/admin/customers/${c.clientId}`}>{c.name}</Link>
                     </th>
                     <td className="num">{c.bookings}</td>
                     <td className="num">{formatINR(c.sellingPrice)}</td>
@@ -134,7 +134,7 @@ function TopTables({ data }: { data: InsightsData }) {
             </table>
           </div>
         ) : (
-          <p className="adm-pad adm-muted">No Clients in this period.</p>
+          <p className="adm-pad adm-muted">No Customers in this period.</p>
         )}
       </Panel>
       <Panel title="Top DMCs" padded={false}>

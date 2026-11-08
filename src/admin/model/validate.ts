@@ -22,12 +22,24 @@ const isBlank = (v: unknown) => typeof v !== 'string' || !v.trim();
 
 export const E164 = /^\+[1-9]\d{6,14}$/;
 
+const GSTIN = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/;
+const PAN = /^[A-Z]{5}[0-9]{4}[A-Z]$/;
+
 export function validateClient(c: Partial<ClientFields>): Errors<keyof ClientFields> {
   const e: Errors<keyof ClientFields> = {};
   if (isBlank(c.name)) e.name = 'Enter a name.';
   if (!c.mobile || !E164.test(c.mobile)) e.mobile = 'Enter a mobile number in +91… format.';
   if (c.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(c.email)) e.email = 'Enter a valid email.';
+  if (!c.whatsappSameAsMobile && c.whatsapp && !E164.test(c.whatsapp)) e.whatsapp = 'Enter a WhatsApp number in +91… format.';
+  if (c.emergencyPhone && !E164.test(c.emergencyPhone)) e.emergencyPhone = 'Enter a phone number in +91… format.';
+  if (c.gstin && !GSTIN.test(c.gstin)) e.gstin = 'Enter a 15-character GSTIN, e.g. 24ABCDE1234F1Z5.';
+  if (c.pan && !PAN.test(c.pan)) e.pan = 'Enter a 10-character PAN, e.g. ABCDE1234F.';
   return e;
+}
+
+/** The number to WhatsApp a Client on: their mobile when marked the same, else `whatsapp` (if any). */
+export function clientWhatsapp(c: Pick<ClientFields, 'mobile' | 'whatsapp' | 'whatsappSameAsMobile'>): string | undefined {
+  return c.whatsappSameAsMobile ? c.mobile : c.whatsapp || undefined;
 }
 
 export function validateDmc(d: Partial<DmcFields>): Errors<keyof DmcFields> {
@@ -45,7 +57,7 @@ export function validateBookingFields(
   { requireClient = true }: { requireClient?: boolean } = {},
 ): Errors<BookingErrorKey> {
   const e: Errors<BookingErrorKey> = {};
-  if (requireClient && isBlank(b.clientId)) e.clientId = 'Choose a Client.';
+  if (requireClient && isBlank(b.clientId)) e.clientId = 'Choose a Customer.';
   if (isBlank(b.destination)) e.destination = 'Enter a destination.';
   if (!isISODate(b.travelStart)) e.travelStart = 'Enter the travel start date.';
   if (!isISODate(b.travelEnd)) e.travelEnd = 'Enter the travel end date.';

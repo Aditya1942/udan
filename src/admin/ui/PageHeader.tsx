@@ -8,7 +8,7 @@ export type PageHeaderProps = {
   titleExtra?: ReactNode;
   /** Muted line under the title. */
   subtitle?: ReactNode;
-  /** Back link above the title, e.g. { to: '/admin/clients', label: 'Clients' }. */
+  /** Back link above the title, e.g. { to: '/admin/customers', label: 'Customers' }. */
   back?: { to: string; label: string };
   /** Right-aligned controls. */
   actions?: ReactNode;

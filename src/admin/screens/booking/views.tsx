@@ -1,7 +1,7 @@
 /** Read states of the Booking sections (Client, Travel, Price, Service lines, Notes). */
 import { ExternalLink, MessageCircle, Phone } from 'lucide-react';
 import { Link } from 'react-router';
-import { formatDate, formatINR, telUrl, whatsappUrl, type Booking, type Client, type Dmc, type Pax } from '../../model';
+import { clientWhatsapp, formatDate, formatINR, telUrl, whatsappUrl, type Booking, type Client, type Dmc, type Pax } from '../../model';
 import { EmptyState, KeyValues } from '../../ui';
 
 export function paxText(p: Pax): string {
@@ -15,12 +15,12 @@ export function dateRange(start?: string, end?: string): string {
 }
 
 export function ClientView({ client }: { client?: Client }) {
-  if (!client) return <p className="adm-muted">This Client record no longer exists. Edit to pick another.</p>;
+  if (!client) return <p className="adm-muted">This Customer record no longer exists. Edit to pick another.</p>;
   const extra = [client.city, client.email].filter(Boolean).join(', ');
   return (
     <div className="adm-stack">
       <p>
-        <Link to={`/admin/clients/${client.id}`} className="adm-strong-link">
+        <Link to={`/admin/customers/${client.id}`} className="adm-strong-link">
           {client.name}
         </Link>
         {extra ? <span className="adm-sub">{extra}</span> : null}
@@ -29,7 +29,7 @@ export function ClientView({ client }: { client?: Client }) {
         <a className="adm-btn adm-btn--outline adm-btn--sm" href={telUrl(client.mobile)}>
           <Phone aria-hidden /> {client.mobile}
         </a>
-        <a className="adm-btn adm-btn--outline adm-btn--sm" href={whatsappUrl(client.mobile)} target="_blank" rel="noreferrer">
+        <a className="adm-btn adm-btn--outline adm-btn--sm" href={whatsappUrl(clientWhatsapp(client) ?? client.mobile)} target="_blank" rel="noreferrer">
           <MessageCircle aria-hidden /> WhatsApp
         </a>
       </div>
@@ -52,7 +52,7 @@ export function TravelView({ booking }: { booking: Booking }) {
             </>
           ),
         },
-        ...(booking.clientBalanceDueBy ? [{ label: 'Client balance due by', value: formatDate(booking.clientBalanceDueBy) }] : []),
+        ...(booking.clientBalanceDueBy ? [{ label: 'Customer balance due by', value: formatDate(booking.clientBalanceDueBy) }] : []),
       ]}
     />
   );
@@ -64,7 +64,7 @@ export function PriceView({ booking }: { booking: Booking }) {
     <KeyValues
       items={[
         { label: 'Selling price', value: <span className={cancelled ? 'is-struck' : undefined}>{formatINR(booking.sellingPrice)}</span> },
-        ...(cancelled ? [{ label: 'Client cancellation charge', value: formatINR(booking.clientCancellationCharge ?? 0) }] : []),
+        ...(cancelled ? [{ label: 'Customer cancellation charge', value: formatINR(booking.clientCancellationCharge ?? 0) }] : []),
         { label: 'Balance due by', value: booking.clientBalanceDueBy ? formatDate(booking.clientBalanceDueBy) : <span className="adm-muted">Not set</span> },
       ]}
     />

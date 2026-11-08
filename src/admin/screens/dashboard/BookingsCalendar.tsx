@@ -20,7 +20,7 @@ const WEEKDAY_SHORT = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const statusSlug = (s: BookingStatus) => s.toLowerCase().replace(/\s+/g, '-');
 const newBookingHref = (date: ISODate) => `/admin/bookings/new?start=${date}`;
 const bookingHref = (r: BookingRow) => `/admin/bookings/${r.booking.bookingNo}`;
-const clientName = (r: BookingRow) => r.client?.name ?? 'Unknown client';
+const clientName = (r: BookingRow) => r.client?.name ?? 'Unknown customer';
 const describe = (r: BookingRow) =>
   `${r.booking.bookingNo} ${clientName(r)}, ${r.booking.destination}, ${dateRange(r.booking.travelStart, r.booking.travelEnd)}, ${r.booking.status}`;
 

@@ -1,4 +1,4 @@
-/** "New client" dialog: name, mobile (unique), email, city, notes → `createClient`. */
+/** "New customer" dialog: Contact and Address & tax side by side (no scrolling on laptop screens) → `createClient`. */
 import { useState } from 'react';
 import { createClient, useAdminData } from '../../data';
 import { hasErrors } from '../../model';
@@ -34,7 +34,7 @@ export function ClientDialog({ open, onClose, onCreated }: { open: boolean; onCl
       reset();
       onCreated(id);
     } catch (err) {
-      setFailure(`Couldn't create the Client. ${errorMessage(err as Error)}`);
+      setFailure(`Couldn't create the Customer. ${errorMessage(err as Error)}`);
     } finally {
       setBusy(false);
     }
@@ -44,7 +44,8 @@ export function ClientDialog({ open, onClose, onCreated }: { open: boolean; onCl
     <Dialog
       open={open}
       onClose={close}
-      title="New client"
+      title="New customer"
+      className="adm-dialog--customer"
       onSubmit={() => void submit()}
       footer={
         <>
@@ -52,12 +53,12 @@ export function ClientDialog({ open, onClose, onCreated }: { open: boolean; onCl
             Cancel
           </Button>
           <Button type="submit" variant="primary" busy={busy}>
-            Create client
+            Create customer
           </Button>
         </>
       }
     >
-      <ClientFormFields value={v} onChange={setV} errors={tried ? errors : {}} />
+      <ClientFormFields layout="sections" value={v} onChange={setV} errors={tried ? errors : {}} />
       {failure ? <Note tone="danger">{failure}</Note> : null}
     </Dialog>
   );

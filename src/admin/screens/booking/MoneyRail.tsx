@@ -5,11 +5,11 @@ import { Panel } from '../../ui';
 export function MoneyPanel({ input }: { input: MoneyInput }) {
   const m = bookingMoney(input);
   const rows = [
-    { label: m.cancelled ? 'Client cancellation charge' : 'Selling price', value: formatINR(m.sellingPrice) },
+    { label: m.cancelled ? 'Customer cancellation charge' : 'Selling price', value: formatINR(m.sellingPrice) },
     { label: m.cancelled ? 'DMC cancellation charges' : 'Net cost', value: formatINR(m.netCost) },
     { label: 'Commission', value: formatINR(m.commission), className: m.commission < 0 ? 'is-overdue' : undefined },
     {
-      label: 'Client outstanding',
+      label: 'Customer outstanding',
       value: m.clientOutstanding < 0 ? `Refund ${formatINR(-m.clientOutstanding)}` : formatINR(m.clientOutstanding),
       className: m.clientOutstanding < 0 ? 'is-refund' : undefined,
     },

@@ -15,7 +15,7 @@ describe('bookingMoney: not cancelled', () => {
   });
   const m = bookingMoney(b);
 
-  it('computes Net Cost, Commission and Client outstanding', () => {
+  it('computes Net Cost, Commission and Customer outstanding', () => {
     expect(m).toMatchObject({
       cancelled: false,
       sellingPrice: 148_500,
@@ -36,7 +36,7 @@ describe('bookingMoney: not cancelled', () => {
     expect(m.dmcOutstanding).toBe(42_000);
   });
 
-  it('goes negative when the Client overpays (refund owed)', () => {
+  it('goes negative when the Customer overpays (refund owed)', () => {
     expect(bookingMoney(booking({ sellingPrice: 10_000, clientPayments: [pay(12_000)] })).clientOutstanding).toBe(-2_000);
   });
 
@@ -65,7 +65,7 @@ describe('bookingMoney: cancelled', () => {
     expect(m).toMatchObject({ cancelled: true, sellingPrice: 20_000, netCost: 10_000, commission: 10_000 });
   });
 
-  it('shows a refund owed to the Client as negative outstanding', () => {
+  it('shows a refund owed to the Customer as negative outstanding', () => {
     expect(m.clientOutstanding).toBe(-30_000);
   });
 
@@ -76,11 +76,11 @@ describe('bookingMoney: cancelled', () => {
     ]);
   });
 
-  it('can leave the Client still owing', () => {
+  it('can leave the Customer still owing', () => {
     expect(bookingMoney({ ...b, clientPayments: [pay(5_000)] }).clientOutstanding).toBe(15_000);
   });
 
-  it('treats a missing Client Cancellation Charge as 0', () => {
+  it('treats a missing Customer Cancellation Charge as 0', () => {
     expect(bookingMoney({ ...b, clientCancellationCharge: undefined }).sellingPrice).toBe(0);
   });
 });

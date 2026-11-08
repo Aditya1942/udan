@@ -82,12 +82,12 @@ afterEach(async () => {
 describe('Login', () => {
   it('denies a Google account that is not on the allow-list, deletes it and signs out', async () => {
     const user = userEvent.setup();
-    const router = renderAdmin('/admin/clients', signInAs('stranger@example.com'));
+    const router = renderAdmin('/admin/customers', signInAs('stranger@example.com'));
 
     // Signed out → login with the deep link kept in ?next=.
     expect(await screen.findByRole('heading', { name: 'Sign in to UDAN admin' })).toBeInTheDocument();
     expect(router.state.location.pathname).toBe('/admin/login');
-    expect(router.state.location.search).toBe('?next=%2Fadmin%2Fclients');
+    expect(router.state.location.search).toBe('?next=%2Fadmin%2Fcustomers');
     expect(document.head.querySelector('meta[name="robots"]')).toHaveAttribute('content', 'noindex, nofollow');
 
     await user.click(screen.getByRole('button', { name: 'Continue with Google' }));
@@ -101,15 +101,15 @@ describe('Login', () => {
 
   it('lets an allow-listed account through to the deep link, with the shell and the New enquiry badge', async () => {
     const user = userEvent.setup();
-    const router = renderAdmin('/admin/clients', signInAs(ADMIN_EMAIL.toUpperCase()));
+    const router = renderAdmin('/admin/customers', signInAs(ADMIN_EMAIL.toUpperCase()));
 
     await user.click(await screen.findByRole('button', { name: 'Continue with Google' }));
 
-    expect(await screen.findByRole('heading', { level: 1, name: 'Clients' })).toBeInTheDocument();
-    expect(router.state.location.pathname).toBe('/admin/clients');
-    expect(document.title).toBe('Clients · UDAN admin');
+    expect(await screen.findByRole('heading', { level: 1, name: 'Customers' })).toBeInTheDocument();
+    expect(router.state.location.pathname).toBe('/admin/customers');
+    expect(document.title).toBe('Customers · UDAN admin');
     const nav = screen.getByRole('navigation', { name: 'Admin' });
-    expect(within(nav).getByRole('link', { name: 'Clients' })).toHaveAttribute('aria-current', 'page');
+    expect(within(nav).getByRole('link', { name: 'Customers' })).toHaveAttribute('aria-current', 'page');
     await waitFor(() => expect(within(nav).getByRole('link', { name: /Enquiries/ })).toHaveAccessibleName('Enquiries 1 new'));
 
     // Settings → Account → Sign out returns to login.

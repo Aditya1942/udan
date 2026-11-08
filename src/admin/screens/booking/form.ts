@@ -25,7 +25,7 @@ export type SectionKey = keyof typeof BOOKING_SECTIONS;
 /** Section order on the page (Client → Travel → Price → Service lines → Notes). */
 export const SECTION_KEYS: SectionKey[] = ['client', 'travel', 'price', 'lines', 'notes'];
 export const SECTION_TITLES: Record<SectionKey, string> = {
-  client: 'Client',
+  client: 'Customer',
   travel: 'Travel',
   price: 'Price',
   lines: 'Service lines',
@@ -126,7 +126,7 @@ const pick = (e: Errors, keys: readonly string[]): Errors => Object.fromEntries(
 export function sectionErrors(section: SectionKey, form: BookingForm, clients: readonly Client[]): SectionErrors {
   const lines: LineErrors = {};
   if (section === 'client') {
-    if (form.clientMode === 'existing') return { fields: form.clientId ? {} : { clientId: 'Choose a Client.' }, lines };
+    if (form.clientMode === 'existing') return { fields: form.clientId ? {} : { clientId: 'Choose a Customer.' }, lines };
     const fields: Errors = { ...validateClient(newClientFields(form.newClient)) };
     const mobile = toE164(form.newClient.mobile);
     const taken = !fields.mobile && matchClientByMobile(clients, mobile);

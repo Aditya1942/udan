@@ -89,7 +89,7 @@ export function createBooking(db: Firestore, draft: BookingDraft, opts: CreateBo
         clientId = clientRef.id;
         tx.set(clientRef, clientCreateData(opts.newClient));
       }
-      if (!clientId) throw new AdminDataError('conflict', 'A Booking needs a Client');
+      if (!clientId) throw new AdminDataError('conflict', 'A Booking needs a Customer');
 
       const bookingNo = formatBookingNo(seq);
       tx.set(

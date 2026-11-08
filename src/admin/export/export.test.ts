@@ -79,14 +79,14 @@ describe('Payments Ledger', () => {
   const all = [b2, old, b1];
   const fy = { from: '2026-04-01', to: '2027-03-31' };
 
-  it('signs per side and kind: Client payment +, Client refund −, DMC payment −, DMC refund +', () => {
+  it('signs per side and kind: Customer payment +, Customer refund −, DMC payment −, DMC refund +', () => {
     const rows = ledgerRows(all, clientsById, dmcsById, { ...fy, side: 'both' });
     const signed = rows.map((r) => [r.bookingNo, r.side, r.kind, r.amount, r.signedAmount]);
     expect(signed).toEqual([
-      ['UDN-001', 'Client', 'Payment', 30_000, 30_000],
+      ['UDN-001', 'Customer', 'Payment', 30_000, 30_000],
       ['UDN-001', 'DMC', 'Payment', 20_000, -20_000],
-      ['UDN-002', 'Client', 'Payment', 10_000, 10_000],
-      ['UDN-001', 'Client', 'Refund', 5_000, -5_000],
+      ['UDN-002', 'Customer', 'Payment', 10_000, 10_000],
+      ['UDN-001', 'Customer', 'Refund', 5_000, -5_000],
       ['UDN-001', 'DMC', 'Refund', 1_000, 1_000],
     ]);
   });
@@ -103,7 +103,7 @@ describe('Payments Ledger', () => {
 
   it('filters by side and names the party', () => {
     const client = ledgerRows(all, clientsById, dmcsById, { ...fy, side: 'client' });
-    expect(client.every((r) => r.side === 'Client')).toBe(true);
+    expect(client.every((r) => r.side === 'Customer')).toBe(true);
     expect(client.map((r) => r.party)).toEqual(['Asha Patel', 'Ravi Mehta', 'Asha Patel']);
     const dmc = ledgerRows(all, clientsById, dmcsById, { ...fy, side: 'dmc' });
     expect(dmc.map((r) => `${r.party} ${r.signedAmount}`)).toEqual(['Gulf Holidays -20000', 'Gulf Holidays 1000']);
@@ -113,9 +113,9 @@ describe('Payments Ledger', () => {
     const csv = ledgerCsv(ledgerRows(all, clientsById, dmcsById, { from: '2026-05-10', to: '2026-05-10', side: 'both' }));
     expect(lines(csv)).toEqual([
       'Date,Booking ID,Booking status,Side,Party,Kind,Mode,Reference,Note,Amount,Signed amount',
-      '2026-05-10,UDN-001,Confirmed,Client,Asha Patel,Payment,UPI,UTR1,,30000,30000',
+      '2026-05-10,UDN-001,Confirmed,Customer,Asha Patel,Payment,UPI,UTR1,,30000,30000',
       '2026-05-10,UDN-001,Confirmed,DMC,Gulf Holidays,Payment,UPI,,,20000,-20000',
-      "2026-05-10,UDN-002,Cancelled,Client,Ravi Mehta,Payment,UPI,,'=evil,10000,10000",
+      "2026-05-10,UDN-002,Cancelled,Customer,Ravi Mehta,Payment,UPI,,'=evil,10000,10000",
     ]);
   });
 
@@ -127,7 +127,7 @@ describe('Payments Ledger', () => {
   });
 });
 
-describe('Clients / DMCs / Bookings CSV', () => {
+describe('Customers / DMCs / Bookings CSV', () => {
   const rows = buildBookingRows(
     [
       booking({ bookingSeq: 1, clientId: 'c1', sellingPrice: 100_000, lines: [line({ dmcId: 'd1', netCost: 80_000 })] }),
@@ -138,12 +138,12 @@ describe('Clients / DMCs / Bookings CSV', () => {
     '2026-11-01',
   );
 
-  it('Clients: every field + Bookings count (Pending excluded); dates IST', () => {
+  it('Customers: every field + Bookings count (Pending excluded); dates IST', () => {
     const withDates = [{ ...clients[0], notes: 'VIP, "gold"', createdAt: new Date('2026-10-31T20:00:00Z') }, clients[1]];
     expect(lines(clientsCsv(clientCsvRows(withDates, rows)))).toEqual([
-      'Client ID,Name,Mobile,Email,City,Notes,Bookings,Created,Updated',
-      'c1,Asha Patel,\'+919876543210,asha@example.com,Ahmedabad,"VIP, ""gold""",1,2026-11-01,',
-      "c2,Ravi Mehta,'+919812345678,,,,0,,",
+      'Customer ID,Name,Mobile,WhatsApp,Email,Address,City,State,Country,Emergency contact name,Emergency contact phone,GST number,PAN number,Notes,Bookings,Created,Updated',
+      'c1,Asha Patel,\'+919876543210,,asha@example.com,,Ahmedabad,,,,,,,"VIP, ""gold""",1,2026-11-01,',
+      "c2,Ravi Mehta,'+919812345678,,,,,,,,,,,,0,,",
     ]);
   });
 
@@ -157,7 +157,7 @@ describe('Clients / DMCs / Bookings CSV', () => {
 
   it('Bookings table rows keep the given order and the table columns', () => {
     const [header, first] = lines(bookingsCsv(rows));
-    expect(header.split(',').slice(0, 4)).toEqual(['Booking ID', 'Client', 'Mobile', 'Destination']);
+    expect(header.split(',').slice(0, 4)).toEqual(['Booking ID', 'Customer', 'Mobile', 'Destination']);
     expect(first.startsWith("UDN-001,Asha Patel,'+919876543210,Dubai,2026-11-10,2026-11-15,,2,Confirmed,100000,0,100000,20000")).toBe(true);
   });
 });

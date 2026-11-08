@@ -159,15 +159,15 @@ export function AmountChart({ kind, data }: { kind: 'destination' | 'dmc' | 'lin
 
 /** 6. Client outstanding ageing (stacked by bucket). */
 export function AgeingChart({ data }: { data: AgeingPoint[] }) {
-  const row = Object.fromEntries([['name', 'Client outstanding'], ...data.map((d) => [d.bucket, d.amount])]);
+  const row = Object.fromEntries([['name', 'Customer outstanding'], ...data.map((d) => [d.bucket, d.amount])]);
   return (
     <ChartFigure
-      title="Client outstanding ageing"
-      note="Days past the Client balance due date, as of today. All Bookings."
-      plotLabel="Stacked bar of Client outstanding split into ageing buckets: not due, 0–30, 31–60, 61–90 and 90+ days."
+      title="Customer outstanding ageing"
+      note="Days past the Customer balance due date, as of today. All Bookings."
+      plotLabel="Stacked bar of Customer outstanding split into ageing buckets: not due, 0–30, 31–60, 61–90 and 90+ days."
       empty={allZero(data.map((d) => d.amount))}
       table={{
-        caption: 'Client outstanding ageing',
+        caption: 'Customer outstanding ageing',
         head: ['Days past due', 'Outstanding', 'Bookings'],
         numeric: [1, 2],
         rows: data.map((d) => [d.label, formatINR(d.amount), d.count]),

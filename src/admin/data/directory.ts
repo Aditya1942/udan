@@ -4,7 +4,7 @@ import type { ClientFields, DmcFields } from '../model';
 import { COLLECTIONS, toCreate, toUpdate } from './convert';
 import { run } from './errors';
 
-const CLIENT_OPTIONAL = ['email', 'city', 'notes'] as const;
+const CLIENT_OPTIONAL = ['email', 'whatsapp', 'address', 'city', 'state', 'country', 'emergencyName', 'emergencyPhone', 'gstin', 'pan', 'notes'] as const;
 const DMC_OPTIONAL = ['contactPerson', 'phone', 'email', 'region', 'notes'] as const;
 
 /** Create payload for a Client (also used inside createBooking / saveBookingSection). */

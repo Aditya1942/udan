@@ -90,7 +90,7 @@ export function ClientPicker({
         onKeyDown={onKeyDown}
       />
       {showList ? (
-        <ul id={listId} role="listbox" className="adm-combo__list" aria-label="Clients">
+        <ul id={listId} role="listbox" className="adm-combo__list" aria-label="Customers">
           {noMatch ? (
             <li className="adm-combo__empty" role="option" aria-selected={false} aria-disabled="true">
               No match. Try another name or mobile.
@@ -136,21 +136,21 @@ export function ClientFields({
       {conversion ? (
         <Note>
           {conversion.matchedClient
-            ? `Matched existing Client ${conversion.matchedClient.name} by mobile ${conversion.mobile}. Confirm or pick another.`
-            : `No Client with mobile ${conversion.mobile}. A new Client will be created.`}
+            ? `Matched existing Customer ${conversion.matchedClient.name} by mobile ${conversion.mobile}. Confirm or pick another.`
+            : `No Customer with mobile ${conversion.mobile}. A new Customer will be created.`}
         </Note>
       ) : null}
       <Segmented<ClientMode>
-        label="Client"
+        label="Customer"
         value={form.clientMode}
         onChange={(clientMode) => set({ clientMode })}
         options={[
-          { value: 'existing', label: 'Existing client' },
-          { value: 'new', label: 'New client' },
+          { value: 'existing', label: 'Existing customer' },
+          { value: 'new', label: 'New customer' },
         ]}
       />
       {form.clientMode === 'existing' ? (
-        <Field label="Client" hint="Search by name or mobile" error={errors.clientId}>
+        <Field label="Customer" hint="Search by name or mobile" error={errors.clientId}>
           <ClientPicker clients={clients} value={form.clientId} onChange={(clientId) => set({ clientId })} />
         </Field>
       ) : (
@@ -217,7 +217,7 @@ export function PriceFields({ form, set, errors }: { form: BookingForm; set: Set
       <Field label="Selling price" hint="The one total on the Invoice" error={errors.sellingPrice}>
         <MoneyInput value={form.sellingPrice} onChange={(sellingPrice) => set({ sellingPrice })} />
       </Field>
-      <Field label="Client balance due by" hint="Optional" error={errors.clientBalanceDueBy}>
+      <Field label="Customer balance due by" hint="Optional" error={errors.clientBalanceDueBy}>
         <input type="date" value={form.clientBalanceDueBy ?? ''} onChange={(e) => set({ clientBalanceDueBy: e.target.value || undefined })} />
       </Field>
     </div>

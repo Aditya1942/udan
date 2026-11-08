@@ -209,13 +209,13 @@ describe('Overview', () => {
       .filter((li) => li.classList.contains('adm-attn__row'))
       .map((li) => li.querySelector('summary')?.textContent);
     expect(labels).toEqual([
-      '1Client balance overdueShow',
+      '1Customer balance overdueShow',
       '1DMC payments due in 7 days / overdueShow',
       '1Travel ended, not marked CompletedShow',
       '1New EnquiriesShow',
       '1Backup overdueShow',
     ]);
-    await user.click(within(attention).getByText('Client balance overdue'));
+    await user.click(within(attention).getByText('Customer balance overdue'));
     const overdueLink = within(attention).getByRole('link', { name: 'UDN-001' });
     expect(overdueLink).toHaveAttribute('href', '/admin/bookings/UDN-001');
     expect(overdueLink.closest('li')).toHaveTextContent(`UDN-001 Asha Patel, ₹1,00,000 overdue since ${formatDate(addDays(today, -3))}`);
@@ -283,7 +283,7 @@ describe('Overview', () => {
     await renderAdmin('/admin?view=table&scope=all&client=c1&sort=bookingNo&dir=desc');
 
     await waitFor(() => expect(tableIds()).toEqual(['UDN-004', 'UDN-001']));
-    expect(screen.getByRole('button', { name: 'Remove filter Client: Asha Patel' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Remove filter Customer: Asha Patel' })).toBeInTheDocument();
     expect(screen.getByRole('row', { name: /UDN-004/ })).toHaveTextContent('Not marked Completed');
     const b1 = screen.getByRole('row', { name: /UDN-001/ });
     expect(within(b1).getByText('₹1,00,000')).toHaveClass('is-overdue');
@@ -293,7 +293,7 @@ describe('Overview', () => {
     expect(files[0].name).toBe(`udan-bookings-${today}.csv`);
     const lines = (await text(files[0].blob)).split('\r\n');
     expect(lines[0]).toBe(
-      '﻿Booking ID,Client,Mobile,Destination,Travel start,Travel end,Not marked Completed,Pax,Status,Selling price,Received,Client outstanding,Commission,Net cost,DMC outstanding,DMCs,Invoice no.,Booked on',
+      '﻿Booking ID,Customer,Mobile,Destination,Travel start,Travel end,Not marked Completed,Pax,Status,Selling price,Received,Customer outstanding,Commission,Net cost,DMC outstanding,DMCs,Invoice no.,Booked on',
     );
     expect(lines.slice(1, -1).map((l) => l.split(',')[0])).toEqual(['UDN-004', 'UDN-001']);
     expect(lines[2]).toMatch(/^UDN-001,Asha Patel,'\+919811111111,Dubai,/);
@@ -376,8 +376,8 @@ describe('Insights (lazy route)', () => {
     expect(within(monthly).getByRole('button', { name: 'View as chart' })).toHaveAttribute('aria-pressed', 'true');
 
     expect(screen.getAllByRole('figure')).toHaveLength(8);
-    const topClients = screen.getByRole('region', { name: 'Top Clients' });
-    expect(within(topClients).getByRole('link', { name: 'Asha Patel' })).toHaveAttribute('href', '/admin/clients/c1');
+    const topClients = screen.getByRole('region', { name: 'Top Customers' });
+    expect(within(topClients).getByRole('link', { name: 'Asha Patel' })).toHaveAttribute('href', '/admin/customers/c1');
 
     await user.click(screen.getByRole('button', { name: 'Custom range' }));
     expect(params(router).get('period')).toBe('custom');

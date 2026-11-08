@@ -279,7 +279,7 @@ export function NewBooking({ initial, conversion }: { initial: BookingForm; conv
                 <SectionFields section={key} editor={editor} conversion={key === 'client' ? conversion : undefined} />
               </Panel>
             ))}
-            <p className="adm-muted">Client and DMC payments are added on the booking page after it is created.</p>
+            <p className="adm-muted">Customer and DMC payments are added on the booking page after it is created.</p>
           </>
         }
         rail={

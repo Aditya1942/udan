@@ -119,7 +119,7 @@ function DmcPage({ dmc }: { dmc: Dmc }) {
                 <thead>
                   <tr>
                     <th scope="col">Booking</th>
-                    <th scope="col">Client</th>
+                    <th scope="col">Customer</th>
                     <th scope="col">Services</th>
                     <th scope="col">Status</th>
                     <th scope="col">Pay by</th>
@@ -145,8 +145,8 @@ function DmcPage({ dmc }: { dmc: Dmc }) {
                             {b.bookingNo}
                           </Link>
                         </th>
-                        <td data-label="Client">
-                          {r.row.client?.name ?? <span className="adm-muted">Missing Client</span>}
+                        <td data-label="Customer">
+                          {r.row.client?.name ?? <span className="adm-muted">Missing Customer</span>}
                           <span className="adm-sub">{dateRange(b.travelStart, b.travelEnd)}</span>
                         </td>
                         <td data-label="Services">{r.lines.map((l) => l.type).join(', ') || <span className="adm-muted">Payments only</span>}</td>

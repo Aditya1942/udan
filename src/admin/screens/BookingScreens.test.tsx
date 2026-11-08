@@ -114,15 +114,15 @@ describe('New booking', () => {
 
     expect(await screen.findByRole('heading', { level: 1, name: 'New booking' })).toBeInTheDocument();
     expect(await screen.findByText(/Gets UDN-002 on save/)).toBeInTheDocument();
-    expect(screen.queryByRole('region', { name: 'Client payments' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'Customer payments' })).not.toBeInTheDocument();
 
     // Create with nothing filled → errors, nothing written.
     await user.click(screen.getByRole('button', { name: 'Create booking' }));
     expect(screen.getByText('Fix the highlighted fields, then create the booking.')).toBeInTheDocument();
-    expect(within(section('Client')).getByText('Choose a Client.')).toBeInTheDocument();
+    expect(within(section('Customer')).getByText('Choose a Customer.')).toBeInTheDocument();
 
     // Client: type-ahead on name.
-    await user.type(within(section('Client')).getByRole('combobox', { name: 'Client' }), 'asha');
+    await user.type(within(section('Customer')).getByRole('combobox', { name: 'Customer' }), 'asha');
     await user.click(await screen.findByRole('option', { name: /Asha Patel/ }));
 
     const travel = section('Travel');
@@ -150,7 +150,7 @@ describe('New booking', () => {
     await screen.findByRole('combobox', { name: 'Status' }); // detail loaded
     expect(router.state.location.pathname).toBe('/admin/bookings/UDN-002');
     expect(screen.getByText('Pending', { selector: '.adm-badge' })).toBeInTheDocument();
-    expect(within(section('Client')).getByRole('link', { name: 'Asha Patel' })).toHaveAttribute('href', '/admin/clients/c1');
+    expect(within(section('Customer')).getByRole('link', { name: 'Asha Patel' })).toHaveAttribute('href', '/admin/customers/c1');
 
     const stored = (await readAll(env, 'bookings')).find((b) => b.bookingNo === 'UDN-002');
     expect(stored).toMatchObject({
@@ -169,11 +169,11 @@ describe('New booking', () => {
     expect(await readDoc('counters/booking')).toEqual({ seq: 2 });
   });
 
-  it('creates a new Client inline in the same write', async () => {
+  it('creates a new Customer inline in the same write', async () => {
     const user = userEvent.setup();
     await renderAdmin('/admin/bookings/new');
-    const client = await screen.findByRole('region', { name: 'Client' });
-    await user.click(within(client).getByRole('button', { name: 'New client' }));
+    const client = await screen.findByRole('region', { name: 'Customer' });
+    await user.click(within(client).getByRole('button', { name: 'New customer' }));
     await user.type(within(client).getByLabelText('Name'), 'Ravi Mehta');
     // Mobile already used by Asha → error.
     await user.type(within(client).getByLabelText('Mobile'), '98111 11111');
@@ -234,7 +234,7 @@ describe('Booking detail sections', () => {
     expect((await readDoc('bookings/b1'))?.destination).toBe('Abu Dhabi');
     expect(within(price).getByLabelText('Selling price')).toHaveValue('1,60,000');
 
-    setDate(within(price).getByLabelText('Client balance due by'), '2026-11-25');
+    setDate(within(price).getByLabelText('Customer balance due by'), '2026-11-25');
     await user.click(within(price).getByRole('button', { name: 'Save' }));
     expect(await within(price).findByText('₹1,60,000')).toBeInTheDocument();
     expect(within(price).getByText('25 Nov 2026')).toBeInTheDocument();
@@ -271,11 +271,11 @@ describe('Booking detail sections', () => {
 });
 
 describe('Payments', () => {
-  it('add, edit and delete a Client Payment update the Money rail; DMC entries go against a line DMC', async () => {
+  it('add, edit and delete a Customer Payment update the Money rail; DMC entries go against a line DMC', async () => {
     const user = userEvent.setup();
     await renderAdmin('/admin/bookings/UDN-001');
-    const payments = await screen.findByRole('region', { name: 'Client payments' });
-    expect(money('Client outstanding')).toBe('₹1,50,000');
+    const payments = await screen.findByRole('region', { name: 'Customer payments' });
+    expect(money('Customer outstanding')).toBe('₹1,50,000');
     expect(within(payments).getByText('No entries yet. Use Add entry to record a payment.')).toBeInTheDocument();
 
     // Add.
@@ -288,7 +288,7 @@ describe('Payments', () => {
     expect(within(row).getByText('Enter a whole rupee amount above 0.')).toBeInTheDocument();
     await typeMoney(user, within(row).getByLabelText('Amount'), '50000');
     await user.click(within(row).getByRole('button', { name: 'Add entry' }));
-    await waitFor(() => expect(money('Client outstanding')).toBe('₹1,00,000'));
+    await waitFor(() => expect(money('Customer outstanding')).toBe('₹1,00,000'));
     expect(within(payments).getByText('UTR123')).toBeInTheDocument();
 
     // Edit (pencil, same row).
@@ -296,7 +296,7 @@ describe('Payments', () => {
     const edit = within(payments).getByRole('group', { name: 'Edit entry' });
     await typeMoney(user, within(edit).getByLabelText('Amount'), '60000');
     await user.click(within(edit).getByRole('button', { name: 'Save entry' }));
-    await waitFor(() => expect(money('Client outstanding')).toBe('₹90,000'));
+    await waitFor(() => expect(money('Customer outstanding')).toBe('₹90,000'));
 
     // A Refund shows as −₹X and nets off.
     await user.click(within(payments).getByRole('button', { name: 'Add entry' }));
@@ -304,13 +304,13 @@ describe('Payments', () => {
     await user.selectOptions(within(refund).getByLabelText('Kind'), 'Refund');
     await typeMoney(user, within(refund).getByLabelText('Amount'), '5000');
     await user.click(within(refund).getByRole('button', { name: 'Add entry' }));
-    await waitFor(() => expect(money('Client outstanding')).toBe('₹95,000'));
+    await waitFor(() => expect(money('Customer outstanding')).toBe('₹95,000'));
     expect(within(payments).getByText('−₹5,000')).toBeInTheDocument();
 
     // Delete (confirm).
     await user.click(within(payments).getByRole('button', { name: /^Delete payment of ₹60,000/ }));
     await user.click(await screen.findByRole('button', { name: 'Delete entry' }));
-    await waitFor(() => expect(money('Client outstanding')).toBe('₹1,55,000'));
+    await waitFor(() => expect(money('Customer outstanding')).toBe('₹1,55,000'));
     const stored = await readDoc('bookings/b1');
     expect(stored?.clientPayments).toEqual([expect.objectContaining({ kind: 'Refund', amount: 5000 })]);
 
@@ -350,7 +350,7 @@ describe('Status and cancellation', () => {
     expect(preview).toHaveTextContent('Refund owed ₹50,000');
     expect(preview).toHaveTextContent('Due back ₹40,000');
 
-    await typeMoney(user, within(dialog).getByLabelText('Client cancellation charge'), '20000');
+    await typeMoney(user, within(dialog).getByLabelText('Customer cancellation charge'), '20000');
     await typeMoney(user, within(dialog).getByLabelText('DMC cancellation charge for Hotel, Desert Tours'), '10000');
     expect(preview).toHaveTextContent('Commission becomes₹10,000');
     expect(preview).toHaveTextContent('Refund owed ₹30,000');
@@ -361,18 +361,18 @@ describe('Status and cancellation', () => {
     expect(within(dialog).getByText('Enter a reason.')).toBeInTheDocument();
     expect((await readDoc('bookings/b1'))?.status).toBe('Confirmed');
 
-    await user.type(within(dialog).getByLabelText('Reason'), 'Client medical emergency');
+    await user.type(within(dialog).getByLabelText('Reason'), 'Customer medical emergency');
     await user.click(within(dialog).getByRole('button', { name: 'Cancel booking' }));
-    expect(await screen.findByText(`Cancelled ${formatDate(todayIST())}: Client medical emergency`)).toBeInTheDocument();
+    expect(await screen.findByText(`Cancelled ${formatDate(todayIST())}: Customer medical emergency`)).toBeInTheDocument();
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-    expect(money('Client cancellation charge')).toBe('₹20,000');
+    expect(money('Customer cancellation charge')).toBe('₹20,000');
     expect(money('Commission')).toBe('₹10,000');
-    expect(money('Client outstanding')).toBe('Refund ₹30,000');
+    expect(money('Customer outstanding')).toBe('Refund ₹30,000');
     expect(money('DMC outstanding')).toBe('Due back ₹30,000');
     expect(await readDoc('bookings/b1')).toMatchObject({
       status: 'Cancelled',
       cancelledAt: todayIST(),
-      cancelReason: 'Client medical emergency',
+      cancelReason: 'Customer medical emergency',
       clientCancellationCharge: 20_000,
       lines: [expect.objectContaining({ id: 'l1', dmcCancellationCharge: 10_000 }), expect.objectContaining({ id: 'l2', dmcCancellationCharge: 0 })],
     });
@@ -413,15 +413,15 @@ describe('Enquiry Convert', () => {
     ...o,
   });
 
-  it('matches the Client by mobile, prefills, and converts the Enquiry in the same write', async () => {
+  it('matches the Customer by mobile, prefills, and converts the Enquiry in the same write', async () => {
     await seed(env, { 'inquiries/e1': enquiry() });
     const user = userEvent.setup();
     const router = await renderAdmin('/admin/bookings/new?enquiry=e1');
 
-    const client = await screen.findByRole('region', { name: 'Client' });
-    expect(within(client).getByText('Matched existing Client Asha Patel by mobile +919811111111. Confirm or pick another.')).toBeInTheDocument();
-    expect(within(client).getByRole('button', { name: 'Existing client' })).toHaveAttribute('aria-pressed', 'true');
-    expect(within(client).getByRole('combobox', { name: 'Client' })).toHaveValue('Asha Patel, +919811111111');
+    const client = await screen.findByRole('region', { name: 'Customer' });
+    expect(within(client).getByText('Matched existing Customer Asha Patel by mobile +919811111111. Confirm or pick another.')).toBeInTheDocument();
+    expect(within(client).getByRole('button', { name: 'Existing customer' })).toHaveAttribute('aria-pressed', 'true');
+    expect(within(client).getByRole('combobox', { name: 'Customer' })).toHaveValue('Asha Patel, +919811111111');
     expect(within(section('Travel')).getByLabelText('Destination')).toHaveValue('Dubai');
     expect(within(section('Notes')).getByLabelText('Internal notes')).toHaveValue('From enquiry 20 Oct 2026: Visa Services — Dubai visa for two');
 
@@ -440,14 +440,14 @@ describe('Enquiry Convert', () => {
     expect(await readAll(env, 'clients')).toHaveLength(1);
   });
 
-  it('without a mobile match, prefills a new Client that is created with the Booking', async () => {
+  it('without a mobile match, prefills a new Customer that is created with the Booking', async () => {
     await seed(env, { 'inquiries/e2': enquiry({ name: 'Neha Shah', phone: '+919833333333' }) });
     const user = userEvent.setup();
     await renderAdmin('/admin/bookings/new?enquiry=e2');
 
-    const client = await screen.findByRole('region', { name: 'Client' });
-    expect(within(client).getByText('No Client with mobile +919833333333. A new Client will be created.')).toBeInTheDocument();
-    expect(within(client).getByRole('button', { name: 'New client' })).toHaveAttribute('aria-pressed', 'true');
+    const client = await screen.findByRole('region', { name: 'Customer' });
+    expect(within(client).getByText('No Customer with mobile +919833333333. A new Customer will be created.')).toBeInTheDocument();
+    expect(within(client).getByRole('button', { name: 'New customer' })).toHaveAttribute('aria-pressed', 'true');
     expect(within(client).getByLabelText('Name')).toHaveValue('Neha Shah');
     expect(within(client).getByLabelText('Mobile')).toHaveValue('+919833333333');
 

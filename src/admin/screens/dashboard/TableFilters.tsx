@@ -58,9 +58,9 @@ export function FilterFields({ query: q, update, clients, dmcs }: Props) {
           <input type="date" value={q.to ?? ''} onChange={(e) => update({ to: e.target.value || undefined })} />
         </Field>
       </div>
-      <Field label="Client">
+      <Field label="Customer">
         <select value={q.clientId ?? ''} onChange={(e) => update({ clientId: e.target.value || undefined })}>
-          <option value="">Any client</option>
+          <option value="">Any customer</option>
           {sortedClients.map((c) => (
             <option key={c.id} value={c.id}>
               {c.name}
@@ -78,7 +78,7 @@ export function FilterFields({ query: q, update, clients, dmcs }: Props) {
           ))}
         </select>
       </Field>
-      <Field label="Client payment">
+      <Field label="Customer payment">
         <select value={q.clientPayment ?? ''} onChange={(e) => update({ clientPayment: (e.target.value || undefined) as ClientPaymentFilter | undefined })}>
           <option value="">Any</option>
           {Object.entries(CLIENT_PAYMENT_LABELS).map(([v, l]) => (
@@ -134,7 +134,7 @@ export function filterChips(q: TableQuery, clients: readonly Client[], dmcs: rea
     chips.push({ key: 'date', label: `${DATE_FIELD_LABELS[q.dateField]}: ${range}`, remove: { from: undefined, to: undefined } });
   }
   if (q.clientId)
-    chips.push({ key: 'client', label: `Client: ${clients.find((c) => c.id === q.clientId)?.name ?? 'Unknown client'}`, remove: { clientId: undefined } });
+    chips.push({ key: 'client', label: `Customer: ${clients.find((c) => c.id === q.clientId)?.name ?? 'Unknown customer'}`, remove: { clientId: undefined } });
   if (q.dmcIds.length)
     chips.push({
       key: 'dmc',
@@ -142,7 +142,7 @@ export function filterChips(q: TableQuery, clients: readonly Client[], dmcs: rea
       remove: { dmcIds: [] },
     });
   if (q.lineTypes.length) chips.push({ key: 'type', label: `Service Line type: ${q.lineTypes.join(', ')}`, remove: { lineTypes: [] } });
-  if (q.clientPayment) chips.push({ key: 'cpay', label: `Client payment: ${CLIENT_PAYMENT_LABELS[q.clientPayment]}`, remove: { clientPayment: undefined } });
+  if (q.clientPayment) chips.push({ key: 'cpay', label: `Customer payment: ${CLIENT_PAYMENT_LABELS[q.clientPayment]}`, remove: { clientPayment: undefined } });
   if (q.dmcPayment) chips.push({ key: 'dpay', label: `DMC payment: ${DMC_PAYMENT_LABELS[q.dmcPayment]}`, remove: { dmcPayment: undefined } });
   if (q.invoice) chips.push({ key: 'inv', label: `Invoice: ${INVOICE_LABELS[q.invoice]}`, remove: { invoice: undefined } });
   if (q.travelEnded) chips.push({ key: 'flag', label: 'Travel ended, not Completed', remove: { travelEnded: false } });

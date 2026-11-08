@@ -307,7 +307,7 @@ export function insights({ rows, enquiries, period, today }: InsightsInput): Ins
     const shares = allocate(m.sellingPrice, b.lines.map((l) => lineCost(l, m.cancelled)));
     b.lines.forEach((l, i) => bump(byType, l.type, l.type as LineType, shares[i]));
 
-    const tc = clients.get(b.clientId) ?? { clientId: b.clientId, name: r.client?.name ?? 'Unknown client', bookings: 0, sellingPrice: 0, commission: 0, repeat: false };
+    const tc = clients.get(b.clientId) ?? { clientId: b.clientId, name: r.client?.name ?? 'Unknown customer', bookings: 0, sellingPrice: 0, commission: 0, repeat: false };
     tc.bookings += counted;
     tc.sellingPrice += m.sellingPrice;
     tc.commission += m.commission;

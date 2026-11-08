@@ -118,41 +118,89 @@ afterEach(async () => {
   await deleteApp(app);
 });
 
-describe('Clients', () => {
-  it('lists Clients with Bookings, Billed and Outstanding; search narrows; New client checks mobile uniqueness', async () => {
+describe('Customers', () => {
+  it('lists Customers with Bookings, Billed and Outstanding; search narrows; New customer checks mobile uniqueness', async () => {
     const user = userEvent.setup();
-    const router = await renderAdmin('/admin/clients');
+    const router = await renderAdmin('/admin/customers');
 
     const asha = await screen.findByRole('row', { name: /Asha Patel/ });
     expect(within(asha).getByText('asha@example.com')).toBeInTheDocument();
     expect(within(asha).getAllByRole('cell').map((c) => c.textContent)).toEqual(['+919811111111', 'Surat', '1', '₹1,50,000', '₹1,00,000']);
 
-    await user.type(screen.getByRole('searchbox', { name: 'Search clients' }), 'ravi');
+    await user.type(screen.getByRole('searchbox', { name: 'Search customers' }), 'ravi');
     expect(screen.queryByRole('row', { name: /Asha Patel/ })).not.toBeInTheDocument();
     expect(screen.getByRole('row', { name: /Ravi Mehta/ })).toBeInTheDocument();
     expect(router.state.location.search).toBe('?q=ravi');
 
-    await user.click(screen.getByRole('button', { name: 'New client' }));
-    const dialog = screen.getByRole('dialog', { name: 'New client' });
+    await user.click(screen.getByRole('button', { name: 'New customer' }));
+    const dialog = screen.getByRole('dialog', { name: 'New customer' });
     await user.type(within(dialog).getByLabelText('Name'), 'Meera Iyer');
     await user.type(within(dialog).getByLabelText('Mobile'), '98111 11111');
-    await user.click(within(dialog).getByRole('button', { name: 'Create client' }));
+    await user.click(within(dialog).getByRole('button', { name: 'Create customer' }));
     expect(within(dialog).getByText('Asha Patel already has this mobile.')).toBeInTheDocument();
 
     await user.clear(within(dialog).getByLabelText('Mobile'));
     await user.type(within(dialog).getByLabelText('Mobile'), '9855555555');
-    await user.click(within(dialog).getByRole('button', { name: 'Create client' }));
+    await user.click(within(dialog).getByRole('button', { name: 'Create customer' }));
     expect(await screen.findByRole('heading', { level: 1, name: 'Meera Iyer' })).toBeInTheDocument();
     const id = router.state.location.pathname.split('/').pop()!;
     expect(await readDoc(`clients/${id}`)).toMatchObject({ name: 'Meera Iyer', mobile: '+919855555555' });
   });
 
-  it('Client page: strip, Bookings, New booking prefilled, inline Edit/Save, delete blocked while used', async () => {
+  it('New customer saves optional address, WhatsApp, emergency contact, GST and PAN; validates GST and PAN', async () => {
     const user = userEvent.setup();
-    await renderAdmin('/admin/clients/c1');
+    const router = await renderAdmin('/admin/customers');
+    await user.click(await screen.findByRole('button', { name: 'New customer' }));
+    const dialog = screen.getByRole('dialog', { name: 'New customer' });
+    const field = (label: string) => within(dialog).getByLabelText(label);
+
+    await user.type(field('Name'), 'Meera Iyer');
+    await user.type(field('Mobile'), '9855555555');
+    expect(field('Same as mobile')).toBeChecked();
+    expect(field('WhatsApp')).toBeDisabled();
+    await user.click(field('Same as mobile'));
+    await user.type(field('WhatsApp'), '98666 66666');
+    await user.type(field('Address'), '12 Park Road, Navrangpura');
+    await user.type(field('City'), 'Ahmedabad');
+    await user.type(field('State'), 'Gujarat');
+    await user.type(field('Country'), 'India');
+    await user.type(field('Emergency contact name'), 'Ravi Iyer');
+    await user.type(field('Emergency contact phone'), '9877777777');
+    await user.type(field('GST number'), '24abc');
+    await user.type(field('PAN number'), 'abc');
+    await user.click(within(dialog).getByRole('button', { name: 'Create customer' }));
+    expect(within(dialog).getByText('Enter a 15-character GSTIN, e.g. 24ABCDE1234F1Z5.')).toBeInTheDocument();
+    expect(within(dialog).getByText('Enter a 10-character PAN, e.g. ABCDE1234F.')).toBeInTheDocument();
+
+    await user.clear(field('GST number'));
+    await user.type(field('GST number'), '24abcde1234f1z5');
+    await user.clear(field('PAN number'));
+    await user.type(field('PAN number'), 'abcde1234f');
+    await user.click(within(dialog).getByRole('button', { name: 'Create customer' }));
+    expect(await screen.findByRole('heading', { level: 1, name: 'Meera Iyer' })).toBeInTheDocument();
+    const id = router.state.location.pathname.split('/').pop()!;
+    const saved = await readDoc(`clients/${id}`);
+    expect(saved).toMatchObject({
+      whatsapp: '+919866666666',
+      address: '12 Park Road, Navrangpura',
+      city: 'Ahmedabad',
+      state: 'Gujarat',
+      country: 'India',
+      emergencyName: 'Ravi Iyer',
+      emergencyPhone: '+919877777777',
+      gstin: '24ABCDE1234F1Z5',
+      pan: 'ABCDE1234F',
+    });
+    expect(saved).not.toHaveProperty('whatsappSameAsMobile');
+    expect(screen.getByRole('link', { name: /WhatsApp/ })).toHaveAttribute('href', expect.stringContaining('919866666666'));
+  });
+
+  it('Customer page: strip, Bookings, New booking prefilled, inline Edit/Save, delete blocked while used', async () => {
+    const user = userEvent.setup();
+    await renderAdmin('/admin/customers/c1');
 
     expect(await screen.findByRole('heading', { level: 1, name: 'Asha Patel' })).toBeInTheDocument();
-    const strip = screen.getByLabelText('Client totals (Pending excluded)');
+    const strip = screen.getByLabelText('Customer totals (Pending excluded)');
     expect(within(strip).getByText('Billed').nextElementSibling).toHaveTextContent('₹1,50,000');
     expect(within(strip).getByText('Outstanding').nextElementSibling).toHaveTextContent('₹1,00,000');
     expect(screen.getByRole('link', { name: 'UDN-001' })).toHaveAttribute('href', '/admin/bookings/UDN-001');
@@ -160,7 +208,7 @@ describe('Clients', () => {
     expect(screen.getByRole('link', { name: /WhatsApp/ })).toHaveAttribute('href', 'https://wa.me/919811111111');
 
     const details = screen.getByRole('region', { name: 'Details' });
-    expect(within(details).getByRole('button', { name: 'Delete client' })).toBeDisabled();
+    expect(within(details).getByRole('button', { name: 'Delete customer' })).toBeDisabled();
     expect(within(details).getByText("Used in 1 booking, so it can't be deleted.")).toBeInTheDocument();
 
     await user.click(within(details).getByRole('button', { name: 'Edit' }));
@@ -182,19 +230,19 @@ describe('Clients', () => {
     expect(stored).not.toHaveProperty('email');
   });
 
-  it('New booking from a Client page starts with that Client picked', async () => {
+  it('New booking from a Customer page starts with that Customer picked', async () => {
     await renderAdmin('/admin/bookings/new?client=c2');
-    const client = await screen.findByRole('region', { name: 'Client' });
-    expect(within(client).getByRole('combobox', { name: 'Client' })).toHaveValue('Ravi Mehta, +919833333333');
+    const client = await screen.findByRole('region', { name: 'Customer' });
+    expect(within(client).getByRole('combobox', { name: 'Customer' })).toHaveValue('Ravi Mehta, +919833333333');
   });
 
-  it('deletes an unused Client after confirm', async () => {
+  it('deletes an unused Customer after confirm', async () => {
     const user = userEvent.setup();
-    const router = await renderAdmin('/admin/clients/c2');
+    const router = await renderAdmin('/admin/customers/c2');
     const details = await screen.findByRole('region', { name: 'Details' });
-    await user.click(within(details).getByRole('button', { name: 'Delete client' }));
-    await user.click(within(screen.getByRole('dialog', { name: 'Delete Ravi Mehta?' })).getByRole('button', { name: 'Delete client' }));
-    await waitFor(() => expect(router.state.location.pathname).toBe('/admin/clients'));
+    await user.click(within(details).getByRole('button', { name: 'Delete customer' }));
+    await user.click(within(screen.getByRole('dialog', { name: 'Delete Ravi Mehta?' })).getByRole('button', { name: 'Delete customer' }));
+    await waitFor(() => expect(router.state.location.pathname).toBe('/admin/customers'));
     expect(await readDoc('clients/c2')).toBeUndefined();
   });
 });
@@ -393,7 +441,7 @@ describe('Settings', () => {
     expect(backup.collections.counters.booking).toEqual({ seq: 1 });
   });
 
-  it('exports the Payments Ledger CSV for a custom range and side, and the Clients CSV', async () => {
+  it('exports the Payments Ledger CSV for a custom range and side, and the Customers CSV', async () => {
     const files = captureDownloads();
     const user = userEvent.setup();
     await renderAdmin('/admin/settings');
@@ -413,15 +461,15 @@ describe('Settings', () => {
         '2026-10-06,UDN-001,Confirmed,DMC,Gulf Transfers,Payment,Bank transfer,,,10000,-10000\r\n',
     );
 
-    await user.click(screen.getByRole('button', { name: 'Export Clients CSV' }));
-    expect(files[1].name).toBe(`udan-clients-${todayIST()}.csv`);
+    await user.click(screen.getByRole('button', { name: 'Export Customers CSV' }));
+    expect(files[1].name).toBe(`udan-customers-${todayIST()}.csv`);
     const clientsCsv = (await text(files[1].blob)).split('\r\n');
-    expect(clientsCsv[0]).toBe('﻿Client ID,Name,Mobile,Email,City,Notes,Bookings,Created,Updated');
-    expect(clientsCsv[1]).toMatch(/^c1,Asha Patel,'\+919811111111,asha@example.com,Surat,,1,/);
+    expect(clientsCsv[0]).toBe('﻿Customer ID,Name,Mobile,WhatsApp,Email,Address,City,State,Country,Emergency contact name,Emergency contact phone,GST number,PAN number,Notes,Bookings,Created,Updated');
+    expect(clientsCsv[1]).toMatch(/^c1,Asha Patel,'\+919811111111,,asha@example.com,,Surat,,,,,,,,1,/);
   });
 });
 
-describe('Data-region states (Clients and Enquiries lists)', () => {
+describe('Data-region states (Customers and Enquiries lists)', () => {
   function renderScreen(screenEl: React.ReactNode, database: Firestore) {
     return render(
       <MemoryRouter>
@@ -442,8 +490,8 @@ describe('Data-region states (Clients and Enquiries lists)', () => {
     await clearFirestore(env);
     await seedAdmins(env);
     renderScreen(<ClientsScreen />, googleDb(env));
-    expect(await screen.findByRole('heading', { name: 'No Clients yet' })).toBeInTheDocument();
-    expect(screen.getAllByRole('button', { name: 'New client' })).toHaveLength(2);
+    expect(await screen.findByRole('heading', { name: 'No Customers yet' })).toBeInTheDocument();
+    expect(screen.getAllByRole('button', { name: 'New customer' })).toHaveLength(2);
 
     renderScreen(<EnquiriesScreen />, googleDb(env));
     expect(await screen.findByRole('heading', { name: 'No Enquiries yet' })).toBeInTheDocument();
@@ -452,7 +500,7 @@ describe('Data-region states (Clients and Enquiries lists)', () => {
   it('error: what broke + Retry', async () => {
     const stranger = googleDb(env, { email: 'stranger@example.com' });
     renderScreen(<ClientsScreen />, stranger);
-    expect(await screen.findByRole('heading', { name: "Couldn't load Clients" })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: "Couldn't load Customers" })).toBeInTheDocument();
     expect(screen.getByText("Your account doesn't have access to this data.")).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Retry' })).toBeInTheDocument();
   });

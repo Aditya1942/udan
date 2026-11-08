@@ -47,7 +47,7 @@ export function PaymentsSection({ booking, side, dmcsById }: { booking: Booking;
   const [editing, setEditing] = useState<string | 'new' | null>(null);
   const [deleting, setDeleting] = useState<PaymentEntry | null>(null);
   const [busy, setBusy] = useState(false);
-  const title = side === 'client' ? 'Client payments' : 'DMC payments';
+  const title = side === 'client' ? 'Customer payments' : 'DMC payments';
   const dmcName = (id: string) => dmcsById.get(id)?.name ?? 'Unknown DMC';
   const net = list.reduce((s, p) => s + (p.kind === 'Refund' ? -p.amount : p.amount), 0);
   const money = bookingMoney(booking);
@@ -142,7 +142,7 @@ export function PaymentsSection({ booking, side, dmcsById }: { booking: Booking;
       ) : (
         <div className="adm-table-wrap">
           <table className="adm-table adm-table--pay">
-            <caption className="visually-hidden">{side === 'client' ? 'Client payments' : 'DMC payments'}</caption>
+            <caption className="visually-hidden">{side === 'client' ? 'Customer payments' : 'DMC payments'}</caption>
             <thead>
               <tr>
                 <th scope="col">Date</th>

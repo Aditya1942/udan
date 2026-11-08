@@ -21,7 +21,7 @@ export type LedgerRow = {
   bookingNo: string;
   bookingSeq: number;
   bookingStatus: BookingStatus;
-  side: 'Client' | 'DMC';
+  side: 'Customer' | 'DMC';
   /** Client or DMC name ('' if the record is missing). */
   party: string;
   kind: 'Payment' | 'Refund';
@@ -36,8 +36,8 @@ export type LedgerRow = {
 
 export type LedgerFilter = Period & { side: LedgerSide };
 
-export function signedAmount(side: 'Client' | 'DMC', kind: 'Payment' | 'Refund', amount: number): number {
-  const into = side === 'Client' ? kind === 'Payment' : kind === 'Refund';
+export function signedAmount(side: 'Customer' | 'DMC', kind: 'Payment' | 'Refund', amount: number): number {
+  const into = side === 'Customer' ? kind === 'Payment' : kind === 'Refund';
   return into ? amount : -amount;
 }
 
@@ -58,14 +58,14 @@ export function ledgerRows(
         out.push({
           ...base(b),
           date: p.date,
-          side: 'Client',
+          side: 'Customer',
           party: clientsById.get(b.clientId)?.name ?? '',
           kind: p.kind,
           mode: p.mode,
           ref: p.ref ?? '',
           note: p.note ?? '',
           amount: p.amount,
-          signedAmount: signedAmount('Client', p.kind, p.amount),
+          signedAmount: signedAmount('Customer', p.kind, p.amount),
         });
       }
     }

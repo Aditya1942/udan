@@ -7,9 +7,9 @@ import { Button, DataRegion, EmptyState, PageHeader, useAdminTitle, useToast } f
 import { ClientDialog } from './directory/ClientDialog';
 import { matchesText, SearchBox, useRetryRows, useSearchParam } from './directory/shared';
 
-/** `/admin/clients` — search (name, mobile, email, city) + table with Bookings, Billed, Outstanding; New client dialog. */
+/** `/admin/customers` — search (name, mobile, email, city) + table with Bookings, Billed, Outstanding; New customer dialog. */
 export function ClientsScreen() {
-  useAdminTitle('Clients');
+  useAdminTitle('Customers');
   const { clients } = useAdminData();
   const retryRows = useRetryRows();
   const rowsState = useBookingRows();
@@ -29,10 +29,10 @@ export function ClientsScreen() {
   return (
     <>
       <PageHeader
-        title="Clients"
+        title="Customers"
         actions={
           <Button variant="primary" icon={<Plus aria-hidden />} onClick={() => setCreating(true)}>
-            New client
+            New customer
           </Button>
         }
       />
@@ -40,30 +40,30 @@ export function ClientsScreen() {
         status={rowsState.status}
         error={rowsState.errors[0]}
         onRetry={retryRows}
-        errorTitle="Couldn't load Clients"
+        errorTitle="Couldn't load Customers"
         isEmpty={clients.data.length === 0}
         empty={
           <EmptyState
-            title="No Clients yet"
+            title="No Customers yet"
             action={
               <Button variant="primary" icon={<Plus aria-hidden />} onClick={() => setCreating(true)}>
-                New client
+                New customer
               </Button>
             }
           >
-            Clients are added here or while creating a booking.
+            Customers are added here or while creating a booking.
           </EmptyState>
         }
       >
         <div className="adm-table-tools">
-          <SearchBox label="Search clients" placeholder="Search name, mobile, email, city" />
+          <SearchBox label="Search customers" placeholder="Search name, mobile, email, city" />
         </div>
         {list.length === 0 ? (
-          <EmptyState title="No Clients match">Try a different name, mobile, email or city.</EmptyState>
+          <EmptyState title="No Customers match">Try a different name, mobile, email or city.</EmptyState>
         ) : (
           <div className="adm-table-wrap">
             <table className="adm-table adm-table--dir adm-table--cards">
-              <caption className="visually-hidden">Clients</caption>
+              <caption className="visually-hidden">Customers</caption>
               <thead>
                 <tr>
                   <th scope="col">Name</th>
@@ -84,7 +84,7 @@ export function ClientsScreen() {
                 {list.map(({ client: c, summary: s }) => (
                   <tr key={c.id}>
                     <th scope="row">
-                      <Link to={`/admin/clients/${c.id}`} className="adm-strong-link">
+                      <Link to={`/admin/customers/${c.id}`} className="adm-strong-link">
                         {c.name}
                       </Link>
                       {c.email ? <span className="adm-sub">{c.email}</span> : null}
@@ -115,8 +115,8 @@ export function ClientsScreen() {
         onClose={() => setCreating(false)}
         onCreated={(id) => {
           setCreating(false);
-          toast('Client created.');
-          navigate(`/admin/clients/${id}`);
+          toast('Customer created.');
+          navigate(`/admin/customers/${id}`);
         }}
       />
     </>
