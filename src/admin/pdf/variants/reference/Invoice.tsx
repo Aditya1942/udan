@@ -7,7 +7,8 @@ import type { InvoiceView, Letterhead } from '../../view';
 import type { InvoiceTemplate } from '../types';
 import { C, s, toneColour } from './styles';
 
-const MIN_ROWS = 7;
+/** The faint mark behind the grid needs this many rows to sit inside it (it is not clipped). */
+const MARK_ROWS = 5;
 
 /** Indigo title + trading name + rule (shared with the admin sheet). */
 export function TitleBlock({ title, name, cancelled, size }: { title: string; name?: string; cancelled: boolean; size?: number }) {
@@ -62,11 +63,15 @@ export function Signature({ sig }: { sig: { image: string; caption: string } }) 
   );
 }
 
-/** Customer details for the right column: everything filled except the mobile (printed as the contact). */
-export function ToBlock({ v }: { v: Pick<InvoiceView, 'billedTo' | 'billedToDetails'> }) {
+/**
+ * Customer details for the right column: everything filled. The mobile is left out only when it is already printed
+ * as the contact (no Booking Contact person); the Contact person rows always print in the contact field.
+ */
+export function ToBlock({ v }: { v: Pick<InvoiceView, 'billedTo' | 'billedToDetails' | 'contact'> }) {
+  const skip = ['Address', 'Contact person', 'Contact no.', ...(v.contact.length ? [] : ['Mobile'])];
   const details = [
     ...v.billedToDetails.filter((d) => d.label === 'Address'),
-    ...v.billedToDetails.filter((d) => !['Mobile', 'Address', 'Contact person', 'Contact no.'].includes(d.label)),
+    ...v.billedToDetails.filter((d) => !skip.includes(d.label)),
   ];
   return (
     <View>
@@ -101,7 +106,7 @@ export function Field({ label, value, accent }: { label: string; value: string |
   );
 }
 
-const COL = { no: 34, qty: 44, total: 92 };
+const COL = { no: 34, total: 92 };
 
 function ItemGrid({ v, mark }: { v: InvoiceView; mark: string }) {
   const struck = v.servicesStruck ? s.struck : {};
@@ -110,8 +115,7 @@ function ItemGrid({ v, mark }: { v: InvoiceView; mark: string }) {
     v.lineItems.length === 1 && !v.servicesStruck && v.item.title.includes(v.lineItems[0].description) ? v.lineItems[0] : undefined;
   const items = only ? [] : v.lineItems;
   const detail = [v.item.detail, only?.detail].filter(Boolean).join(' · ');
-  const filled = 1 + items.length;
-  const pad = Math.max(0, MIN_ROWS - filled);
+  const showMark = 1 + items.length >= MARK_ROWS;
   const travellers = v.trip.travellers.length ? `Travellers: ${v.trip.travellers.join(', ')}` : '';
   return (
     <View>
@@ -119,21 +123,22 @@ function ItemGrid({ v, mark }: { v: InvoiceView; mark: string }) {
       <View style={s.gridHead} fixed>
         <Text style={[s.gridHeadText, { width: COL.no, paddingLeft: 6 }]}>NO</Text>
         <Text style={[s.gridHeadText, { flex: 1, paddingLeft: 6 }]}>DESCRIPTION</Text>
-        <Text style={[s.gridHeadText, { width: COL.qty, textAlign: 'center' }]}>QTY</Text>
         <Text style={[s.gridHeadText, { width: COL.total, textAlign: 'right', paddingRight: 6 }]}>TOTAL</Text>
       </View>
       <View style={s.grid}>
-        <View
-          style={{
-            position: 'absolute',
-            top: 4,
-            left: 0,
-            right: 0,
-            alignItems: 'center',
-          }}
-        >
-          <Image src={mark} style={{ width: 128, height: 151, opacity: 0.12 }} />
-        </View>
+        {showMark ? (
+          <View
+            style={{
+              position: 'absolute',
+              top: 4,
+              left: 0,
+              right: 0,
+              alignItems: 'center',
+            }}
+          >
+            <Image src={mark} style={{ width: 128, height: 151, opacity: 0.12 }} />
+          </View>
+        ) : null}
         <View style={s.gridRow} wrap={false}>
           <Text style={[s.gridCell, { width: COL.no, fontWeight: 600 }]}>01</Text>
           <View style={[s.gridCell, { flex: 1 }]}>
@@ -141,7 +146,6 @@ function ItemGrid({ v, mark }: { v: InvoiceView; mark: string }) {
             {detail ? <Text style={{ color: C.muted }}>{detail}</Text> : null}
             {travellers ? <Text style={{ color: C.muted, fontSize: 7.5 }}>{travellers}</Text> : null}
           </View>
-          <Text style={[s.gridCell, { width: COL.qty, textAlign: 'center', fontWeight: 600 }]}>01</Text>
           <Text style={[s.gridCell, { width: COL.total, textAlign: 'right', fontWeight: 600 }]}>{v.item.amount}</Text>
         </View>
         {items.map((li, i) => (
@@ -155,16 +159,7 @@ function ItemGrid({ v, mark }: { v: InvoiceView; mark: string }) {
                 <Text style={[{ color: C.muted, fontSize: 7.5 }, struck]}>{[li.dates, li.detail].filter(Boolean).join(' · ')}</Text>
               ) : null}
             </View>
-            <Text style={[s.gridCell, { width: COL.qty, textAlign: 'center' }, struck]}>01</Text>
             <Text style={[s.gridCell, { width: COL.total, textAlign: 'right', color: C.muted }, struck]}>Incl.</Text>
-          </View>
-        ))}
-        {Array.from({ length: pad }, (_, i) => (
-          <View key={`pad${i}`} style={s.gridRow} wrap={false}>
-            <Text style={[s.gridCell, { width: COL.no, fontWeight: 600 }]}>{String(filled + i + 1).padStart(2, '0')}</Text>
-            <Text style={[s.gridCell, { flex: 1 }]}> </Text>
-            <Text style={[s.gridCell, { width: COL.qty }]}> </Text>
-            <Text style={[s.gridCell, { width: COL.total }]}> </Text>
           </View>
         ))}
       </View>
@@ -185,22 +180,16 @@ function ItemGrid({ v, mark }: { v: InvoiceView; mark: string }) {
   );
 }
 
-/** SUBTOTAL / SALES TAX / TOTAL cells, payments received, then the tone-coloured result. */
-export function Totals({ v }: { v: Pick<InvoiceView, 'summary' | 'totals'> }) {
+/** TOTAL (or CANCELLATION CHARGE) cell, payments received / refunded, then the tone-coloured result. No tax field exists. */
+export function Totals({ v }: { v: Pick<InvoiceView, 'summary' | 'totals' | 'cancelledPill'> }) {
   const r = v.totals.result;
   const tone = toneColour[r.tone];
   return (
     <View style={{ width: 280 }}>
-      {[
-        ['SUBTOTAL', v.summary.total],
-        ['SALES TAX', '0.00'],
-        ['TOTAL', v.summary.total],
-      ].map(([label, value]) => (
-        <View key={label} style={[s.totRow, { marginBottom: 3 }]}>
-          <Text style={s.totLabel}>{label}</Text>
-          <Text style={s.totCell}>{value}</Text>
-        </View>
-      ))}
+      <View style={[s.totRow, { marginBottom: 3 }]}>
+        <Text style={s.totLabel}>{v.cancelledPill ? v.totals.lines[0].label.toUpperCase() : 'TOTAL'}</Text>
+        <Text style={s.totCell}>{v.summary.total}</Text>
+      </View>
       {v.totals.lines.slice(1).map((l, i) => (
         <View key={i} style={[s.totRow, { marginTop: i ? 0 : 3 }]}>
           <Text
@@ -266,10 +255,12 @@ function BankTable({ v }: { v: InvoiceView }) {
   const rest = v.bankRows.filter((r) => r !== branch);
   return (
     <View style={s.bankTable}>
-      <View style={{ flexDirection: 'row' }}>
-        <Text style={s.bankLabel}>Bank Detail</Text>
-        <Text style={s.bankValue}>{branch ? branch.value.toUpperCase() : ' '}</Text>
-      </View>
+      {branch ? (
+        <View style={{ flexDirection: 'row' }}>
+          <Text style={s.bankLabel}>Bank Detail</Text>
+          <Text style={s.bankValue}>{branch.value.toUpperCase()}</Text>
+        </View>
+      ) : null}
       {rest.map((r, i) => (
         <View key={i} style={{ flexDirection: 'row' }}>
           <Text style={s.bankLabel}>{r.label === 'Account no.' ? 'Account no' : r.label === 'UPI' ? 'UPI ID' : r.label}</Text>
@@ -284,6 +275,8 @@ export const Invoice: InvoiceTemplate = ({ view: v, assets }) => {
   const gstNote = v.terms[0] && /GST/i.test(v.terms[0]) ? v.terms[0] : '';
   const otherTerms = gstNote ? v.terms.slice(1) : v.terms;
   const showQr = Boolean(assets.qr && v.payment?.qr);
+  // Bank details are payment instructions: only while a balance is due (`payment`), never on a paid or refund invoice.
+  const showBank = Boolean(v.payment) && v.bankRows.length > 0;
   const lh = v.letterhead;
   return (
     <Document title={v.filenameTitle} author={lh.name} creator={lh.name} producer={lh.name}>
@@ -347,9 +340,9 @@ export const Invoice: InvoiceTemplate = ({ view: v, assets }) => {
             <Totals v={v} />
           </View>
 
-          {v.bankRows.length > 0 || v.signature ? (
+          {showBank || v.signature ? (
             <View style={{ flexDirection: 'row', marginTop: 14, gap: 18, alignItems: 'flex-end' }} wrap={false}>
-              <View style={{ flex: 1 }}>{v.bankRows.length > 0 ? <BankTable v={v} /> : null}</View>
+              <View style={{ flex: 1 }}>{showBank ? <BankTable v={v} /> : null}</View>
               {v.signature ? <Signature sig={v.signature} /> : null}
             </View>
           ) : null}
@@ -367,7 +360,7 @@ export const Invoice: InvoiceTemplate = ({ view: v, assets }) => {
           ) : null}
         </View>
 
-        <Footer lh={lh} lines={[['Thank you for your business!', ...v.footer.slice(1)].join('  ·  ')]} />
+        <Footer lh={lh} lines={[v.footer.join('  ·  ')]} />
       </Page>
     </Document>
   );

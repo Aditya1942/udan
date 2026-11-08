@@ -11,6 +11,13 @@
       {
         "source": "/admin{,/**}",
         "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }]
+      },
+      {
+        "source": "/d/**",
+        "headers": [
+          { "key": "X-Robots-Tag", "value": "noindex, nofollow" },
+          { "key": "Referrer-Policy", "value": "no-referrer" }
+        ]
       }
     ],
     "rewrites": [{ "source": "**", "destination": "/index.html" }]

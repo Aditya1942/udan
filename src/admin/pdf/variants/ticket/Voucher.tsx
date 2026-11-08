@@ -8,27 +8,23 @@ type Service = VoucherView['services'][number];
 
 const typeColour = (t: Service['type']) => (t === 'Flight' ? c.sky : c.teal);
 
-/** `IndiGo 6E-512 AMD 07:10 → GOI 08:55, 15 kg` → carrier, from/to codes + times, extras. Undefined when no route. */
+/**
+ * `IndiGo 6E-512 AMD 07:10 → GOI 08:55, 15 kg` → the two airport/station codes (`AMD`, `GOI`) for the big route art.
+ * Only the codes are lifted out: the description itself is always printed verbatim under them, so times, carrier and
+ * extras keep the meaning the agent typed (e.g. `AMD → DXB 04:25` is a departure time, not an arrival at DXB).
+ * Undefined unless both sides of a single `→` carry a 3-letter code.
+ */
 function parseRoute(description: string) {
   const parts = description.split('→');
   if (parts.length !== 2) return undefined;
-  const [left, rightAll] = parts.map((p) => p.trim());
   const code = /\b([A-Z]{3})\b/;
-  const lm = code.exec(left);
-  const rm = code.exec(rightAll);
-  if (!lm || !rm) return { from: { code: left, rest: '' }, to: { code: rightAll, rest: '' }, carrier: '', extra: '', plain: true };
-  const carrier = left.slice(0, lm.index).trim();
-  const fromRest = left.slice(lm.index + 3).trim();
-  const afterTo = rightAll.slice(rm.index + 3).trim();
-  const beforeTo = rightAll.slice(0, rm.index).trim();
-  const comma = afterTo.indexOf(',');
-  const toRest = (comma >= 0 ? afterTo.slice(0, comma) : afterTo).trim();
-  const extra = [beforeTo, comma >= 0 ? afterTo.slice(comma + 1).trim() : ''].filter(Boolean).join(' · ');
-  return { from: { code: lm[1], rest: fromRest }, to: { code: rm[1], rest: toRest }, carrier, extra, plain: false };
+  const lm = code.exec(parts[0]);
+  const rm = code.exec(parts[1]);
+  return lm && rm ? { from: lm[1], to: rm[1] } : undefined;
 }
 
-function DateLine({ svc }: { svc: Service }) {
-  if (!svc.start) return <Text style={[s.semi, { fontSize: 8.5, color: c.muted }]}>Throughout your trip</Text>;
+function DateLine({ svc, hasTrip }: { svc: Service; hasTrip: boolean }) {
+  if (!svc.start) return hasTrip ? <Text style={[s.semi, { fontSize: 8.5, color: c.muted }]}>Throughout your trip</Text> : null;
   return (
     <Text style={[s.semi, { fontSize: 8.5 }]}>
       {svc.start}
@@ -67,37 +63,23 @@ function HotelBody({ svc }: { svc: Service }) {
 
 function RouteBody({ svc, route }: { svc: Service; route: NonNullable<ReturnType<typeof parseRoute>> }) {
   const colour = typeColour(svc.type);
-  if (route.plain)
-    return (
-      <View style={[s.row, { marginTop: 4, alignItems: 'center', gap: 8 }]}>
-        <Text style={[s.h, { fontSize: 11, flexShrink: 1 }]}>{route.from.code}</Text>
-        <Text style={[s.h, { fontSize: 14, color: colour }]}>→</Text>
-        <Text style={[s.h, { fontSize: 11, flexShrink: 1 }]}>{route.to.code}</Text>
-      </View>
-    );
   return (
     <>
-      {route.carrier ? <Text style={[s.semi, { fontSize: 9.5, marginTop: 2 }]}>{route.carrier}</Text> : null}
-      <View style={[s.row, { marginTop: 4, alignItems: 'flex-start' }]}>
-        <View style={{ width: 90 }}>
-          <Text style={[s.h, { fontSize: 22, letterSpacing: 1 }]}>{route.from.code}</Text>
-          {route.from.rest ? <Text style={[s.semi, { color: c.muted, fontSize: 8.5 }]}>{route.from.rest}</Text> : null}
-        </View>
-        <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', marginHorizontal: 6, marginTop: 9 }}>
+      <View style={[s.row, { marginTop: 4, alignItems: 'center' }]}>
+        <Text style={[s.h, { fontSize: 22, letterSpacing: 1 }]}>{route.from}</Text>
+        <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', marginHorizontal: 10 }}>
           <View style={{ flex: 1, borderTopWidth: 1, borderTopStyle: 'dashed', borderTopColor: colour }} />
           <Text style={[s.h, { fontSize: 13, color: colour, marginLeft: 3 }]}>→</Text>
         </View>
-        <View style={{ width: 90, alignItems: 'flex-end' }}>
-          <Text style={[s.h, { fontSize: 22, letterSpacing: 1 }]}>{route.to.code}</Text>
-          {route.to.rest ? <Text style={[s.semi, s.right, { color: c.muted, fontSize: 8.5 }]}>{route.to.rest}</Text> : null}
-        </View>
+        <Text style={[s.h, { fontSize: 22, letterSpacing: 1 }]}>{route.to}</Text>
       </View>
-      {route.extra ? <Text style={{ color: c.muted, fontSize: 7.5, marginTop: 4 }}>{route.extra}</Text> : null}
+      {/* Verbatim: Inter 400 (free text with → mis-shapes later Inter SemiBold). */}
+      <Text style={{ fontSize: 8.5, marginTop: 3 }}>{svc.description}</Text>
     </>
   );
 }
 
-function ServiceTicket({ svc, bookingNo }: { svc: Service; bookingNo: string }) {
+function ServiceTicket({ svc, bookingNo, hasTrip }: { svc: Service; bookingNo: string; hasTrip: boolean }) {
   const colour = typeColour(svc.type);
   const route = svc.type !== 'Hotel' ? parseRoute(svc.description) : undefined;
   const travel = svc.type === 'Flight' || svc.type === 'Train' || svc.type === 'Bus';
@@ -122,7 +104,7 @@ function ServiceTicket({ svc, bookingNo }: { svc: Service; bookingNo: string }) 
         <Label color={colour} style={{ fontSize: 7 }}>
           {svc.type}
         </Label>
-        {svc.type === 'Hotel' && svc.start ? null : <DateLine svc={svc} />}
+        {svc.type === 'Hotel' && svc.start ? null : <DateLine svc={svc} hasTrip={hasTrip} />}
       </View>
       {svc.type === 'Hotel' ? (
         <HotelBody svc={svc} />
@@ -237,7 +219,7 @@ function RouteCard({ lines }: { lines: string[] }) {
       <View wrap={false}>
         <View style={[s.row, { alignItems: 'center', gap: 8, marginBottom: 6 }]}>
           <Label color={c.teal} style={{ fontSize: 7 }}>
-            Route
+            Itinerary
           </Label>
           <View style={{ flex: 1, borderTopWidth: 1, borderTopStyle: 'dashed', borderTopColor: c.line }} />
           <Text style={[s.h, { fontSize: 10, color: c.teal }]}>→</Text>
@@ -339,7 +321,7 @@ export const Voucher: VoucherTemplate = ({ view: v, assets }) => {
               </View>
             </View>
             {v.services.map((svc, i) => (
-              <ServiceTicket key={i} svc={svc} bookingNo={v.bookingNo} />
+              <ServiceTicket key={i} svc={svc} bookingNo={v.bookingNo} hasTrip={Boolean(v.trip.destination || v.trip.dates)} />
             ))}
           </View>
         ) : null}

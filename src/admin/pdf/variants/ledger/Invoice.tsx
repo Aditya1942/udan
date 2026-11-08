@@ -8,8 +8,6 @@ const SR = 26;
 const DATES = 118;
 const AMT = 88;
 
-const notTaxInvoice = (footer: string[]) => footer.some((l) => /not a tax invoice/i.test(l));
-
 /** Billed to | invoice facts; Trip / Service | Travellers. */
 export function PartiesGrid({ v, meta }: { v: InvoiceView | AdminInvoiceView; meta: { label: string; value: string; colour?: string; bold?: boolean }[] }) {
   const trip = [
@@ -24,7 +22,7 @@ export function PartiesGrid({ v, meta }: { v: InvoiceView | AdminInvoiceView; me
         <View style={[s.box, s.vr, { flex: 1 }]}>
           <Text style={[s.lab, { marginBottom: 3 }]}>Billed to</Text>
           {v.billedTo.name ? <Text style={[s.semi, { fontSize: 10, marginBottom: 3 }]}>{v.billedTo.name}</Text> : null}
-          <PairList rows={v.billedToDetails} labelWidth={52} />
+          <PairList rows={v.billedToDetails} labelWidth={66} />
         </View>
         <View style={{ width: 232 }}>
           <KvTable rows={meta.filter((r) => r.value)} labelWidth={78} />
@@ -88,7 +86,8 @@ export function ItemTable({
           </Td>
           <Td>
             <Text style={s.semi}>{v.item.title}</Text>
-            {v.item.detail ? <Text style={[s.muted, s.small]}>{v.item.detail}</Text> : null}
+            {/* Dates have their own column (item.detail would repeat them): pax only. */}
+            {v.trip.pax ? <Text style={[s.muted, s.small]}>{v.trip.pax}</Text> : null}
           </Td>
           <Td w={DATES}>
             <Text style={s.small}>{v.trip.dates}</Text>
@@ -199,7 +198,8 @@ export function ItemTable({
         </View>
         {words && (
           <View style={[s.row, s.box, { gap: 8 }]}>
-            <Text style={[s.lab, { paddingTop: 1.5 }]}>Amount in words</Text>
+            {/* inWords spells the total (first totals line), not the balance printed just above. */}
+            <Text style={[s.lab, { paddingTop: 1.5 }]}>{`${v.totals.lines[0]?.label ?? 'Total'} in words`}</Text>
             <Text style={[s.semi, { flex: 1 }]}>{v.summary.inWords}</Text>
           </View>
         )}
@@ -208,11 +208,12 @@ export function ItemTable({
   );
 }
 
-/** Bank details (+ UPI QR) left, Terms right. Omitted when both are empty. */
+/** Bank details (+ UPI QR) left, Terms right. Bank only while the view asks for payment (balance due). */
 function BankTerms({ v, qr }: { v: InvoiceView; qr?: string }) {
   const showQr = Boolean(qr && v.payment?.qr);
-  if (!v.bankRows.length && !v.terms.length && !showQr) return null;
-  const bank = v.bankRows.length > 0 || showQr;
+  const bankRows = v.payment ? v.bankRows : [];
+  if (!bankRows.length && !v.terms.length && !showQr) return null;
+  const bank = bankRows.length > 0 || showQr;
   return (
     <View style={[s.section, s.row]} wrap={false}>
       {bank && (
@@ -220,7 +221,7 @@ function BankTerms({ v, qr }: { v: InvoiceView; qr?: string }) {
           <Caption>Bank details</Caption>
           <View style={s.row}>
             <View style={{ flex: 1 }}>
-              <KvTable rows={v.bankRows} labelWidth={72} />
+              <KvTable rows={bankRows} labelWidth={72} />
             </View>
             {showQr && (
               <View
@@ -264,23 +265,13 @@ export function LedgerInvoice({ v, assets }: { v: InvoiceView; assets: VariantAs
       <Page size="A4" style={s.page}>
         <Furniture running={`Invoice ${v.invoiceNo}`} footer={[`Invoice ${v.invoiceNo} · Booking ${v.bookingNo}`]} />
         <LetterheadBox lh={v.letterhead} wordmark={assets.wordmark} />
-        <TitleBand
-          title="INVOICE"
-          sub={notTaxInvoice(v.footer) ? 'Bill of Supply — not a tax invoice' : undefined}
-          stamp={cancelled ? 'CANCELLED' : undefined}
-        />
+        <TitleBand title="INVOICE" stamp={cancelled ? 'CANCELLED' : undefined} />
         <PartiesGrid
           v={v}
           meta={[
             { label: 'Invoice No.', value: v.invoiceNo, bold: true },
             { label: 'Invoice date', value: v.invoiceDate },
             { label: 'Booking No.', value: v.bookingNo },
-            {
-              label: 'Status',
-              value: v.status,
-              colour: cancelled ? RED : undefined,
-              bold: cancelled,
-            },
           ]}
         />
         {v.cancelledNote ? (
@@ -290,7 +281,7 @@ export function LedgerInvoice({ v, assets }: { v: InvoiceView; assets: VariantAs
         ) : null}
         <ItemTable v={v} />
         <BankTerms v={v} qr={assets.qr} />
-        <View style={[s.section, s.row, { minHeight: 78 }]} wrap={false}>
+        <View style={[s.section, s.row, v.signature ? { minHeight: 78 } : {}]} wrap={false}>
           <View style={[s.box, { flex: 1, justifyContent: 'flex-end', gap: 1 }]}>
             {v.footer.map((l, i) => (
               <Text key={i} style={[s.small, i === 0 ? s.semi : s.muted]}>
@@ -298,7 +289,7 @@ export function LedgerInvoice({ v, assets }: { v: InvoiceView; assets: VariantAs
               </Text>
             ))}
           </View>
-          <SignatureBox name={v.letterhead.name} signature={v.signature} />
+          {v.signature ? <SignatureBox name={v.letterhead.name} signature={v.signature} /> : null}
         </View>
       </Page>
     </Document>

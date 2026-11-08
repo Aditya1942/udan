@@ -8,7 +8,10 @@ import { c, s } from './styles';
 const Confirmation = ({ conf }: { conf: VoucherItem['confirmation'] }) => (
   <View style={{ alignItems: 'flex-end' }}>
     <Text style={[s.caps, { fontSize: 6, color: conf.pending ? c.warn : c.muted }]}>{conf.pending ? 'Status' : 'Confirmation'}</Text>
-    <Text style={[s.caps, { fontSize: 7.5, letterSpacing: 1.2, color: conf.pending ? c.warn : c.ink, textAlign: 'right' }]}>{conf.text}</Text>
+    {/* Codes print exactly as entered (no uppercase transform): references can be case-sensitive. */}
+    <Text style={[s.caps, { fontSize: 7.5, letterSpacing: 1.2, color: conf.pending ? c.warn : c.ink, textAlign: 'right' }, conf.pending ? {} : { textTransform: 'none', letterSpacing: 0.6 }]}>
+      {conf.text}
+    </Text>
   </View>
 );
 
@@ -17,7 +20,11 @@ function Cover({ v }: { v: VoucherView }) {
   const glance = [
     { label: 'Travel dates', value: v.trip.dates },
     { label: 'Guests', value: v.trip.pax },
-    { label: 'Status', value: v.status },
+    // Not the Booking status (internal pipeline word, e.g. "Voucher Received"): the confirmation state of the services.
+    {
+      label: 'Services',
+      value: v.services.length ? (v.pendingCount ? `${v.pendingCount} of ${v.services.length} to be confirmed` : 'All confirmed') : '',
+    },
   ].filter((g) => g.value);
   const travellers = v.travellers.filter((t) => t !== v.guest.name);
   return (
@@ -44,7 +51,7 @@ function Cover({ v }: { v: VoucherView }) {
       {glance.length > 0 && (
         <View style={{ alignSelf: 'stretch', marginTop: 14 }}>
           <Serif italic style={{ fontSize: 10.5, color: c.goldText, textAlign: 'center', marginBottom: 4 }}>
-            Your journey at a glance
+            At a glance
           </Serif>
           <View style={[s.row, { borderTopWidth: 0.5, borderBottomWidth: 0.5, borderColor: c.gold, paddingVertical: 8 }]}>
             {glance.map((g, i) => (
@@ -161,10 +168,13 @@ function Days({ v }: { v: VoucherView }) {
       ))}
       {v.throughout.length > 0 && (
         <View style={[s.row, { paddingVertical: 4 }]} wrap={false}>
-          <View style={{ width: 64, paddingTop: 4 }}>
-            <Text style={[s.caps, { color: c.goldText, fontSize: 6, letterSpacing: 1.2 }]}>Throughout</Text>
-            <Text style={[s.caps, { color: c.goldText, fontSize: 6, letterSpacing: 1.2 }]}>your trip</Text>
-          </View>
+          {/* Only beside dated days; on its own (e.g. a visa) the list needs no "throughout your trip" label. */}
+          {v.days.length > 0 ? (
+            <View style={{ width: 64, paddingTop: 4 }}>
+              <Text style={[s.caps, { color: c.goldText, fontSize: 6, letterSpacing: 1.2 }]}>Throughout</Text>
+              <Text style={[s.caps, { color: c.goldText, fontSize: 6, letterSpacing: 1.2 }]}>your trip</Text>
+            </View>
+          ) : null}
           <View style={{ flex: 1 }}>
             {v.throughout.map((it, i) => (
               <Item key={i} item={it} />

@@ -4,6 +4,7 @@
  */
 import type { ReactNode } from 'react';
 import { Document, Image, Page, StyleSheet, Text, View } from '@react-pdf/renderer';
+import { PairValue } from '../../InvoiceDocument';
 import { base, colour } from '../../theme';
 import type { Tone } from '../../view';
 import type { AdminInvoiceTemplate } from '../types';
@@ -87,6 +88,8 @@ export const AdminInvoice: AdminInvoiceTemplate = ({ view: v, assets }) => {
   const p = v.profit;
   const cancelled = v.cancelledPill;
   const priceLabel = cancelled ? 'Cancellation charge' : 'Selling price';
+  // Cancelled: the view's net cost is the sum of DMC cancellation charges.
+  const costLabel = cancelled ? 'DMC cxl. charges' : 'Net cost';
   const tripLines = [v.trip.destination, v.trip.dates, v.trip.pax].filter(Boolean);
 
   const costRows = v.costLines.map((l) => (
@@ -186,10 +189,12 @@ export const AdminInvoice: AdminInvoiceTemplate = ({ view: v, assets }) => {
           <View style={{ flex: 1 }}>
             <Text style={base.label}>Client</Text>
             {v.billedTo.name ? <Text style={base.semi}>{v.billedTo.name}</Text> : null}
-            {v.billedTo.lines.map((l, i) => (
-              <Text key={i}>{l}</Text>
+            {v.billedToDetails.map((r, i) => (
+              <View key={i} style={base.row}>
+                <Text style={[base.muted, { width: 76, fontSize: 7.5, paddingTop: 1 }]}>{r.label}</Text>
+                <PairValue text={r.value} />
+              </View>
             ))}
-            {v.contact.length ? <Text style={[base.muted, { marginTop: 2 }]}>Contact: {v.contact.join(', ')}</Text> : null}
           </View>
           <View style={{ flex: 1 }}>
             <Text style={base.label}>Trip</Text>
@@ -224,7 +229,7 @@ export const AdminInvoice: AdminInvoiceTemplate = ({ view: v, assets }) => {
             <Text style={s.kpiValue}>{p.sellingPrice}</Text>
           </View>
           <View style={s.kpi}>
-            <Text style={base.label}>Net cost</Text>
+            <Text style={base.label}>{costLabel}</Text>
             <Text style={s.kpiValue}>{p.netCost}</Text>
           </View>
           <View style={s.kpi}>
@@ -263,11 +268,12 @@ export const AdminInvoice: AdminInvoiceTemplate = ({ view: v, assets }) => {
             <TotRow label={priceLabel} amount={p.sellingPrice} />
             <TotRow label="Received (net of refunds)" amount={p.clientReceived} muted />
             <TotResult label="Client outstanding" amount={p.clientOutstanding} tone={p.clientOutstandingTone} />
+            {v.totals.result.note ? <Text style={[s.sub, base.right, { marginTop: 2 }]}>{v.totals.result.note}</Text> : null}
           </View>
           {v.dmcs.length > 0 ? (
             <View style={{ flex: 1 }}>
               <Text style={s.sectionLabel}>Supplier account</Text>
-              <TotRow label="Net cost" amount={p.netCost} />
+              <TotRow label={costLabel} amount={p.netCost} />
               <TotRow label={`Commission (${p.margin})`} amount={p.commission} colour={toneColour[p.commissionTone]} />
               <TotResult label="Owed to DMCs" amount={p.dmcOutstanding} tone={p.dmcOutstandingTone} />
             </View>

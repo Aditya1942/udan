@@ -4,6 +4,7 @@ import { useAdminSession } from '../auth';
 import { Button, PageHeader, Panel, useAdminTitle } from '../ui';
 import { BusinessProfileForm } from './settings/BusinessProfileForm';
 import { DataCard } from './settings/DataCard';
+import { SettingsTabs } from './settings/SettingsTabs';
 
 function Avatar({ photoURL, email }: { photoURL: string | null; email: string }) {
   const [broken, setBroken] = useState(false);
@@ -59,7 +60,9 @@ export function SettingsScreen() {
   useAdminTitle('Settings');
   return (
     <>
-      <PageHeader title="Settings" />
+      <PageHeader title="Settings">
+        <SettingsTabs />
+      </PageHeader>
       <div className="adm-settings">
         <nav className="adm-settings__nav" aria-label="Settings sections">
           {SECTIONS.map((s) => (

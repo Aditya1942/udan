@@ -7,6 +7,11 @@ export function invoiceFilename(invoiceNo: string): string {
   return `UDAN-Invoice-${invoiceNo.replaceAll('/', '_')}.pdf`;
 }
 
+/** `UDN-001` → `UDAN-Admin-invoice-UDN-001.pdf` (internal copy; never sent to the customer). */
+export function adminInvoiceFilename(bookingNo: string): string {
+  return `UDAN-Admin-invoice-${bookingNo}.pdf`;
+}
+
 /** `UDN-001` → `UDAN-Voucher-UDN-001.pdf`. */
 export function voucherFilename(bookingNo: string): string {
   return `UDAN-Voucher-${bookingNo}.pdf`;

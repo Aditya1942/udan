@@ -6,11 +6,12 @@ import react from '@vitejs/plugin-react'
 const PUBLIC_FORBIDDEN: RegExp[] = [/src\/admin\//, /firebase\/auth|@firebase\/auth/, /@react-pdf/, /node_modules\/qrcode\//, /recharts/]
 /**
  * Heavy code the admin routes chunk must leave to its nested lazy chunks: Recharts (only the Insights screen) and the
- * PDF stack (react-pdf, qrcode, src/admin/pdf — loaded when Prepare is pressed).
+ * PDF stack (react-pdf, qrcode, src/admin/pdf — loaded when Prepare is pressed). The pure modules `pdf/view.ts`,
+ * `pdf/share.ts` and `pdf/catalog.ts` (no react-pdf) are allowed: live links and template pickers need them.
  */
 const ADMIN_ROUTES_FORBIDDEN: { pattern: RegExp; rule: string }[] = [
   { pattern: /recharts/, rule: 'Recharts: only the lazy Insights screen may import it' },
-  { pattern: /@react-pdf|node_modules\/qrcode\/|src\/admin\/pdf\//, rule: 'the PDF stack (react-pdf, qrcode, src/admin/pdf): load it only with a dynamic import on Prepare' },
+  { pattern: /@react-pdf|node_modules\/qrcode\/|src\/admin\/pdf\/(?!(?:view|share|catalog)\.ts$)/, rule: 'the PDF stack (react-pdf, qrcode, src/admin/pdf): load it only with a dynamic import on Prepare' },
 ]
 
 /**

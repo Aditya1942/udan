@@ -152,6 +152,13 @@ export function VoucherDocument({ view: v, wordmark }: { view: VoucherView; word
           </View>
         )}
 
+        {v.signature ? (
+          <View wrap={false} style={[s.section, { alignItems: 'flex-end' }]}>
+            <Image src={v.signature.image} style={{ width: 110, height: 40, objectFit: 'contain' }} />
+            <Text style={[base.muted, { fontSize: 7.5 }]}>{v.signature.caption}</Text>
+          </View>
+        ) : null}
+
         {v.footer ? (
           <Text fixed style={base.footer}>
             {v.footer}

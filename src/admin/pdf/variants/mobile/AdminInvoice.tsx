@@ -35,7 +35,7 @@ function InternalHero({ v }: { v: AdminInvoiceView }) {
       <Text style={{ color: c.white, opacity: 0.75, marginTop: 10 }}>Commission</Text>
       <Text style={[s.h, { color: onDark[p.commissionTone], fontSize: 30, lineHeight: 1.15 }]}>{p.commission}</Text>
       <Text style={{ color: c.white, marginTop: 2 }}>
-        {p.margin} margin on {p.sellingPrice}
+        {p.margin} margin on {v.cancelledPill ? `the ${p.sellingPrice} cancellation charge` : p.sellingPrice}
       </Text>
       <Text style={{ color: c.white, opacity: 0.7, fontSize: 8.5, marginTop: 8 }}>{ids}</Text>
     </View>
@@ -64,7 +64,8 @@ function KpiGrid({ v }: { v: AdminInvoiceView }) {
         marginBottom: 8,
       }}
     >
-      <Kpi label="Selling price" value={p.sellingPrice} />
+      {/* Cancelled: profit.sellingPrice is the client cancellation charge. */}
+      <Kpi label={v.cancelledPill ? 'Cancellation charge' : 'Selling price'} value={p.sellingPrice} />
       <Kpi label="Net cost" value={p.netCost} />
       <Kpi label="Commission" value={p.commission} sub={`${p.margin} margin`} colour={toneColour[p.commissionTone]} />
       <Kpi label="Cash in hand" value={p.cashInHand} sub="Client in − DMC out" />

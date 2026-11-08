@@ -144,24 +144,26 @@ export const Voucher: VoucherTemplate = ({ view: v, assets }) => {
           </View>
         )}
 
-        <View style={[s.section, s.row, { minHeight: 78 }]} wrap={false}>
-          {v.goodToKnow.length > 0 ? (
-            <View style={{ flex: 1 }}>
-              <Caption>Good to know</Caption>
-              <View style={[s.box, { gap: 2 }]}>
-                {v.goodToKnow.map((t, i) => (
-                  <View key={i} style={[s.row, { gap: 4 }]}>
-                    <Text style={[s.small, { width: 10 }]}>{i + 1}.</Text>
-                    <Text style={[s.small, { flex: 1 }]}>{t}</Text>
-                  </View>
-                ))}
+        {v.goodToKnow.length > 0 || v.signature ? (
+          <View style={[s.section, s.row, v.signature ? { minHeight: 78 } : {}]} wrap={false}>
+            {v.goodToKnow.length > 0 ? (
+              <View style={{ flex: 1 }}>
+                <Caption>Good to know</Caption>
+                <View style={[s.box, { gap: 2 }]}>
+                  {v.goodToKnow.map((t, i) => (
+                    <View key={i} style={[s.row, { gap: 4 }]}>
+                      <Text style={[s.small, { width: 10 }]}>{i + 1}.</Text>
+                      <Text style={[s.small, { flex: 1 }]}>{t}</Text>
+                    </View>
+                  ))}
+                </View>
               </View>
-            </View>
-          ) : (
-            <View style={{ flex: 1 }} />
-          )}
-          <SignatureBox name={v.letterhead.name} signature={v.signature} ruledLeft={v.goodToKnow.length > 0} />
-        </View>
+            ) : (
+              <View style={{ flex: 1 }} />
+            )}
+            {v.signature ? <SignatureBox name={v.letterhead.name} signature={v.signature} ruledLeft={v.goodToKnow.length > 0} /> : null}
+          </View>
+        ) : null}
       </Page>
     </Document>
   );

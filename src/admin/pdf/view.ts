@@ -142,6 +142,12 @@ const CATEGORY_LABEL: Record<BookingCategory, string> = {
   Passport: 'Passport services',
 };
 
+/** Label of the priced total: `Package price` for packages, else the Category (`Visa services`); Cancelled → `Cancellation charge`. */
+function priceLabel(booking: Booking, cancelled: boolean): string {
+  if (cancelled) return 'Cancellation charge';
+  return booking.category === 'Package' ? 'Package price' : CATEGORY_LABEL[booking.category];
+}
+
 /* -------------------------------- Invoice -------------------------------- */
 
 export type Tone = 'danger' | 'action' | 'warn';
@@ -198,7 +204,15 @@ export type InvoiceView = {
   /** Numbered line items (one per Service line) for itemised layouts; no per-line price exists. */
   lineItems: { no: string; type: LineType; description: string; dates: string; detail: string }[];
   /** Raw totals, formatted. */
-  summary: { total: string; received: string; refunded: string; balance: string; inWords: string };
+  summary: {
+    /** What the total is: `Package price`, `Hotel booking`, `Visa services`… or `Cancellation charge`. */
+    totalLabel: string;
+    total: string;
+    received: string;
+    refunded: string;
+    balance: string;
+    inWords: string;
+  };
   /** Bank + UPI rows, printed whatever the balance (filled only). */
   bankRows: Pair[];
 };
@@ -279,7 +293,7 @@ export function invoiceView({ booking, client, profile: raw }: InvoiceInput): In
     originalPrice: cancelled ? { label: 'Original package price (all services above)', amount: formatINR(booking.sellingPrice) } : undefined,
     totals: {
       lines: [
-        { label: cancelled ? 'Cancellation charge' : 'Package price', amount: formatINR(total), muted: false },
+        { label: priceLabel(booking, cancelled), amount: formatINR(total), muted: false },
         ...entries.map((e) =>
           e.kind === 'Refund'
             ? { label: `Refunded ${formatDate(e.date)} · ${e.mode}`, amount: `+ ${formatINR(e.amount)}`, muted: true }
@@ -292,7 +306,16 @@ export function invoiceView({ booking, client, profile: raw }: InvoiceInput): In
     payment,
     terms: textLines(p.invoiceTerms),
     signature: p.signature ? { image: p.signature, caption: name ? `For ${name}` : 'Authorised signatory' } : undefined,
-    footer: [name ? `Thank you for travelling with ${name}.` : 'Thank you for travelling with us.', 'This is not a tax invoice.'],
+    footer: [
+      cancelled
+        ? name
+          ? `Thank you for choosing ${name}.`
+          : 'Thank you for choosing us.'
+        : name
+          ? `Thank you for travelling with ${name}.`
+          : 'Thank you for travelling with us.',
+      'This is not a tax invoice.',
+    ],
     filenameTitle: `Invoice ${booking.invoiceNo}`,
     ...richInvoiceFields(booking, client, p),
   };
@@ -340,6 +363,7 @@ function richInvoiceFields(booking: Booking, client: Client | undefined, p: Busi
       detail: lineDetail(l),
     })),
     summary: {
+      totalLabel: priceLabel(booking, m.cancelled),
       total: formatINR(m.sellingPrice),
       received: formatINR(m.clientPaid),
       refunded: formatINR(m.clientRefunded),
@@ -384,6 +408,8 @@ export type AdminInvoiceView = Omit<InvoiceView, 'invoiceNo' | 'invoiceDate' | '
     /** DMC paid / owed on this line from tagged entries (DMC lines only). */
     dmcPaid?: string;
     dmcOwed?: string;
+    /** danger = still owed, warn = overpaid (due back), action = settled. */
+    dmcOwedTone?: Tone;
   }[];
   /** Headline business numbers. Commission tone: action (> 0), danger (< 0). */
   profit: {
@@ -467,6 +493,7 @@ export function adminInvoiceView({ booking, client, profile, dmcs, today }: Admi
         payBy: l.dmcPayBy ? `Pay by ${formatDate(l.dmcPayBy)}` : undefined,
         dmcPaid: l.dmcId && lm ? formatINR(lm.dmcPaid) : undefined,
         dmcOwed: l.dmcId && lm?.dmcOwed !== undefined ? formatINR(lm.dmcOwed) : undefined,
+        dmcOwedTone: l.dmcId && lm?.dmcOwed !== undefined ? (lm.dmcOwed > 0 ? 'danger' : lm.dmcOwed < 0 ? 'warn' : 'action') : undefined,
       };
     }),
     profit: {

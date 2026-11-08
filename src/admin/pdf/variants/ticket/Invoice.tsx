@@ -190,12 +190,12 @@ export function InvoiceBody({ v }: { v: Pick<InvoiceView, 'categoryLabel' | 'ite
                 <Stamp text="VOID · CANCELLED" colour={c.danger} size={16} rotate={-8} style={{ backgroundColor: 'rgba(255,255,255,0.75)' }} />
               </View>
             ) : null}
-            {v.originalPrice ? (
-              <View wrap={false} style={[s.row, { justifyContent: 'space-between', paddingTop: 6 }]}>
-                <Text style={s.muted}>{v.originalPrice.label}</Text>
-                <Text style={[s.semi, s.struck, s.right]}>{v.originalPrice.amount}</Text>
-              </View>
-            ) : null}
+          </View>
+        ) : null}
+        {v.originalPrice ? (
+          <View wrap={false} style={[s.row, { justifyContent: 'space-between', paddingTop: 6 }]}>
+            <Text style={s.muted}>{v.originalPrice.label}</Text>
+            <Text style={[s.semi, s.struck, s.right]}>{v.originalPrice.amount}</Text>
           </View>
         ) : null}
       </Seg>
@@ -291,8 +291,9 @@ function PaymentSlip({ v, qr }: { v: InvoiceView; qr?: string }) {
           <Label color={c.teal}>
             {paid ? 'Payment receipt' : 'Refund slip'}
           </Label>
-          <Label style={{ marginTop: 6 }}>{paid ? 'Received' : r.label}</Label>
-          <Text style={[s.h, { fontSize: 20, color: paid ? c.ink : tone }]}>{paid ? v.summary.received : r.amount}</Text>
+          {/* Paid in full: net received = the total (summary.received is gross, before refunds). */}
+          <Label style={{ marginTop: 6 }}>{paid ? 'Amount paid' : r.label}</Label>
+          <Text style={[s.h, { fontSize: 20, color: paid ? c.ink : tone }]}>{paid ? v.summary.total : r.amount}</Text>
           {paid ? <Text style={[s.semi, { color: tone, marginTop: 2 }]}>{r.label}</Text> : null}
           <SlipMeta v={v} />
         </View>

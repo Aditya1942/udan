@@ -4,14 +4,24 @@ Start here before touching any Invoice / Admin invoice / Voucher template. Produ
 `src/admin/README.md` (section "`pdf/` + Documents card"); this file covers the **template variants** and the
 open **`/templates`** gallery.
 
-Status: exploration. Production (Documents card → `prepare.ts`) still renders `InvoiceDocument.tsx` / `VoucherDocument.tsx`
-(= family `current`). No variant is wired into the app yet, and the Admin invoice has no button yet.
+Status: **live**. Every family is selectable in production:
+
+- **Settings → Templates** (`/admin/settings/templates`, `screens/TemplatesSettingsScreen.tsx`): default family per document
+  (Invoice / Admin invoice / Voucher) + WhatsApp / email message texts, saved in `settings/documents`. Preview = lazy
+  `pdf/settingsPreview.tsx` (sample scenarios + the real Business profile). No default saved → `current` (`FALLBACK_TEMPLATE`).
+- **Documents card** (`screens/booking/DocumentsCard.tsx`): rows Invoice, Voucher, Admin invoice; per-row template `<select>`
+  (starts on the default, not saved on the Booking) → `prepareDocument(kind, booking, { family, … })`. Admin invoice:
+  Preview / Download only, never shared.
+- **Live links** `/d/<token>`: WhatsApp / Email on Invoice and Voucher create or refresh `shares/<token>` and open a prefilled,
+  editable message (placeholders: `model/messages.ts`). See "Live links" below.
 
 ## Route
 
 | Route | Auth | Entry | What |
 |---|---|---|---|
 | `/templates` | open (noindex) | `src/App.tsx` → lazy `src/admin/pdf/gallery/route.tsx` | Pick document × scenario × family; "Compare all" grid; Open / Download each PDF |
+| `/admin/settings/templates` | admin | `AdminApp.tsx` → `screens/TemplatesSettingsScreen.tsx` | Defaults per document, preview, message texts |
+| `/d/:token` | open (noindex, no-referrer) | `src/App.tsx` → lazy `src/admin/pdf/share/route.tsx` | Customer's live document: Download / Open + inline preview (if `navigator.pdfViewerEnabled`) |
 
 URL state: `/templates?doc=invoice|admin|voucher&s=<scenario id>&v=<family id>&view=single|compare`.
 Lazy chunk (pulls react-pdf), so `bundleGuard` in `vite.config.ts` stays happy. Sample data only — never real customer data.
@@ -22,7 +32,13 @@ Lazy chunk (pulls react-pdf), so `bundleGuard` in `vite.config.ts` stays happy. 
 src/admin/pdf/
 ├── view.ts                 ← ALL data decisions. invoiceView / adminInvoiceView / voucherView (pure, tested)
 ├── theme.ts                ← fonts (Inter 400/600, Manrope 600/700), colours, base styles, registerFonts
-├── render.tsx              ← qrPng (UPI QR), production render
+├── render.tsx              ← qrPng (UPI QR), legacy prepareInvoice/prepareVoucher render
+├── renderTemplate.tsx      ← renderTemplate(family, {kind, view}, assets) → Blob; ONE serial queue app-wide; familyById
+├── prepare.ts              ← prepareDocument(kind, booking, { family, client, profile, dmcs }) → File (Documents card)
+├── catalog.ts              ← PURE: TEMPLATE_CATALOG (id/name/tagline), defaultTemplate, FALLBACK_TEMPLATE (catalog.test keeps it = registry)
+├── share.ts                ← PURE: sharePayload (customer-safe view JSON), samePayload, messageVars (paymentLine, pendingLine)
+├── settingsPreview.tsx     ← lazy Settings → Templates preview
+├── share/route.tsx         ← /d/:token page (+ share.css)
 ├── InvoiceDocument.tsx     ← production invoice  (family `current`)
 ├── VoucherDocument.tsx     ← production voucher  (family `current`)
 ├── sampleData.ts           ← Kerala sample booking/profile used by tests + scenarios
@@ -92,6 +108,17 @@ npx vite build                                                # bundleGuard
 ```
 Omit `VARIANT` to render all families. Don't use `npm test` for this (it boots the Firestore emulator).
 
+## Live links (`shares/{token}`)
+
+- Doc = `{ kind: invoice|voucher, bookingId, family, active, issuedOn, v, title, filename, tradingName, phone, view, unavailable, createdAt, updatedAt }`.
+  `view` = JSON of `invoiceView` / `voucherView` (never the Booking → no DMC, cost, commission, notes). `unavailable` = `''|cancelled|not-invoiced`.
+- Token = 128 random bits (base64url). Rules: `get` public, `list` + writes Admin only, key allow-list, disabling is final.
+- **ShareSync** (`data/DocumentsProvider.tsx`, mounted in `AdminLayout`): subscribes to active shares + `settings/business`; whenever a Booking,
+  its Client or the profile changes, rewrites every stale active link (`samePayload` guard). Client-side, no Cloud Functions.
+- Sending again updates the same token (template + issue date). "New link" = disable + new token. Voucher issue date = `issuedOn`.
+- `SHARE_VERSION` (share.ts): bump when the stored view shape changes incompatibly; the page refuses newer versions.
+- Pure modules `pdf/view.ts`, `pdf/share.ts`, `pdf/catalog.ts` are allowed in the admin routes chunk (`bundleGuard` exempts them).
+
 ## Known react-pdf 4.9 issues
 
 - **Page numbers vanish** (`<Text fixed render>`) when `lineHeight` is set on the `Page` or an ancestor View, or when the fixed element is
@@ -102,11 +129,12 @@ Omit `VARIANT` to render all families. Don't use `npm test` for this (it boots t
 
 ## Open gaps (view-model / data model)
 
-No per-line price, tax, room type, meal plan, rooms count, check-in time or business tagline fields (reference layout hard-codes the tagline and
-shows tax 0.00). `payBy` is a sentence (`Pay by …`), `dmcOwed` has no tone, `totals.lines[0]` says "Package price" for every Category.
+No per-line price, tax, room type, meal plan, rooms count, check-in time fields. `payBy` is a sentence (`Pay by …`); no `payByDate`.
+Voucher has no contact person and no per-service `detail` (visa type · country). Admin result label is customer wording ("Refund due to you").
+Fixed: price label by Category (`totals.lines[0].label` / `summary.totalLabel`), `costLines[].dmcOwedTone`, cancelled footer wording.
+Templates audited (Nov 2026): fake/hard-coded text removed (reference tagline, tax 0.00, QTY), cancelled labels, empty boxes.
 
 ## Next steps
 
-1. Owner picks a family (or mix per document).
-2. Wire it into `prepare.ts` / `render.tsx`; add an Admin invoice row to `screens/booking/DocumentsCard.tsx` (never shared to the customer).
-3. Decide whether `/templates` stays public or moves behind admin auth.
+1. Decide whether `/templates` stays public or moves behind admin auth (Settings → Templates now covers the owner's preview).
+2. Deploy: `firebase deploy --only firestore:rules,hosting` (new `shares` + `settings/documents` rules, `/d/**` headers).

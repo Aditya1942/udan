@@ -18,6 +18,7 @@ import { NewBookingScreen } from './screens/NewBookingScreen';
 import { NotFoundScreen } from './screens/NotFoundScreen';
 import { OverviewScreen } from './screens/OverviewScreen';
 import { SettingsScreen } from './screens/SettingsScreen';
+import { TemplatesSettingsScreen } from './screens/TemplatesSettingsScreen';
 import { AdminLayout } from './shell/AdminLayout';
 import { LoadingState } from './ui';
 
@@ -54,6 +55,7 @@ export function AdminApp({ auth, db, signIn }: AdminAppProps) {
           <Route path="dmcs/:id" element={<DmcDetailScreen />} />
           <Route path="enquiries" element={<EnquiriesScreen />} />
           <Route path="settings" element={<SettingsScreen />} />
+          <Route path="settings/templates" element={<TemplatesSettingsScreen />} />
           <Route path="*" element={<NotFoundScreen />} />
         </Route>
       </Routes>

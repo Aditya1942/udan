@@ -17,9 +17,9 @@ const cell = {
   paddingHorizontal: 5,
 } as const;
 
-/** Heading that never sits alone at the foot of a page. */
+/** Heading that never sits alone at the foot of a page: needs room for the table header + first row after it. */
 const H = ({ children }: { children: string }) => (
-  <Text style={s.aH} minPresenceAhead={50}>
+  <Text style={s.aH} minPresenceAhead={80}>
     {children}
   </Text>
 );
@@ -110,10 +110,15 @@ function Stat({ label, value, colour, last }: { label: string; value: string; co
 
 const small = { fontSize: 7.5, color: C.muted } as const;
 
+/** Rows a table may have and still move to the next page whole with its heading (minPresenceAhead ignores fixed headers). */
+const KEEP_WHOLE = 8;
+
 export const AdminInvoice: AdminInvoiceTemplate = ({ view: v }) => {
   const lh = v.letterhead;
   const p = v.profit;
   const cancelled = v.cancelledPill;
+  // Same Service line (both numbered from booking.lines): visa type/country, hotel nights.
+  const lineDetail = (no: string) => v.lineItems.find((li) => li.no === no)?.detail ?? '';
   const summary: Pair[] = [
     { label: 'Category', value: v.categoryLabel },
     { label: 'Status', value: v.status },
@@ -200,7 +205,7 @@ export const AdminInvoice: AdminInvoiceTemplate = ({ view: v }) => {
           </View>
 
           {v.costLines.length > 0 && (
-            <View>
+            <View wrap={v.costLines.length > KEEP_WHOLE}>
               <H>COST &amp; SUPPLIER LINES</H>
               <Grid
                 cols={[
@@ -221,7 +226,7 @@ export const AdminInvoice: AdminInvoiceTemplate = ({ view: v }) => {
                     <Text>
                       <Text style={{ fontWeight: 600 }}>{l.type}</Text> — {l.description}
                     </Text>
-                    <Text style={small}>{l.dates}</Text>
+                    <Text style={small}>{[l.dates, lineDetail(l.no)].filter(Boolean).join(' · ')}</Text>
                   </View>,
                   l.supplier,
                   <Text style={l.confirmation.pending ? { color: C.warn, fontWeight: 600 } : { fontWeight: 600 }}>
@@ -256,7 +261,7 @@ export const AdminInvoice: AdminInvoiceTemplate = ({ view: v }) => {
                 }}
               >
                 <Stat label={cancelled ? 'CANCELLATION CHARGE' : 'SELLING PRICE'} value={p.sellingPrice} />
-                <Stat label="NET COST" value={p.netCost} />
+                <Stat label={cancelled ? 'DMC CANCELLATION' : 'NET COST'} value={p.netCost} />
                 <Stat label="COMMISSION" value={p.commission} colour={toneColour[p.commissionTone]} />
                 <Stat label="MARGIN" value={p.margin} colour={toneColour[p.commissionTone]} last />
               </View>
@@ -275,7 +280,7 @@ export const AdminInvoice: AdminInvoiceTemplate = ({ view: v }) => {
               <Grid
                 cols={[
                   { label: 'DMC' },
-                  { label: 'COST', width: 80, align: 'right' },
+                  { label: cancelled ? 'CHARGE' : 'COST', width: 80, align: 'right' },
                   { label: 'PAID', width: 80, align: 'right' },
                   { label: 'OUTSTANDING', width: 110, align: 'right' },
                 ]}
@@ -301,7 +306,7 @@ export const AdminInvoice: AdminInvoiceTemplate = ({ view: v }) => {
           )}
 
           {v.ledger.length > 0 && (
-            <View>
+            <View wrap={v.ledger.length > KEEP_WHOLE}>
               <H>MONEY LEDGER</H>
               <Grid
                 cols={[

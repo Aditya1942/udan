@@ -9,6 +9,9 @@ const money = { fontFamily: 'Inter', textAlign: 'right' as const };
 export const AdminInvoice: AdminInvoiceTemplate = ({ view: v, assets }) => {
   const cancelled = v.cancelledPill;
   const p = v.profit;
+  // Cancelled: the view's selling price is the client cancellation charge, net cost the DMC cancellation charges.
+  const priceLabel = cancelled ? 'Cancellation charge' : 'Selling price';
+  const costLabel = cancelled ? 'DMC cxl. charges' : 'Net cost';
   const hasPayBy = v.costLines.some((l) => l.payBy);
   const hasDmcMoney = v.costLines.some((l) => l.dmcPaid !== undefined || l.dmcOwed !== undefined);
   const tail = (hasPayBy ? 54 : 0) + (hasDmcMoney ? 112 : 0);
@@ -133,14 +136,14 @@ export const AdminInvoice: AdminInvoiceTemplate = ({ view: v, assets }) => {
                 )}
                 {hasDmcMoney && (
                   <Td w={56} last>
-                    <Text style={[s.small, money, l.dmcOwed && !/^₹0$/.test(l.dmcOwed) ? { color: RED } : {}]}>{l.dmcOwed ?? ''}</Text>
+                    <Text style={[s.small, money]}>{l.dmcOwed ?? ''}</Text>
                   </Td>
                 )}
               </View>
             ))}
             <View style={s.row} wrap={false}>
               <Td>
-                <Text style={[s.lab, { textAlign: 'right', color: INK }]}>Total net cost</Text>
+                <Text style={[s.lab, { textAlign: 'right', color: INK }]}>{`Total ${costLabel}`}</Text>
               </Td>
               <Td w={64} last={!tail}>
                 <Text style={[s.small, money, s.semi]}>{p.netCost}</Text>
@@ -157,8 +160,8 @@ export const AdminInvoice: AdminInvoiceTemplate = ({ view: v, assets }) => {
               labelWidth={96}
               valueRight
               rows={[
-                { label: 'Selling price', value: p.sellingPrice },
-                { label: 'Net cost', value: p.netCost },
+                { label: priceLabel, value: p.sellingPrice },
+                { label: costLabel, value: p.netCost },
                 {
                   label: 'Commission',
                   value: p.commission,

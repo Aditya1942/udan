@@ -44,7 +44,7 @@ function CustomerSide({ v }: { v: V }) {
       <Text style={[s.h, { fontSize: 11, marginTop: 3 }]}>{v.item.title}</Text>
       {v.item.detail ? <Text style={s.muted}>{v.item.detail}</Text> : null}
       <View style={[s.row, { marginTop: 6, gap: 6, flexWrap: 'wrap' }]}>
-        <Badge color={v.status === 'Cancelled' ? c.danger : c.teal}>{v.status.toUpperCase()}</Badge>
+        <Badge color={v.cancelledPill ? c.danger : c.teal}>{v.status.toUpperCase()}</Badge>
         <Badge color={c.muted}>{v.category.toUpperCase()}</Badge>
       </View>
       {v.billedTo.name || details.length ? (
@@ -71,6 +71,7 @@ function CustomerSide({ v }: { v: V }) {
 
 function ProfitStub({ v }: { v: V }) {
   const p = v.profit;
+  const r = v.totals.result;
   return (
     <Ticket
       stubWidth={170}
@@ -88,11 +89,12 @@ function ProfitStub({ v }: { v: V }) {
       }
     >
       <View style={[s.row, { flexWrap: 'wrap' }]}>
-        <Stat label="Selling price" value={p.sellingPrice} />
+        {/* Once cancelled, profit.sellingPrice is the cancellation charge (totals.lines[0] carries that label). */}
+        <Stat label={v.cancelledPill ? (v.totals.lines[0]?.label ?? 'Cancellation charge') : 'Selling price'} value={p.sellingPrice} />
         <Stat label="Net cost" value={p.netCost} />
         <Stat label="Cash in hand" value={p.cashInHand} />
         <Stat label="Client received" value={p.clientReceived} />
-        <Stat label="Client outstanding" value={p.clientOutstanding} colour={toneColour[p.clientOutstandingTone]} />
+        <Stat label={r.label === 'Refund due to you' ? 'Refund due to client' : 'Client outstanding'} value={r.amount} colour={toneColour[p.clientOutstandingTone]} />
         <Stat label="DMC outstanding" value={p.dmcOutstanding} colour={toneColour[p.dmcOutstandingTone]} />
       </View>
     </Ticket>
@@ -100,7 +102,6 @@ function ProfitStub({ v }: { v: V }) {
 }
 
 function CostLine({ line, cancelled }: { line: V['costLines'][number]; cancelled: boolean }) {
-  const owedNonZero = line.dmcOwed !== undefined && line.dmcOwed !== '₹0';
   return (
     <Ticket
       stubWidth={160}
@@ -125,7 +126,8 @@ function CostLine({ line, cancelled }: { line: V['costLines'][number]; cancelled
               {line.dmcOwed !== undefined ? (
                 <View>
                   <Label>Owed</Label>
-                  <Text style={[s.semi, { fontSize: 8.5, color: owedNonZero ? c.danger : c.muted }]}>{line.dmcOwed}</Text>
+                  {/* No tone in the view for dmcOwed (view.ts gap): neutral ink, no string-compare on money text. */}
+                  <Text style={[s.semi, { fontSize: 8.5 }]}>{line.dmcOwed}</Text>
                 </View>
               ) : null}
             </View>
@@ -237,7 +239,7 @@ function Ledger({ rows }: { rows: V['ledger'] }) {
 }
 
 export const AdminInvoice: AdminInvoiceTemplate = ({ view: v, assets }) => {
-  const cancelled = v.status === 'Cancelled';
+  const cancelled = v.cancelledPill;
   return (
     <Document title={v.filenameTitle} author={v.letterhead.name} creator={v.letterhead.name} producer={v.letterhead.name}>
       <Page size="A4" style={[s.page, { paddingTop: 80 }]}>

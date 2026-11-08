@@ -334,6 +334,88 @@ describe('settings', () => {
   });
 });
 
+describe('settings/documents', () => {
+  const valid = (o: Record<string, unknown> = {}) => ({
+    defaults: { invoice: 'reference', voucher: 'ticket' },
+    messages: { invoiceWhatsapp: 'Hi {name}, {link}' },
+    updatedAt: now(),
+    ...o,
+  });
+
+  it('allows Admins to read and write valid Document settings', async () => {
+    await assertSucceeds(setDoc(doc(admin, 'settings/documents'), valid()));
+    await assertSucceeds(setDoc(doc(admin, 'settings/documents'), valid({ defaults: {}, messages: {} })));
+    await assertSucceeds(getDoc(doc(admin, 'settings/documents')));
+  });
+
+  it('denies unknown kinds/keys, bad template ids, oversize messages and non-Admins', async () => {
+    await assertFails(setDoc(doc(admin, 'settings/documents'), valid({ defaults: { receipt: 'band' } })));
+    await assertFails(setDoc(doc(admin, 'settings/documents'), valid({ defaults: { invoice: 'Bad Id!' } })));
+    await assertFails(setDoc(doc(admin, 'settings/documents'), valid({ messages: { sms: 'x' } })));
+    await assertFails(setDoc(doc(admin, 'settings/documents'), valid({ messages: { invoiceEmail: 'x'.repeat(2001) } })));
+    await assertFails(setDoc(doc(admin, 'settings/documents'), valid({ extra: 1 })));
+    await assertFails(setDoc(doc(admin, 'settings/documents'), { defaults: {}, messages: {} }));
+    const anon = contextDb(env.unauthenticatedContext());
+    await assertFails(getDoc(doc(anon, 'settings/documents')));
+    await assertFails(setDoc(doc(anon, 'settings/documents'), valid()));
+  });
+});
+
+describe('shares', () => {
+  const TOKEN = 'AbCdEfGhIjKlMnOpQrStUv';
+  const share = (o: Record<string, unknown> = {}) => ({
+    kind: 'invoice',
+    bookingId: 'b1',
+    family: 'reference',
+    active: true,
+    issuedOn: '2026-11-08',
+    v: 1,
+    title: 'Invoice UDAN/2026-27/001',
+    filename: 'UDAN-Invoice-UDAN_2026-27_001.pdf',
+    tradingName: 'UDAN',
+    phone: '+91 96872 32015',
+    view: '{"invoiceNo":"UDAN/2026-27/001"}',
+    unavailable: '',
+    createdAt: now(),
+    updatedAt: now(),
+    ...o,
+  });
+
+  it('lets anyone get one link by token, but only Admins list', async () => {
+    await seed(env, { [`shares/${TOKEN}`]: { ...share(), createdAt: past, updatedAt: past } });
+    const anon = contextDb(env.unauthenticatedContext());
+    await assertSucceeds(getDoc(doc(anon, 'shares', TOKEN)));
+    await assertFails(getDocs(collection(anon, 'shares')));
+    await assertSucceeds(getDocs(collection(admin, 'shares')));
+  });
+
+  it('allows Admins to create, sync and disable a link; denies the public any write', async () => {
+    await assertSucceeds(setDoc(doc(admin, 'shares', TOKEN), share()));
+    await assertSucceeds(updateDoc(doc(admin, 'shares', TOKEN), { view: '{}', family: 'band', updatedAt: now() }));
+    await assertSucceeds(updateDoc(doc(admin, 'shares', TOKEN), { active: false, view: '', updatedAt: now() }));
+    const anon = contextDb(env.unauthenticatedContext());
+    await assertFails(setDoc(doc(anon, 'shares', 'ZyXwVuTsRqPoNmLkJiHgFe'), share()));
+    await assertFails(updateDoc(doc(anon, 'shares', TOKEN), { view: '{}' }));
+  });
+
+  it('keeps a disabled link disabled and its identity fixed', async () => {
+    await seed(env, { [`shares/${TOKEN}`]: { ...share({ active: false, view: '' }), createdAt: past, updatedAt: past } });
+    await assertFails(updateDoc(doc(admin, 'shares', TOKEN), { active: true, updatedAt: now() }));
+    await seed(env, { [`shares/${TOKEN}`]: { ...share(), createdAt: past, updatedAt: past } });
+    await assertFails(updateDoc(doc(admin, 'shares', TOKEN), { bookingId: 'b2', updatedAt: now() }));
+    await assertFails(updateDoc(doc(admin, 'shares', TOKEN), { kind: 'voucher', updatedAt: now() }));
+    await assertFails(deleteDoc(doc(admin, 'shares', TOKEN)));
+  });
+
+  it('denies short tokens, unknown keys, bad kinds and inactive creates', async () => {
+    await assertFails(setDoc(doc(admin, 'shares', 'short'), share()));
+    await assertFails(setDoc(doc(admin, 'shares', TOKEN), share({ netCost: 1 })));
+    await assertFails(setDoc(doc(admin, 'shares', TOKEN), share({ kind: 'admin' })));
+    await assertFails(setDoc(doc(admin, 'shares', TOKEN), share({ active: false })));
+    await assertFails(setDoc(doc(admin, 'shares', TOKEN), share({ unavailable: 'x' })));
+  });
+});
+
 describe('inquiries: admin', () => {
   const enquiry = (o: Record<string, unknown> = {}) => ({
     name: 'Neha Shah',

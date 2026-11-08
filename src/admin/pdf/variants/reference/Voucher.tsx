@@ -57,41 +57,18 @@ const Section = ({ title, children, flow }: { title: string; children: ReactNode
     </View>
   );
 
-function Letterhead({ v, mark }: { v: VoucherView; mark: string }) {
-  const name = v.letterhead.name || 'UDAN Immigration & Tours';
+/** Brand panel (logo assets) + navy box with the trading name and phones from the Business profile (filled only). */
+function Letterhead({ v, assets }: { v: VoucherView; assets: { mark: string; wordmark: string } }) {
+  const { name, phones } = v.letterhead;
   return (
     <View style={s.lhBox}>
       <View style={s.lhLeft}>
-        <Image src={mark} style={{ width: 50, height: 59 }} />
-        <Text
-          style={{
-            fontFamily: 'Manrope',
-            fontWeight: 700,
-            fontSize: 14,
-            color: C.teal,
-            letterSpacing: 2.5,
-            paddingLeft: 2.5,
-            marginTop: 5,
-            lineHeight: 1.1,
-          }}
-        >
-          UDAN
-        </Text>
-        <Text
-          style={{
-            fontSize: 6.5,
-            fontWeight: 600,
-            color: C.navy,
-            lineHeight: 1.1,
-          }}
-        >
-          {'Immigration & Tours'}
-        </Text>
+        <Image src={assets.mark} style={{ width: 50, height: 59 }} />
+        <Image src={assets.wordmark} style={{ width: 96, height: 30, marginTop: 5 }} />
       </View>
       <View style={s.lhRight}>
-        <Text style={s.lhName}>{name.toUpperCase()}</Text>
-        <Text style={s.lhSub}>LET YOUR JOURNEY BEGIN WITH UDAN</Text>
-        {v.letterhead.phones.length > 0 ? <Text style={s.lhPhone}>{v.letterhead.phones.join('  |  ')}</Text> : null}
+        {name ? <Text style={s.lhName}>{name.toUpperCase()}</Text> : null}
+        {phones.length > 0 ? <Text style={name ? s.lhSub : s.lhName}>{phones.join('  |  ')}</Text> : null}
       </View>
     </View>
   );
@@ -114,15 +91,14 @@ function guestTable(v: VoucherView): Row[] {
       });
     else if (r.label === 'Guests')
       rows.push({
-        label: 'Adults / Children',
+        label: 'Guests',
         value: paxCountsText(v.paxCounts) || r.value,
       });
     else rows.push({ label: r.label, value: r.value });
   }
-  if (v.category !== 'Hotel') {
-    if (v.trip.destination) rows.push({ label: 'Destination', value: v.trip.destination });
-    if (v.trip.dates) rows.push({ label: 'Travel Dates', value: v.trip.dates });
-  }
+  if (v.trip.destination) rows.push({ label: 'Destination', value: v.trip.destination });
+  // Hotel vouchers print check-in / check-out per stay instead.
+  if (v.trip.dates && !(v.category === 'Hotel' && v.stays.length)) rows.push({ label: 'Travel Dates', value: v.trip.dates });
   return rows;
 }
 
@@ -135,7 +111,7 @@ function stayRows(st: VoucherView['stays'][number]): Row[] {
     label: 'Hotel Confirmation No.',
     value: <Confirmation c={st.confirmation} />,
   });
-  if (st.notes) rows.push({ label: 'Address / Notes', value: st.notes });
+  if (st.notes) rows.push({ label: 'Notes', value: st.notes });
   return rows;
 }
 
@@ -150,7 +126,7 @@ function serviceRows(sv: VoucherView['services'][number]): Row[] {
       label: 'Hotel Confirmation No.',
       value: <Confirmation c={sv.confirmation} />,
     });
-    if (sv.notes) rows.push({ label: 'Address / Notes', value: sv.notes });
+    if (sv.notes) rows.push({ label: 'Notes', value: sv.notes });
     return rows;
   }
   const rows: Row[] = [{ label: sv.type, value: sv.description, strong: true }];
@@ -197,7 +173,7 @@ function Bullets({ lines }: { lines: string[] }) {
 
 export const Voucher: VoucherTemplate = ({ view: v, assets }) => {
   const word = VOUCHER_WORD[v.category];
-  const brand = (v.letterhead.name || 'UDAN Immigration & Tours').toUpperCase();
+  const brand = v.letterhead.name?.toUpperCase() ?? '';
   // Hotel vouchers lead with stays (like the reference); every other category lists services in date order.
   const hotelVoucher = v.category === 'Hotel';
   const listed = hotelVoucher ? v.services.filter((x) => x.type !== 'Hotel') : v.services;
@@ -221,11 +197,11 @@ export const Voucher: VoucherTemplate = ({ view: v, assets }) => {
     <Document title={v.filenameTitle} author={lh.name} creator={lh.name} producer={lh.name}>
       <Page size="A4" style={s.vPage}>
         <Text fixed style={s.runHead}>
-          {brand} | {word} VOUCHER
+          {[brand, `${word} VOUCHER`].filter(Boolean).join(' | ')}
         </Text>
 
         <View style={s.body}>
-          <Letterhead v={v} mark={assets.mark} />
+          <Letterhead v={v} assets={assets} />
 
           <Text style={s.vTitle}>{voucherTitle(v.category)}</Text>
 
@@ -302,7 +278,7 @@ export const Voucher: VoucherTemplate = ({ view: v, assets }) => {
             <Text style={s.vH}>ISSUED BY</Text>
             <View style={s.issuedBox}>
               <View style={{ flex: 1, justifyContent: 'center' }}>
-                <Text style={s.issuedText}>{brand}</Text>
+                {brand ? <Text style={s.issuedText}>{brand}</Text> : null}
                 {lh.address.map((a, i) => (
                   <Text key={i} style={s.issuedText}>
                     {a}
@@ -315,9 +291,9 @@ export const Voucher: VoucherTemplate = ({ view: v, assets }) => {
                   <Text style={[s.issuedText, { color: C.danger }]}>Emergency: {v.emergency.join(' / ')}</Text>
                 ) : null}
               </View>
-              <View style={{ width: '44%' }}>
-                <Text style={{ color: C.muted, marginBottom: 4 }}>Authorized Signature / Stamp</Text>
-                {v.signature ? (
+              {v.signature ? (
+                <View style={{ width: '44%' }}>
+                  <Text style={{ color: C.muted, marginBottom: 4 }}>Authorized Signature / Stamp</Text>
                   <Image
                     src={v.signature.image}
                     style={{
@@ -327,27 +303,27 @@ export const Voucher: VoucherTemplate = ({ view: v, assets }) => {
                       objectPosition: 'left',
                     }}
                   />
-                ) : (
-                  <View style={{ height: 40 }} />
-                )}
-                <View
-                  style={{
-                    borderBottomWidth: 0.75,
-                    borderBottomColor: C.muted,
-                    width: 150,
-                    marginTop: 4,
-                  }}
-                />
-                {v.signature ? <Text style={{ color: C.muted, fontSize: 7.5, marginTop: 2 }}>{v.signature.caption}</Text> : null}
-              </View>
+                  <View
+                    style={{
+                      borderBottomWidth: 0.75,
+                      borderBottomColor: C.muted,
+                      width: 150,
+                      marginTop: 4,
+                    }}
+                  />
+                  <Text style={{ color: C.muted, fontSize: 7.5, marginTop: 2 }}>{v.signature.caption}</Text>
+                </View>
+              ) : null}
             </View>
-            <Text style={s.thanks}>Thank you for choosing {v.letterhead.name || 'UDAN Immigration & Tours'}.</Text>
+            {v.letterhead.name ? <Text style={s.thanks}>Thank you for choosing {v.letterhead.name}.</Text> : null}
           </View>
         </View>
 
-        <Text fixed style={s.vFoot}>
-          This voucher is a booking confirmation document. It is not a tax invoice unless expressly stated.
-        </Text>
+        {v.footer ? (
+          <Text fixed style={s.vFoot}>
+            {v.footer}
+          </Text>
+        ) : null}
         <Text
           fixed
           style={s.pageNo}

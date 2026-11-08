@@ -35,6 +35,12 @@ export type {
 export { createClient, createDmc, deleteClient, deleteDmc, updateClient, updateDmc } from './directory';
 export { deleteEnquiry, saveEnquiryNotes, setEnquiryStatus } from './enquiries';
 export { getBusinessProfile, saveBusinessProfile } from './businessProfile';
+export { DOCUMENTS_DOC, documentSettingsFromDoc, saveDocumentSettings, subscribeBusinessProfile, subscribeDocumentSettings } from './documentSettings';
+export type { DocState } from './documentSettings';
+export { disableShare, newShareToken, publishShare, readShare, shareUrl, subscribeActiveShares, syncShare } from './shares';
+export type { PublishShareInput, ShareListState, ShareRecord } from './shares';
+export { DocumentsProvider, useDocuments } from './DocumentsProvider';
+export type { DocumentsContextValue } from './DocumentsProvider';
 export { projectIdOf, readBackupCollections } from './backup';
 export type { RawCollections } from './backup';
 export { ADMIN_COLLECTION_NAMES, subscribeCollection } from './subscribe';

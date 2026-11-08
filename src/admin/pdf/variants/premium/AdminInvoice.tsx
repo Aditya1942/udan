@@ -54,7 +54,8 @@ function Profitability({ v }: { v: AdminInvoiceView }) {
     <View style={s.section} wrap={false}>
       <SectionHead>Profitability</SectionHead>
       <View style={[s.row, { alignItems: 'stretch', backgroundColor: c.cream, borderWidth: 0.5, borderColor: c.goldSoft, paddingVertical: 10 }]}>
-        <Stat label="Selling price" value={p.sellingPrice} />
+        {/* Cancelled: profit.sellingPrice is the client cancellation charge. */}
+        <Stat label={v.cancelledPill ? 'Cancellation charge' : 'Selling price'} value={p.sellingPrice} />
         <VRule />
         <Stat label="Net cost" value={p.netCost} />
         <VRule />
@@ -252,7 +253,7 @@ export const AdminInvoice: AdminInvoiceTemplate = ({ view: v, assets }) => (
         mark={assets.mark}
         letterhead={v.letterhead}
         title="Booking Statement — Internal"
-        meta={[v.bookingLine, v.invoiceDate ? `Invoice ${v.invoiceNo}` : v.invoiceNo, v.preparedLine]}
+        meta={[v.bookingLine, v.invoiceDate ? `Invoice ${v.invoiceNo}` : v.invoiceNo, v.invoiceDate ? `Invoiced ${v.invoiceDate}` : '', v.preparedLine]}
       >
         {v.cancelledPill ? <CancelledMark /> : null}
       </Header>

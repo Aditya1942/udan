@@ -5,7 +5,7 @@
 import type { Firestore } from 'firebase/firestore';
 import { Navigate, Outlet, useLocation } from 'react-router';
 import { loginPathFor, useAdminSession } from '../auth';
-import { AdminDataProvider } from '../data';
+import { AdminDataProvider, DocumentsProvider } from '../data';
 import { FullScreenSpinner, ToastProvider, useNoIndex } from '../ui';
 import { AdminShell } from './AdminShell';
 
@@ -18,11 +18,13 @@ export function AdminLayout({ db }: { db: Firestore }) {
   if (status !== 'admin') return <Navigate to={loginPathFor(`${location.pathname}${location.search}${location.hash}`)} replace />;
   return (
     <AdminDataProvider db={db}>
-      <ToastProvider>
-        <AdminShell>
-          <Outlet />
-        </AdminShell>
-      </ToastProvider>
+      <DocumentsProvider db={db}>
+        <ToastProvider>
+          <AdminShell>
+            <Outlet />
+          </AdminShell>
+        </ToastProvider>
+      </DocumentsProvider>
     </AdminDataProvider>
   );
 }

@@ -33,6 +33,8 @@ export function PartyCards({ v }: { v: InvoiceView }) {
 /** Priced row + itemised services (zebra), struck through when cancelled. */
 export function LineTable({ v }: { v: InvoiceView }) {
   const st = v.servicesStruck ? s.struck : {};
+  /** No line has dates (e.g. Visa): drop the column instead of printing an empty "Dates" header. */
+  const hasDates = v.lineItems.some((l) => l.dates);
   return (
     <View>
       <View
@@ -63,7 +65,7 @@ export function LineTable({ v }: { v: InvoiceView }) {
                 <Text style={[s.th, { width: 20 }]}>#</Text>
                 <Text style={[s.th, { width: 70 }]}>Service</Text>
                 <Text style={[s.th, { flex: 1 }]}>Included</Text>
-                <Text style={[s.th, { width: 128, textAlign: 'right' }]}>Dates</Text>
+                {hasDates ? <Text style={[s.th, { width: 128, textAlign: 'right' }]}>Dates</Text> : null}
               </View>
             }
             rows={v.lineItems.map((l, i) => (
@@ -76,26 +78,26 @@ export function LineTable({ v }: { v: InvoiceView }) {
                   <Text style={st}>{l.description}</Text>
                   {l.detail ? <Text style={[s.small, s.muted, st]}>{l.detail}</Text> : null}
                 </View>
-                <Text style={[{ width: 128, textAlign: 'right' }, s.muted, st]}>{l.dates}</Text>
+                {hasDates ? <Text style={[{ width: 128, textAlign: 'right' }, s.muted, st]}>{l.dates}</Text> : null}
               </View>
             ))}
           />
-          {v.originalPrice && (
-            <View
-              style={[
-                s.row,
-                {
-                  justifyContent: 'space-between',
-                  paddingHorizontal: 8,
-                  paddingTop: 5,
-                },
-              ]}
-              wrap={false}
-            >
-              <Text style={s.muted}>{v.originalPrice.label}</Text>
-              <Text style={[s.struck, s.semi, s.right]}>{v.originalPrice.amount}</Text>
-            </View>
-          )}
+        </View>
+      )}
+      {v.originalPrice && (
+        <View
+          style={[
+            s.row,
+            {
+              justifyContent: 'space-between',
+              paddingHorizontal: 8,
+              paddingTop: 5,
+            },
+          ]}
+          wrap={false}
+        >
+          <Text style={s.muted}>{v.originalPrice.label}</Text>
+          <Text style={[s.struck, s.semi, s.right]}>{v.originalPrice.amount}</Text>
         </View>
       )}
     </View>

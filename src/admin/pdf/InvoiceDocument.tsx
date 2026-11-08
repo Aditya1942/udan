@@ -27,7 +27,21 @@ const s = StyleSheet.create({
   std: { paddingVertical: 3.5, borderBottomWidth: 0.5, borderBottomColor: colour.border },
   totRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 3 },
   struck: { textDecoration: 'line-through', color: colour.muted },
+  pairLabel: { width: 76, fontSize: 7.5, paddingTop: 1 },
 });
+
+/** A label/value value that may break after "@" (react-pdf breaks only at spaces, or hyphenates, which would corrupt an e-mail). */
+export function PairValue({ text }: { text: string }) {
+  const parts = text.split(/(?<=@)/);
+  if (parts.length < 2) return <Text style={{ flex: 1 }}>{text}</Text>;
+  return (
+    <View style={{ flex: 1, flexDirection: 'row', flexWrap: 'wrap' }}>
+      {parts.map((p, i) => (
+        <Text key={i}>{p}</Text>
+      ))}
+    </View>
+  );
+}
 
 function ServiceRow({ row, struck }: { row: InvoiceView['services'][number]; struck: boolean }) {
   const st = struck ? s.struck : {};
@@ -61,21 +75,21 @@ export function InvoiceDocument({ view: v, wordmark, qr }: { view: InvoiceView; 
         <View style={[base.rule, { marginVertical: 16 }]} />
 
         <View style={[base.row, { gap: 24 }]}>
-          <View style={{ flex: 1 }}>
-            <Text style={base.label}>Billed to</Text>
-            {v.billedTo.name ? <Text style={base.semi}>{v.billedTo.name}</Text> : null}
-            {v.billedTo.lines.map((l, i) => (
-              <Text key={i}>{l}</Text>
-            ))}
-            {v.contact.length ? (
-              <>
-                <Text style={[base.label, { marginTop: 8 }]}>Contact person</Text>
-                {v.contact.map((l, i) => (
-                  <Text key={i}>{l}</Text>
-                ))}
-              </>
-            ) : null}
-          </View>
+          {v.billedTo.name || v.billedToDetails.length ? (
+            <View style={{ flex: 1 }}>
+              <Text style={base.label}>Billed to</Text>
+              {v.billedTo.name ? <Text style={base.semi}>{v.billedTo.name}</Text> : null}
+              {/* Mobile, WhatsApp, email, address, GSTIN, PAN, contact person: filled rows only. */}
+              {v.billedToDetails.map((r, i) => (
+                <View key={i} style={base.row}>
+                  <Text style={[base.muted, s.pairLabel]}>{r.label}</Text>
+                  <PairValue text={r.value} />
+                </View>
+              ))}
+            </View>
+          ) : (
+            <View style={{ flex: 1 }} />
+          )}
           {v.from.name || v.from.lines.length ? (
             <View style={{ flex: 1 }}>
               <Text style={base.label}>From</Text>
@@ -100,6 +114,7 @@ export function InvoiceDocument({ view: v, wordmark, qr }: { view: InvoiceView; 
             <View style={[s.td, { flex: 1 }]}>
               <Text style={base.semi}>{v.item.title}</Text>
               {v.item.detail ? <Text style={base.muted}>{v.item.detail}</Text> : null}
+              {v.trip.travellers.length > 0 ? <Text style={base.muted}>Travellers: {v.trip.travellers.join(', ')}</Text> : null}
             </View>
             <Text style={[s.td, base.right, { width: 100 }]}>{v.item.amount}</Text>
           </View>

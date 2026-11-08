@@ -33,6 +33,8 @@ export const appRoutes: RouteObject[] = [
   { path: '/admin/*', HydrateFallback: AdminChunkLoading, lazy: () => import('./admin/routes') },
   // Open template gallery (sample data only): Invoice / Admin invoice / Voucher designs. Lazy: pulls the PDF stack.
   { path: '/templates', HydrateFallback: AdminChunkLoading, lazy: () => import('./admin/pdf/gallery/route') },
+  // Live document link sent to a customer (Invoice / Voucher). Lazy: Firestore read + the PDF stack.
+  { path: '/d/:token', HydrateFallback: AdminChunkLoading, lazy: () => import('./admin/pdf/share/route') },
 ];
 
 const router = createBrowserRouter(appRoutes);

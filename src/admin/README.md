@@ -197,6 +197,9 @@ and if the admin routes chunk (the one holding `src/admin/routes.tsx`) staticall
   (`?url` TTFs + wordmark PNG).
 - `prepare.ts` (re-exported by `index.ts`, the lazy entry): `prepareInvoice(booking, { client, profile, assets? })` / `prepareVoucher(booking, { client,
   profile, today?, assets? })` → `File` (`invoiceFilename` / `voucherFilename`, `application/pdf`). The Invoice number must already be on the Booking.
+- **Superseded by templates + live links (see `pdf/TEMPLATES.md`)**: rows Invoice / Voucher / Admin invoice with a template picker,
+  `prepareDocument`, WhatsApp / Email open a dialog with the Settings message + live `/d/<token>` link (`shares`, ShareSync in `DocumentsProvider`).
+  The original behaviour below still applies to Prepare / Preview / Download / Share (file).
 - `screens/booking/DocumentsCard.tsx`: rows Invoice and Voucher. Prepare → (Invoice: `allocateInvoiceNo` in parallel with `getBusinessProfile`)
   → lazy `import('../../pdf')` → File + Blob URL (memory only; revoked on replace/unmount). Ready: filename + Share (only if
   `navigator.canShare({ files })`; `AbortError` silent, else toast "Sharing failed — use Download"), Preview (`<a target=_blank>`), Download

@@ -8,26 +8,29 @@ import { cleanup, render, screen, waitFor, within } from '@testing-library/react
 import userEvent from '@testing-library/user-event';
 import { deleteApp, initializeApp, type FirebaseApp } from 'firebase/app';
 import { connectAuthEmulator, GoogleAuthProvider, inMemoryPersistence, initializeAuth, signInWithCredential, type Auth } from 'firebase/auth';
-import { connectFirestoreEmulator, doc, getDoc, getFirestore, type Firestore } from 'firebase/firestore';
+import { collection, connectFirestoreEmulator, doc, getDoc, getDocs, getFirestore, type Firestore } from 'firebase/firestore';
 import { createMemoryRouter, RouterProvider } from 'react-router';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ADMIN_EMAIL, seed, seedAdmins } from '../../test/adminAuth';
 import { clearFirestore, contextDb, createRulesEnv } from '../../test/firestoreEmulator';
 import { AdminApp } from '../AdminApp';
-import { fyOf, mailtoUrl, todayIST, whatsappUrl, type Booking } from '../model';
+import { fyOf, todayIST, type Booking } from '../model';
 
 // Stand-in for the lazy PDF chunk: same names and Files as the real prepare, without react-pdf.
 const pdf = vi.hoisted(() => ({
-  prepareInvoice: vi.fn(async (booking: { invoiceNo?: string }) => {
-    const { invoiceFilename } = await import('../model');
-    return new File(['%PDF-1.3'], invoiceFilename(booking.invoiceNo!), { type: 'application/pdf' });
-  }),
-  prepareVoucher: vi.fn(async (booking: { bookingNo: string }) => {
-    const { voucherFilename } = await import('../model');
-    return new File(['%PDF-1.3'], voucherFilename(booking.bookingNo), { type: 'application/pdf' });
+  prepareDocument: vi.fn(async (kind: 'invoice' | 'admin' | 'voucher', booking: { invoiceNo?: string; bookingNo: string }, _data: unknown) => {
+    const { adminInvoiceFilename, invoiceFilename, voucherFilename } = await import('../model');
+    const name =
+      kind === 'invoice' ? invoiceFilename(booking.invoiceNo!) : kind === 'admin' ? adminInvoiceFilename(booking.bookingNo) : voucherFilename(booking.bookingNo);
+    return new File(['%PDF-1.3'], name, { type: 'application/pdf' });
   }),
 }));
 vi.mock('../pdf', () => pdf);
+// Settings → Templates preview renders react-pdf; not under test here.
+vi.mock('../pdf/settingsPreview', () => ({ default: ({ familyId }: { familyId: string }) => <p>Preview of {familyId}</p> }));
+
+type PrepareCall = [kind: string, booking: Booking, data: { profile: { tradingName?: string }; client: { name: string }; family: string }];
+const calls = () => pdf.prepareDocument.mock.calls as unknown as PrepareCall[];
 
 const PROJECT_ID = 'demo-udan-admin-documents';
 const AUTH_HOST = process.env.FIREBASE_AUTH_EMULATOR_HOST;
@@ -73,18 +76,30 @@ async function readDoc(path: string): Promise<Record<string, unknown> | undefine
   return data;
 }
 
-async function renderBooking(bookingNo = 'UDN-001') {
+async function readShares(): Promise<(Record<string, unknown> & { id: string })[]> {
+  let out: (Record<string, unknown> & { id: string })[] = [];
+  await env.withSecurityRulesDisabled(async (ctx) => {
+    out = (await getDocs(collection(contextDb(ctx), 'shares'))).docs.map((d) => ({ id: d.id, ...d.data() }));
+  });
+  return out;
+}
+
+async function renderAt(path: string) {
   await signInWithCredential(auth, GoogleAuthProvider.credential(JSON.stringify({ sub: 'sub-owner', email: ADMIN_EMAIL, email_verified: true })));
-  const router = createMemoryRouter([{ path: '/admin/*', element: <AdminApp auth={auth} db={db} /> }], { initialEntries: [`/admin/bookings/${bookingNo}`] });
+  const router = createMemoryRouter([{ path: '/admin/*', element: <AdminApp auth={auth} db={db} /> }], { initialEntries: [path] });
   render(<RouterProvider router={router} />);
+}
+
+async function renderBooking(bookingNo = 'UDN-001') {
+  await renderAt(`/admin/bookings/${bookingNo}`);
   await screen.findByRole('heading', { level: 1, name: bookingNo });
   await screen.findByRole('region', { name: 'Documents' });
 }
 
 const card = () => screen.getByRole('region', { name: 'Documents' });
-const row = (name: 'Invoice' | 'Voucher') => within(card()).getByRole('listitem', { name });
+const row = (name: 'Invoice' | 'Voucher' | 'Admin invoice') => within(card()).getByRole('listitem', { name });
 
-function setNavigator(props: Partial<Record<'canShare' | 'share', unknown>>) {
+function setNavigator(props: Partial<Record<'canShare' | 'share' | 'clipboard', unknown>>) {
   for (const [key, value] of Object.entries(props)) Object.defineProperty(navigator, key, { value, configurable: true, writable: true });
 }
 
@@ -99,8 +114,7 @@ afterAll(async () => {
   await env?.cleanup();
 });
 beforeEach(async () => {
-  pdf.prepareInvoice.mockClear();
-  pdf.prepareVoucher.mockClear();
+  pdf.prepareDocument.mockClear();
   await clearFirestore(env);
   await fetch(`http://${AUTH_HOST}/emulator/v1/projects/${PROJECT_ID}/accounts`, { method: 'DELETE' });
   await seedAdmins(env);
@@ -139,13 +153,15 @@ describe('Documents card', () => {
     const user = userEvent.setup();
     await renderBooking();
 
-    expect(within(row('Invoice')).getByText('Number assigned when first prepared')).toBeInTheDocument();
+    expect(within(row('Invoice')).getByText('Number assigned when first prepared or sent')).toBeInTheDocument();
     await user.click(within(row('Invoice')).getByRole('button', { name: 'Prepare Invoice' }));
 
     // The PDF is built from the Booking with its new invoice number and the seeded Business profile.
     await within(row('Invoice')).findByRole('link', { name: 'Download Invoice' });
-    expect(pdf.prepareInvoice).toHaveBeenCalledTimes(1);
-    const [booking, data] = pdf.prepareInvoice.mock.calls[0] as unknown as [Booking, { profile: { tradingName?: string }; client: { name: string } }];
+    expect(pdf.prepareDocument).toHaveBeenCalledTimes(1);
+    const [kind, booking, data] = calls()[0];
+    expect(kind).toBe('invoice');
+    expect(data.family).toBe('current'); // no Settings default yet → fallback
     expect(booking.invoiceNo).toBe(INVOICE_NO);
     expect(data.profile.tradingName).toBe(TRADING_NAME);
     expect(data.client.name).toBe('Asha Patel');
@@ -161,19 +177,15 @@ describe('Documents card', () => {
     expect(within(invoice).getByRole('link', { name: 'Preview Invoice' })).toHaveAttribute('target', '_blank');
     expect(within(invoice).getByRole('link', { name: 'Download Invoice' }).getAttribute('href')).toMatch(/^blob:/);
 
-    const message = `Hi Asha, please find your invoice for booking UDN-001 attached. — ${TRADING_NAME}`;
-    expect(within(invoice).getByRole('link', { name: 'WhatsApp Invoice' })).toHaveAttribute('href', whatsappUrl('+919811111111', message));
-    expect(within(invoice).getByRole('link', { name: 'Email Invoice' })).toHaveAttribute(
-      'href',
-      mailtoUrl('asha@example.com', `Invoice ${INVOICE_NO} — ${TRADING_NAME}`, message),
-    );
+    expect(within(invoice).getByRole('button', { name: 'WhatsApp Invoice' })).toBeInTheDocument();
+    expect(within(invoice).getByRole('button', { name: 'Email Invoice' })).toBeInTheDocument();
     // No Web Share with files here (jsdom) → no Share button.
     expect(within(invoice).queryByRole('button', { name: 'Share Invoice' })).not.toBeInTheDocument();
 
     // Prepare again keeps the number (no second allocation).
     await user.click(within(invoice).getByRole('button', { name: 'Prepare again' }));
-    await waitFor(() => expect(pdf.prepareInvoice).toHaveBeenCalledTimes(2));
-    expect((pdf.prepareInvoice.mock.calls[1][0] as Booking).invoiceNo).toBe(INVOICE_NO);
+    await waitFor(() => expect(pdf.prepareDocument).toHaveBeenCalledTimes(2));
+    expect(calls()[1][1].invoiceNo).toBe(INVOICE_NO);
     expect(await readDoc(`counters/invoice-${FY}`)).toEqual({ seq: 1 });
   });
 
@@ -205,17 +217,12 @@ describe('Documents card', () => {
 
     await user.click(within(row('Voucher')).getByRole('button', { name: 'Prepare Voucher' }));
     await within(row('Voucher')).findByRole('link', { name: 'Download Voucher' });
-    expect(pdf.prepareVoucher).toHaveBeenCalledTimes(1);
-    expect(pdf.prepareInvoice).not.toHaveBeenCalled();
+    expect(calls().map((c) => c[0])).toEqual(['voucher']);
     expect((await readDoc('bookings/b1'))?.invoiceNo).toBeUndefined();
     expect(within(row('Voucher')).getByText('UDAN-Voucher-UDN-001.pdf')).toBeInTheDocument();
-    expect(within(row('Voucher')).getByRole('link', { name: 'Email Voucher' })).toHaveAttribute(
-      'href',
-      expect.stringContaining(`subject=${encodeURIComponent(`Travel voucher UDN-001 — ${TRADING_NAME}`)}`),
-    );
   });
 
-  it('Cancelled: Voucher disabled "Booking cancelled"; Invoice still prepares; no Email without a Customer email', async () => {
+  it('Cancelled: Voucher disabled "Booking cancelled"; Invoice still prepares', async () => {
     const user = userEvent.setup();
     await renderBooking('UDN-002');
 
@@ -225,13 +232,11 @@ describe('Documents card', () => {
     await user.click(within(row('Invoice')).getByRole('button', { name: 'Prepare Invoice' }));
     await within(row('Invoice')).findByRole('link', { name: 'Download Invoice' });
     expect((await readDoc('bookings/b2'))?.invoiceNo).toBe(INVOICE_NO);
-    expect(within(row('Invoice')).getByRole('link', { name: 'WhatsApp Invoice' })).toHaveAttribute('href', expect.stringContaining('https://wa.me/919822222222?text=Hi%20Ravi'));
-    expect(within(row('Invoice')).queryByRole('link', { name: 'Email Invoice' })).not.toBeInTheDocument();
   });
 
   it('a render failure shows an inline error with Retry', async () => {
     const user = userEvent.setup();
-    pdf.prepareVoucher.mockRejectedValueOnce(new Error('font failed'));
+    pdf.prepareDocument.mockRejectedValueOnce(new Error('font failed'));
     await renderBooking();
 
     await user.click(within(row('Voucher')).getByRole('button', { name: 'Prepare Voucher' }));
@@ -257,6 +262,121 @@ describe('Documents card', () => {
     await renderBooking('UDN-003');
 
     expect(row('Invoice')).toBeInTheDocument();
+    expect(row('Admin invoice')).toBeInTheDocument();
     expect(within(card()).queryByRole('listitem', { name: 'Voucher' })).not.toBeInTheDocument();
+  });
+
+  it('Template picker starts on the Settings default; a picked template is used for the PDF', async () => {
+    const user = userEvent.setup();
+    await seed(env, { 'settings/documents': { defaults: { invoice: 'reference' }, messages: {}, updatedAt: now } });
+    await renderBooking();
+
+    const select = within(row('Invoice')).getByRole('combobox', { name: 'Invoice template' });
+    await waitFor(() => expect(select).toHaveValue('reference'));
+    await user.selectOptions(select, 'band');
+    await user.click(within(row('Invoice')).getByRole('button', { name: 'Prepare Invoice' }));
+    await within(row('Invoice')).findByRole('link', { name: 'Download Invoice' });
+    expect(calls()[0][2].family).toBe('band');
+    // The Voucher keeps its own default.
+    expect(within(row('Voucher')).getByRole('combobox', { name: 'Voucher template' })).toHaveValue('current');
+  });
+
+  it('Admin invoice: prepares without allocating the invoice number and is never sendable', async () => {
+    const user = userEvent.setup();
+    await renderBooking();
+    const admin = row('Admin invoice');
+    expect(within(admin).queryByRole('button', { name: /WhatsApp|Email/ })).not.toBeInTheDocument();
+
+    await user.click(within(admin).getByRole('button', { name: 'Prepare Admin invoice' }));
+    await within(admin).findByRole('link', { name: 'Download Admin invoice' });
+    expect(calls()[0][0]).toBe('admin');
+    expect(within(admin).getByText('UDAN-Admin-invoice-UDN-001.pdf')).toBeInTheDocument();
+    expect(within(admin).queryByRole('button', { name: /WhatsApp|Email/ })).not.toBeInTheDocument();
+    expect((await readDoc('bookings/b1'))?.invoiceNo).toBeUndefined();
+  });
+
+  it('WhatsApp: creates a live link with the customer-safe invoice, prefilled message with the link; updates on Booking change; Disable turns it off', async () => {
+    const user = userEvent.setup();
+    await renderBooking();
+
+    await user.click(within(row('Invoice')).getByRole('button', { name: 'WhatsApp Invoice' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Send invoice on WhatsApp' });
+    const open = await within(dialog).findByRole('link', { name: 'Open WhatsApp' });
+
+    const [share] = await readShares();
+    expect(share).toMatchObject({ kind: 'invoice', bookingId: 'b1', family: 'current', active: true, issuedOn: todayIST(), unavailable: '' });
+    expect(share.id).toMatch(/^[A-Za-z0-9_-]{22}$/);
+    const view = String(share.view);
+    expect(view).toContain(INVOICE_NO);
+    // Customer-safe: no DMC, net cost or internal fields.
+    expect(view).not.toContain('Desert Tours');
+    expect(view).not.toContain('90,000');
+    expect(view).not.toMatch(/netCost|commission|dmc/i);
+    expect((await readDoc('bookings/b1'))?.invoiceNo).toBe(INVOICE_NO);
+
+    const href = open.getAttribute('href')!;
+    expect(href.startsWith('https://wa.me/919811111111?text=')).toBe(true);
+    const text = decodeURIComponent(href.split('text=')[1]);
+    expect(text).toContain('Hi Asha,');
+    expect(text).toContain(`/d/${share.id}`);
+    expect(text).toContain(INVOICE_NO);
+    expect(text).toContain('Balance due: ₹1,50,000.');
+    expect(within(dialog).getByRole('textbox', { name: 'Message' })).toHaveValue(text);
+
+    await user.click(within(dialog).getByRole('button', { name: 'Cancel' }));
+    expect(await within(row('Invoice')).findByText(/Live link on/)).toBeInTheDocument();
+
+    // ShareSync: a Booking change rewrites the link's data.
+    await seed(env, { 'bookings/b1': { ...BOOKING, invoiceNo: INVOICE_NO, invoiceSeq: 1, invoiceDate: todayIST(), sellingPrice: 160_000 } });
+    await waitFor(async () => expect(String((await readShares())[0].view)).toContain('1,60,000'));
+
+    // Sending again keeps the same URL.
+    await user.click(within(row('Invoice')).getByRole('button', { name: 'Email Invoice' }));
+    const email = await screen.findByRole('dialog', { name: 'Email invoice' });
+    const mail = await within(email).findByRole('link', { name: 'Open email' });
+    expect(mail.getAttribute('href')).toContain(encodeURIComponent(`/d/${share.id}`));
+    expect(within(email).getByRole('textbox', { name: 'Subject' })).toHaveValue(`Invoice ${INVOICE_NO} — ${TRADING_NAME}`);
+    expect(await readShares()).toHaveLength(1);
+    await user.click(within(email).getByRole('button', { name: 'Cancel' }));
+
+    await user.click(within(row('Invoice')).getByRole('button', { name: 'Disable Invoice link' }));
+    await user.click(await screen.findByRole('button', { name: 'Disable link' }));
+    await waitFor(async () => expect((await readShares())[0]).toMatchObject({ active: false, view: '' }));
+    await waitFor(() => expect(within(row('Invoice')).queryByText(/Live link on/)).not.toBeInTheDocument());
+  });
+
+  it('Voucher link message mentions services still being confirmed', async () => {
+    const user = userEvent.setup();
+    await renderBooking();
+    await user.click(within(row('Voucher')).getByRole('button', { name: 'WhatsApp Voucher' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Send voucher on WhatsApp' });
+    await within(dialog).findByRole('link', { name: 'Open WhatsApp' });
+    const text = (within(dialog).getByRole('textbox', { name: 'Message' }) as HTMLTextAreaElement).value;
+    expect(text).toContain('Your travel voucher for Dubai');
+    expect(text).toContain('1 service is still being confirmed.');
+    const [share] = await readShares();
+    expect(share).toMatchObject({ kind: 'voucher', title: 'Travel voucher UDN-001', filename: 'UDAN-Voucher-UDN-001.pdf' });
+    expect((await readDoc('bookings/b1'))?.invoiceNo).toBeUndefined();
+  });
+});
+
+describe('Settings → Templates', () => {
+  it('sets a default template per document and saves custom message text', async () => {
+    const user = userEvent.setup();
+    await renderAt('/admin/settings/templates');
+    await user.click(await screen.findByRole('button', { name: 'Voucher' }));
+    const defaults = screen.getByRole('region', { name: 'Default templates' });
+    await user.click(within(defaults).getByRole('button', { name: /^E-ticket/ }));
+    expect(await within(defaults).findByText('Preview of ticket')).toBeInTheDocument();
+    await user.click(within(defaults).getByRole('button', { name: 'Use as default' }));
+    await waitFor(async () => expect((await readDoc('settings/documents'))?.defaults).toEqual({ voucher: 'ticket' }));
+
+    const messages = screen.getByRole('region', { name: 'Messages' });
+    const box = within(messages).getByRole('textbox', { name: 'Invoice · WhatsApp' });
+    await user.clear(box);
+    await user.type(box, 'Hello {{name}');
+    await user.click(within(messages).getByRole('button', { name: 'Save messages' }));
+    await waitFor(async () => expect(await readDoc('settings/documents')).toMatchObject({ defaults: { voucher: 'ticket' }, messages: { invoiceWhatsapp: 'Hello {name}' } }));
+    expect(within(messages).getByText('Hello Asha')).toBeInTheDocument();
   });
 });

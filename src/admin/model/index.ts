@@ -10,6 +10,7 @@ export * from './counting';
 export * from './flags';
 export * from './numbering';
 export * from './documents';
+export * from './messages';
 export * from './business';
 export * from './enquiry';
 export * from './validate';

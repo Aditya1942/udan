@@ -235,10 +235,74 @@ service cloud.firestore {
         && stamped(d);
     }
 
+    function optMessage(m, k) {
+      return !(k in m) || (m[k] is string && m[k].size() <= 2000);
+    }
+
+    function optTemplateId(m, k) {
+      return !(k in m) || (m[k] is string && m[k].matches('^[a-z0-9-]{1,40}$'));
+    }
+
+    // settings/documents: default template per document + WhatsApp / email message texts.
+    function isValidDocumentSettings(d) {
+      return d.keys().hasOnly(['defaults', 'messages', 'updatedAt'])
+        && d.keys().hasAll(['defaults', 'messages', 'updatedAt'])
+        && d.defaults is map
+        && d.defaults.keys().hasOnly(['invoice', 'admin', 'voucher'])
+        && optTemplateId(d.defaults, 'invoice') && optTemplateId(d.defaults, 'admin') && optTemplateId(d.defaults, 'voucher')
+        && d.messages is map
+        && d.messages.keys().hasOnly(['invoiceWhatsapp', 'invoiceEmail', 'voucherWhatsapp', 'voucherEmail'])
+        && optMessage(d.messages, 'invoiceWhatsapp') && optMessage(d.messages, 'invoiceEmail')
+        && optMessage(d.messages, 'voucherWhatsapp') && optMessage(d.messages, 'voucherEmail')
+        && stamped(d);
+    }
+
     match /settings/{settingsId} {
-      allow read: if settingsId == 'business' && isAdmin();
-      allow create, update: if settingsId == 'business' && isAdmin()
-        && isValidBusinessProfile(request.resource.data);
+      allow read: if settingsId in ['business', 'documents'] && isAdmin();
+      allow create, update: if isAdmin()
+        && ((settingsId == 'business' && isValidBusinessProfile(request.resource.data))
+            || (settingsId == 'documents' && isValidDocumentSettings(request.resource.data)));
+      // delete: denied.
+    }
+
+    // ------------------------------------------------------------ shares
+
+    // shares/{token}: live document link (/d/<token>). Holds the customer-safe view-model JSON (never the Booking).
+    // The token (128 random bits) is the secret: anyone may get one doc, nobody but Admins may list.
+    function shareKeys() {
+      return ['kind', 'bookingId', 'family', 'active', 'issuedOn', 'v', 'title', 'filename', 'tradingName', 'phone',
+              'view', 'unavailable', 'createdAt', 'updatedAt'];
+    }
+
+    function isValidShare(shareId, d) {
+      return shareId.matches('^[A-Za-z0-9_-]{22,64}$')
+        && d.keys().hasOnly(shareKeys())
+        && d.keys().hasAll(shareKeys())
+        && d.kind in ['invoice', 'voucher']
+        && nonEmptyString(d.bookingId, 200)
+        && d.family is string && d.family.matches('^[a-z0-9-]{1,40}$')
+        && d.active is bool
+        && isDate(d.issuedOn)
+        && d.v is int
+        && d.title is string && d.title.size() <= 200
+        && d.filename is string && d.filename.size() <= 200
+        && d.tradingName is string && d.tradingName.size() <= 200
+        && d.phone is string && d.phone.size() <= 100
+        && d.view is string && d.view.size() <= 900000
+        && d.unavailable in ['', 'cancelled', 'not-invoiced']
+        && d.createdAt is timestamp
+        && stamped(d);
+    }
+
+    match /shares/{shareId} {
+      allow get: if true;
+      allow list: if isAdmin();
+      allow create: if isAdmin() && isValidShare(shareId, request.resource.data)
+        && createdNow() && request.resource.data.active == true;
+      // Disabling is final: a disabled link never comes back ("New link" makes a new token).
+      allow update: if isAdmin() && isValidShare(shareId, request.resource.data)
+        && unchanged('kind') && unchanged('bookingId') && unchanged('createdAt')
+        && (resource.data.active == true || request.resource.data.active == false);
       // delete: denied.
     }
 

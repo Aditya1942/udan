@@ -4,6 +4,9 @@ import type { AdminInvoiceTemplate } from '../types';
 import type { AdminInvoiceView, Tone } from '../../view';
 import { Band, c, ConfChip, Footer, Label, Pairs, Pill, RunningHead, s, SectionTitle, Table, toneBorder, toneColour, toneTint, TypePill, zebra } from './parts';
 
+/** `profit.sellingPrice` is the cancellation charge once cancelled; `totals.lines[0]` says "Package price" for every Category. */
+const priceLabel = (v: AdminInvoiceView) => (v.cancelledPill ? (v.totals.lines[0]?.label ?? 'Cancellation charge') : 'Selling price');
+
 function Kpi({ label, value, sub, tone, accent }: { label: string; value: string; sub?: string; tone?: Tone; accent: string }) {
   return (
     <View
@@ -52,7 +55,7 @@ function PositionCards({ v }: { v: AdminInvoiceView }) {
       >
         <Label>Client position</Label>
         {v.billedTo.name ? <Text style={[s.h, { fontSize: 10, marginBottom: 3 }]}>{v.billedTo.name}</Text> : null}
-        <Stat label={v.totals.lines[0]?.label ?? 'Selling price'} value={p.sellingPrice} />
+        <Stat label={priceLabel(v)} value={p.sellingPrice} />
         <Stat label="Received (net)" value={p.clientReceived} />
         <View
           style={{
@@ -64,7 +67,7 @@ function PositionCards({ v }: { v: AdminInvoiceView }) {
         >
           <Stat
             label={r.label === 'Refund due to you' ? 'Refund due to client' : r.label}
-            value={p.clientOutstanding}
+            value={r.amount}
             tone={p.clientOutstandingTone}
             strong
           />
@@ -314,7 +317,7 @@ export const AdminInvoice: AdminInvoiceTemplate = ({ view: v, assets }) => {
           ) : null}
 
           <View style={[s.row, { gap: 8 }]} wrap={false}>
-            <Kpi label={v.totals.lines[0]?.label ?? 'Selling price'} value={p.sellingPrice} accent={c.teal} />
+            <Kpi label={priceLabel(v)} value={p.sellingPrice} accent={c.teal} />
             <Kpi label="Net cost" value={p.netCost} accent={c.sky} />
             <Kpi label="Commission" value={p.commission} sub={`Margin ${p.margin}`} tone={p.commissionTone} accent={toneColour[p.commissionTone]} />
             <Kpi label="Cash in hand" value={p.cashInHand} accent={c.lime} />

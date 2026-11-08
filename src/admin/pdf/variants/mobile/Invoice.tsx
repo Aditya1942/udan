@@ -73,7 +73,8 @@ function Hero({ v }: { v: InvoiceView }) {
         }}
       >
         <View style={s.between}>
-          <Text style={{ color: c.white }}>Invoice total</Text>
+          {/* Cancelled: the total is the cancellation charge, so it is labelled as such (view's first totals line). */}
+          <Text style={{ color: c.white }}>{v.cancelledPill ? v.totals.lines[0].label : 'Invoice total'}</Text>
           <Text style={{ color: c.white, fontWeight: 600 }}>{v.summary.total}</Text>
         </View>
       </View>
@@ -153,9 +154,9 @@ function Included({ v }: { v: InvoiceView }) {
       <View style={[s.between, { gap: 12, paddingBottom: v.lineItems.length ? 10 : 0 }]}>
         <View style={{ flex: 1 }}>
           <Text style={[s.h, { fontSize: 12.5 }]}>{v.item.title}</Text>
-          {v.item.detail ? <Text style={s.small}>{v.item.detail}</Text> : null}
+          {v.item.detail ? <Text style={[s.small, { marginTop: 2 }]}>{v.item.detail}</Text> : null}
         </View>
-        <Text style={[s.h, { fontSize: 12.5 }]}>{v.item.amount}</Text>
+        <Text style={[s.h, { fontSize: 12.5, flexShrink: 0 }]}>{v.item.amount}</Text>
       </View>
       {v.lineItems.map((li, i) => {
         const meta = [li.dates, li.detail].filter(Boolean).join(' · ');
