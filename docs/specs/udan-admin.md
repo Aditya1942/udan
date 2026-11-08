@@ -293,7 +293,7 @@ Deleting a line that has DMC Payments is allowed. That DMC's outstanding may go 
 | Confirmed / Voucher Received / Completed | included | included | included |
 | Cancelled | cancellation outstanding; negatives listed separately as Refunds owed, never netted into totals | Cancellation Charge as Selling Price, Σ line Cancellation Charges as Net Cost | excluded from counts; feeds Cancellation rate |
 
-**Month basis**: a Booking belongs to the IST month of its **Booking date** in every money or month view: `travelStart` if set, else the earliest line `start`, else the IST date of `createdAt`. Its **end date** is `travelEnd` if set, else the latest line `end`, else none.
+**Month basis**: a Booking belongs to the IST month of its **Booking date** in every money or month view: `travelStart` if set, else the earliest line `start`, else the IST date of `createdAt`. Its **end date** is `travelEnd` if set, else the latest line `end`, else none. Display (Invoice, Voucher, subtitle) uses entered dates only (travel or line dates), never the `createdAt` fallback.
 
 **Flags**:
 
@@ -441,10 +441,8 @@ H1 "Dashboard", then underline tabs **Overview | Insights**. These are real rout
   - Cancelled → red note with date + reason. Travel ended → warn note "Mark Completed?".
   - Breadcrumb "← Bookings" → dashboard table, All time.
 - **Layout**: main column (1fr) + a **sticky rail** (16–20rem). Under 60rem the rail moves above the sections and stops sticking.
-- **Sections**: Client, Category, Travel, Price, Service lines, Client payments, DMC payments, Notes. Each is a panel with its own **Edit** button.
-  - **Category** sits right after Client: Category select; Trip Scope (Package only, required); Division shown read-only.
-  - **Service** (non-Package): the single line's fields inline in the Category section — no Service lines panel — plus an **Add more service** button that converts to Package and shows the Service lines panel with this line first.
-  - **Service lines** panel: Package only.
+- **Sections**: Client, Service, Travel, Travellers, Price, Client payments, DMC payments, Notes. Each is a panel with its own **Edit** button.
+  - **Service** sits right after Client, one panel (section key `service`, title "Service"): Category select; Trip scope (Package only, required); Division shown read-only; then either the single service's fields inline (non-Package, with **Add more service**, which converts to Package) or the line cards (Package, with **Add service line**). Save writes category, tripScope and lines together in one transaction (`saveServiceSection`), which also clears payment tags that point at deleted lines or lines whose DMC changed.
   - **Travel**: hidden behind **Add travel details** on every Category (`hasTravel`); removable again.
   - **Travellers** (pax + names): for Immigration, shown outside Travel, always and required.
   - **Edit** swaps the section into its fields with **Save / Cancel**. Save = one `updateDoc` of that section's fields + `updatedAt`. Cancel discards.
@@ -455,7 +453,7 @@ H1 "Dashboard", then underline tabs **Overview | Insights**. These are real rout
   - **Price**: Selling Price, balance due by.
   - **Service lines** table: Type + description, DMC link, dates or "Whole trip", Confirmation no. or "Missing" (warn), Pay DMC by, Net cost. While Cancelled, adds a DMC charge column and strikes through the net cost. Footer total.
   - **Notes**: itinerary, internal notes, "From enquiry" link.
-- **Field sets** (used by section Edit and New booking, in order Client → Travel → Price → Service lines → Notes):
+- **Field sets** (used by section Edit and New booking, in order Client → Service → Travel → Price → Notes):
   - **Client**: segmented Existing / New. Existing = type-ahead on name/mobile. New = name + mobile (required), email, city inline; the Client is created in the same write. From an Enquiry: note "Matched existing Client X by mobile" or "A new Client will be created", with fields prefilled.
   - **Travel**: destination, start, end (min = start), adults/children/infants, traveller names as chip input (Enter adds), itinerary textarea.
   - **Price**: Selling Price (₹ input with en-IN grouping) + Client balance due by.

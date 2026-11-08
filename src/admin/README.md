@@ -22,6 +22,8 @@ Types (`types.ts`): `ISODate`, `ISOMonth`, `FY`, `INR`, `PayMode`/`PAY_MODES`, `
 - **Money** (`money.ts`): `bookingMoney(b) → { sellingPrice, netCost, commission, clientNetReceived, clientOutstanding, dmcs[{dmcId,cost,netPaid,outstanding}], dmcOutstanding, cancelled }`
   (Cancelled → Cancellation Charges; negative = refund owed / due back). Accepts unsaved form values (`MoneyInput`).
   `linesMissingConfirmation`, `lineDmcIds`, `formatINR` (`₹1,48,500`, `−₹X`), `isRupees`.
+  `lineMoney(b) → LineMoney[]` (per-line received / paid / owed from tagged entries), `untagStalePayments(…)` (drops tags on deleted lines or changed DMCs; entries stay, untagged).
+- **Category** (`category.ts`): `divisionOf(category)`, `isSingleService(category)`, `bookingDate(b)`, `bookingEndDate(b)`, `serviceDates(b)` (Month basis, entered dates only), `categoryForService(serviceId)`.
 - **Counting rules** (`counting.ts`): `totals(bookings) → Totals` (Pending → `pending` pipeline only; Cancelled via charges,
   excluded from `bookings` count, feeds `cancellationRate`; negatives in `clientRefundsOwed` / `dmcDueBack`, never netted).
 - **Flags** (`flags.ts`): `bookingFlags(b, today)` → `travelEnded`, `clientOverdue`, `dmcDue[]`, `dmcOverdue`, `dmcDueSoon`, `clientRefundOwed`, `dmcDueBack`.
@@ -29,7 +31,7 @@ Types (`types.ts`): `ISODate`, `ISOMonth`, `FY`, `INR`, `PayMode`/`PAY_MODES`, `
   `monthsBetween`, `addDays`, `daysBetween`, `isoWeekday`, `formatDate` (`1 Nov 2026`), `formatMonth`, `isISODate`.
 - **Numbering**: `formatBookingNo(seq)`, `parseBookingNo`, `formatInvoiceNo(fy, seq)`, `invoiceSeries(date)`.
 - **Documents**: `invoiceFilename`, `voucherFilename`, `shareMessage`, `emailSubject`, `whatsappUrl`, `telUrl`, `mailtoUrl`.
-- **Validation** (form guards; rules don't look inside arrays): `validateBookingFields`, `validateLine`, `validatePayment(p, allowedDmcIds?)`,
+- **Validation** (form guards; rules don't look inside arrays): `validateBookingFields`, `validateLine`, `validatePayment(p, allowedDmcIds?, lines?)`,
   `validateClient`, `validateDmc`, `hasErrors`.
 - **Enquiry**: `serviceLabel`, `matchClientByMobile`, `enquiryConversion(enquiry, clients)` (Convert prefill), `ENQUIRY_FILTERS`,
   `matchesEnquiryFilter`, `enquiryCounts`.
@@ -53,6 +55,7 @@ Every function takes a `Firestore` first and rejects with `AdminDataError` (`cod
 - `allocateInvoiceNo(db, bookingId, { today? }) → { invoiceNo, invoiceSeq, invoiceDate, allocated }` — idempotent; per-FY counter.
 - `saveBookingSection(db, bookingId, patch, { newClient? })` — `patch` key with `undefined` removes the field; `BOOKING_SECTIONS` lists keys per section
   (`clientBalanceDueBy` belongs to `price` only).
+- `saveServiceSection(db, bookingId, { category, tripScope, lines })` — one transaction for the Service panel; also clears payment tags on deleted lines or lines whose DMC changed.
 - `setStatus(db, id, status)` (not `'Cancelled'`; leaving Cancelled un-cancels), `cancelBooking(db, id, { reason, clientCancellationCharge?, lineCharges?, today? })`, `uncancelBooking(db, id, status?)`.
 - Payments: `addClientPayment / updateClientPayment / deleteClientPayment`, `addDmcPayment / updateDmcPayment / deleteDmcPayment`
   (generic `addPayment / updatePayment / deletePayment(db, id, side, …)`). Each writes the whole list in a transaction; DMC entries must use a line DMC.
